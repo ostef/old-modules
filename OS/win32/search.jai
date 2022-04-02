@@ -65,8 +65,7 @@ for_expansion :: (search : *File_Search, body : Code, flags : For_Flags) #expand
 			}
 
 			filename := win32.wide_to_utf8 (find_data.cFileName.data, allocator);
-			is_root := dirname == search.dirname && filename == ".";
-			if !is_root && (filename == "." || filename == "..")
+			if filename == "." || filename == ".."
 				continue;
 			mem.init (*it);
 			it.name = filename;
@@ -80,7 +79,7 @@ for_expansion :: (search : *File_Search, body : Code, flags : For_Flags) #expand
 			{
 				if flagged (search.flags, .VISIT_DIRECTORIES)
 					#insert (break={ should_break = true; break; }) body;
-				if !is_root && flagged (search.flags, .RECURSIVE)
+				if flagged (search.flags, .RECURSIVE)
 					array.push (*directories, it.full_name);
 			}
 			else if flagged (search.flags, .VISIT_FILES)
@@ -161,8 +160,7 @@ direct_recurse :: (search : *File_Search, body : Code, flags : For_Flags) #expan
 			}
 
 			filename := win32.wide_to_utf8 (current.find_data.cFileName.data, allocator);
-			is_root := dirname == search.dirname && filename == ".";
-			if !is_root && (filename == "." || filename == "..")
+			if filename == "." || filename == ".."
 				continue;
 			// Fill File_Info data
 			mem.init (*it);
@@ -177,7 +175,7 @@ direct_recurse :: (search : *File_Search, body : Code, flags : For_Flags) #expan
 			{
 				if flagged (search.flags, .VISIT_DIRECTORIES)
 					#insert (break={ current = null; break; }) body;
-				if flagged (search.flags, .RECURSIVE) && !is_root
+				if flagged (search.flags, .RECURSIVE)
 				{
 					// Find next file, so we continue where we left off next time
 					if !win32.FindNextFileW (current.find_handle, *current.find_data)
