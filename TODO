@@ -1,0 +1,17 @@
+* Unicode
+* OS: file search tests
+* OS: file search: correct directory recursion
+* OS: directory error codes
+* OS: file search: metaprogram that checks you set in_loop to false when appropriate
+* Lexer
+* String_Builder
+* Buffer IO
+* Scanning
+* Meta: output filename
+* Meta: custom importing
+* Hash_Map: tests
+* Storage: tests
+* List: tests
+* Streams: tests
+* Time: tests
+* Path string

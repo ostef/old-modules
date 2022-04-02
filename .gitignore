@@ -1,0 +1,7 @@
+*.exe
+*.pdb
+main.jai
+build.bat
+benchmark/
+tests/
+.build/

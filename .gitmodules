@@ -1,0 +1,9 @@
+[submodule "Ryu"]
+	path = Ryu
+	url = https://github.com/ostef/jai-ryu
+[submodule "Fmt"]
+	path = Fmt
+	url = https://github.com/ostef/jai-fmt
+[submodule "Linalg"]
+	path = Linalg
+	url = https://github.com/ostef/linalg
