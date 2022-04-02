@@ -13,6 +13,7 @@ Codepoint_Flags :: enum_flags u8
 	GRAPHICAL :: PRINTABLE | SPACE;
 }
 
+// For ASCII and Latin1 codepoints
 CODEPOINT_FLAGS :: Codepoint_Flags.[
 	Codepoint_Flags.CONTROL,       // '\x00'
 	Codepoint_Flags.CONTROL,       // '\x01'
