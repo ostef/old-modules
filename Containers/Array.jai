@@ -173,3 +173,13 @@ get_index :: inline (arr : []$T, ptr : *T) -> s64 #must
 	contextless_assert (ptr > arr.data && ptr < arr.data + arr.count, "ptr does not point to an element in the array.");
 	return ptr - arr.data;
 }
+
+equals :: inline (a : []$T, b : []T) -> bool #must
+{
+	if a.count != b.count
+		return false;
+	for i : 0..a.count - 1
+		if a[i] != b[i]
+			return false;
+	return true;
+}
