@@ -38,6 +38,7 @@ File_Search :: struct
 		VISIT_DIRECTORIES :: 0x02;
 		RECURSIVE :: 0x04;
 
+		NON_RECURSIVE :: VISIT_FILES | VISIT_DIRECTORIES;
 		ALL :: VISIT_FILES | VISIT_DIRECTORIES | RECURSIVE;
 	}
 
@@ -62,14 +63,26 @@ File_Info :: struct
 	last_write_time  : time.Apollo_Time;
 }
 
-file_search :: inline (dirname : string, allocator : Allocator, filename_capacity := 100, flags := File_Search.Flags.ALL, in_loop := true) -> File_Search #must
+file_search :: inline (dirname : string, allocator : Allocator, flags := File_Search.Flags.ALL, filename_capacity := 100) -> File_Search #must
 {
 	result : File_Search;
 	result.dirname = dirname;
 	result.flags = flags;
 	// Allocate for about filename_capacity files of about 100 characters in name and full_name combined
 	arena.init (*result.filename_arena, filename_capacity * 100, allocator, allocator);
-	result.in_loop = in_loop;
+
+	return result;
+}
+
+// This is supposed to be called in the for statement directly. Don't call this to assign to a variable.
+file_search :: inline (dirname : string, flags := File_Search.Flags.ALL, filename_capacity := 100) -> File_Search #must
+{
+	result : File_Search;
+	result.dirname = dirname;
+	result.flags = flags;
+	// Allocate for about filename_capacity files of about 100 characters in name and full_name combined
+	arena.init (*result.filename_arena, filename_capacity * 100, mem.HEAP_ALLOC, mem.HEAP_ALLOC);
+	result.in_loop = true;
 
 	return result;
 }
@@ -151,7 +164,7 @@ list_files :: (search : *File_Search, allocator : Allocator, filter := filter_hi
 
 list_files :: inline (dirname : string, allocator : Allocator, flags := File_Search.Flags.ALL, filter := filter_hidden_files) -> first : *File_Node #must, search : File_Search #must, all_files : []File_Node
 {
-	search := file_search (dirname, allocator, flags = flags, in_loop = false);
+	search := file_search (dirname, allocator, flags = flags);
 	root, all_files := list_files (*search, allocator, filter);
 	return root, search, all_files;
 }
