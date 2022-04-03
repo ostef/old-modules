@@ -88,11 +88,16 @@ File_Node :: struct
 	next_sibling : *~s32 File_Node;
 }
 
+filter_hidden_files :: (info : File_Info) -> bool #must
+{
+	return !flagged (info.attributes, .HIDDEN);
+}
+
 // You can ignore the all_files array and only care about the first file when freeing
 // the memory allocated for all the files, since first is the same as all_files.data.
 // Note however that the memory used for the filenames is allocated using the
 // File_Search's filename_arena.
-list_files :: (search : *File_Search, allocator : Allocator, ignore_files : []string = .[]) -> first : *File_Node #must, all_files : []File_Node
+list_files :: (search : *File_Search, allocator : Allocator, filter := filter_hidden_files) -> first : *File_Node #must, all_files : []File_Node
 {
 	if flagged (search.flags, .RECURSIVE)
 		search.flags |= .VISIT_DIRECTORIES;
@@ -102,7 +107,7 @@ list_files :: (search : *File_Search, allocator : Allocator, ignore_files : []st
 	all_files.allocator = allocator;
 	for :direct_recurse info : search
 	{
-		if array.find_first (ignore_files, info.name) != -1
+		if filter && !filter (info)
 			continue;
 		// Find the parent directory
 		while parent_index != -1 && !str.starts_with (info.full_name, all_files[parent_index].full_name)
@@ -144,10 +149,10 @@ list_files :: (search : *File_Search, allocator : Allocator, ignore_files : []st
 	return *all_files[0], all_files;
 }
 
-list_files :: inline (dirname : string, allocator : Allocator, flags := File_Search.Flags.ALL, ignore_files : []string = .[]) -> first : *File_Node #must, search : File_Search #must, all_files : []File_Node
+list_files :: inline (dirname : string, allocator : Allocator, flags := File_Search.Flags.ALL, filter := filter_hidden_files) -> first : *File_Node #must, search : File_Search #must, all_files : []File_Node
 {
 	search := file_search (dirname, allocator, flags = flags, in_loop = false);
-	root, all_files := list_files (*search, allocator, ignore_files);
+	root, all_files := list_files (*search, allocator, filter);
 	return root, search, all_files;
 }
 
