@@ -66,10 +66,10 @@ File_Info :: struct
 file_search :: inline (dirname : string, allocator : Allocator, flags := File_Search.Flags.ALL, filename_capacity := 100) -> File_Search #must
 {
 	result : File_Search;
-	result.dirname = dirname;
 	result.flags = flags;
 	// Allocate for about filename_capacity files of about 100 characters in name and full_name combined
 	arena.init (*result.filename_arena, filename_capacity * 100, allocator, allocator);
+	result.dirname = standardize_path (str.clone (dirname, arena.to_allocator (*result.filename_arena)));
 
 	return result;
 }
@@ -78,10 +78,10 @@ file_search :: inline (dirname : string, allocator : Allocator, flags := File_Se
 file_search :: inline (dirname : string, flags := File_Search.Flags.ALL, filename_capacity := 100) -> File_Search #must
 {
 	result : File_Search;
-	result.dirname = dirname;
-	result.flags = flags;
 	// Allocate for about filename_capacity files of about 100 characters in name and full_name combined
 	arena.init (*result.filename_arena, filename_capacity * 100, mem.HEAP_ALLOC, mem.HEAP_ALLOC);
+	result.flags = flags;
+	result.dirname = standardize_path (str.clone (dirname, arena.to_allocator (*result.filename_arena)));
 	result.in_loop = true;
 
 	return result;

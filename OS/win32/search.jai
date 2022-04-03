@@ -1,3 +1,17 @@
+#scope_module
+
+// @Cleanup (stefan): Put this either in Path or String
+// Converts \ into /
+standardize_path :: inline (filename : string) -> string
+{
+	for i : 0..filename.count - 1
+		if filename[i] == #char "\\"
+			filename[i] = #char "/";
+	return filename;
+}
+
+#scope_export
+
 // @Note (stefan): The for expansion below does not recurse directly down in directories,
 // but rather, it queues them and searches them after it finished searching the current one.
 // For a 'direct recurse' approach, see the direct_recurse for expansion below.
