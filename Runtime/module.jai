@@ -15,7 +15,7 @@ f64 :: float64;
 fill_default_context :: inline (ctx : *Context)
 {
 	ctx.assertion_failed = assertion_failed;
-	ctx.default_allocator = mem.HEAP_ALLOC;
+	ctx.allocator = mem.HEAP_ALLOC;
 }
 
 fill_default_context :: inline ()
