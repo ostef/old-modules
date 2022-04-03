@@ -40,7 +40,14 @@ handle_compiler_message :: (msg : *jaic.Message)
 		//fmt.println ("Message import: %", <<import);
 
 	case .FAILED_IMPORT;
-		//fmt.println ("Message failed import: %", <<(cast (*jaic.Message_Failed_Import) msg));
+		import := cast (*jaic.Message_Failed_Import) msg;
+		if import.import_code
+		{
+			at_file := import.import_code.location.enclosing_load.fully_pathed_filename;
+			at_line := import.import_code.location.l0;
+			at_char := import.import_code.location.c0;
+			//fmt.println ("%:%,%: Message failed import: %", at_file, at_line, at_char, <<import);
+		}
 		handle_failed_import (cast (*jaic.Message_Failed_Import) msg);
 
 	case .PHASE;
@@ -134,7 +141,7 @@ build :: ()
 	parse_arguments (*options);
 	files, run_strings := jaic.compiler_get_source_files ();
 	//jaic.set_build_options (options, w);
-	jaic.remap_import (w, "*", "*", "");	// Block all imports so we can handle them ourselves
+	//jaic.remap_import (w, "*", "*", "");	// Block all imports so we can handle them ourselves
 	jaic.compiler_begin_intercept (w);
 	for files
 		jaic.add_build_file (it, w);
