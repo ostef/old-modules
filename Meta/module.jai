@@ -131,23 +131,17 @@ parse_arguments :: (options : *jaic.Build_Options)
 
 build :: ()
 {
-	defer fmt.println ("Compilation done.");
-	fmt.println ("Creating workspace.");
 	w := jaic.compiler_create_workspace ("Main");
 	options := jaic.get_build_options (w);
-	// We use our own import search behaviour, so don't let the
-	// compiler search for modules.
-	fmt.println (options.import_path);
 	parse_arguments (*options);
 	files, run_strings := jaic.compiler_get_source_files ();
-	//jaic.set_build_options (options, w);
+	jaic.set_build_options (options, w);
 	//jaic.remap_import (w, "*", "*", "");	// Block all imports so we can handle them ourselves
 	jaic.compiler_begin_intercept (w);
 	for files
 		jaic.add_build_file (it, w);
 	for run_strings
 		jaic.add_build_string (fmt.format (mem.HEAP_ALLOC, "#run %;\n", it), w);
-	fmt.println (module_search_dirs);
 	while true
 	{
 		msg := jaic.compiler_wait_for_message ();
