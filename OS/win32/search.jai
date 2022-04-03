@@ -45,8 +45,10 @@ for_expansion :: (search : *File_Search, body : Code, flags : For_Flags) #expand
 		dirname := directories[cursor];
 		cursor += 1;
 		find_data : win32.WIN32_FIND_DATAW;
+		ts := mem.get_temporary_storage_state ();
 		wildcard := win32.utf8_to_wide (str.join (mem.TEMP_ALLOC, dirname, "/*"), mem.TEMP_ALLOC);
 		find_handle := win32.FindFirstFileW (wildcard, *find_data);
+		mem.set_temporary_storage_state (ts);
 		if find_handle == win32.INVALID_HANDLE_VALUE
 		{
 			log.error ("Unable to open directory {:'} for searching: %", dirname, get_last_error_string ());
@@ -125,6 +127,7 @@ direct_recurse :: (search : *File_Search, body : Code, flags : For_Flags) #expan
 		dirname := current.dirname;
 		if !current.initialized
 		{
+			mem.temporary_block ();
 			wildcard := win32.utf8_to_wide (str.join (mem.TEMP_ALLOC, dirname, "/*"), mem.TEMP_ALLOC);
 			current.find_handle = win32.FindFirstFileW (wildcard, *current.find_data);
 			current.initialized = true;
