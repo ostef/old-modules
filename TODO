@@ -1,6 +1,6 @@
-* OS: file search tests
-* OS: directory error codes
-* OS: file search: metaprogram that checks you set in_loop to false when appropriate
+* File_System: file search tests
+* File_System: directory error codes
+* File_System: file search: metaprogram that checks you set in_loop to false when appropriate
 * Lexer
 * String_Builder
 * Buffer IO
