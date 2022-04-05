@@ -1,7 +1,7 @@
 #scope_module
 
 #import "Runtime";
-os :: #import "OS";
+fs :: #import "File_System";
 
 #scope_export
 
@@ -52,7 +52,7 @@ Error :: enum
 	UNKNOWN :: 1001;
 }
 
-error_from_os :: inline (err : os.Error) -> Error #must
+error_from_os :: inline (err : fs.Error) -> Error #must
 {
 	if err ==
 	{

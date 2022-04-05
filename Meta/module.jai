@@ -8,7 +8,7 @@ array :: #import "Containers/Array";
 map   :: #import "Containers/Hash_Map";
 for_expansion :: map.for_expansion;
 str   :: #import "String";
-os    :: #import "OS";
+fs    :: #import "File_System";
 
 #scope_export
 
@@ -84,7 +84,7 @@ parse_arguments :: (options : *jaic.Build_Options)
 				dir = system[i];
 			if dir
 			{
-				fullpath := os.get_full_filename (dir, mem.HEAP_ALLOC);
+				fullpath := fs.get_full_filename (dir, mem.HEAP_ALLOC);
 				if array.find_first (module_search_dirs, fullpath) == -1
 					array.push (*module_search_dirs, fullpath);
 			}
@@ -107,7 +107,7 @@ parse_arguments :: (options : *jaic.Build_Options)
 				dir = user[i];
 			if mount && dir
 			{
-				fullpath := os.get_full_filename (dir, mem.HEAP_ALLOC);
+				fullpath := fs.get_full_filename (dir, mem.HEAP_ALLOC);
 				map.insert (*module_search_map, mount, fullpath);
 				if array.find_first (module_search_dirs, fullpath) == -1
 					array.push (*module_search_dirs, fullpath);
@@ -120,7 +120,7 @@ parse_arguments :: (options : *jaic.Build_Options)
 				dir = user[i];
 			if dir
 			{
-				fullpath := os.get_full_filename (dir, mem.HEAP_ALLOC);
+				fullpath := fs.get_full_filename (dir, mem.HEAP_ALLOC);
 				if array.find_first (module_search_dirs, fullpath) == -1
 					array.push (*module_search_dirs, fullpath);
 			}

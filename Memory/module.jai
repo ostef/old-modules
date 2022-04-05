@@ -1,7 +1,6 @@
 #scope_module
 
 #import "Runtime";
-os    :: #import "OS";
 arena :: #import "Memory/Arena";
 math  :: #import "Math";
 
@@ -11,6 +10,7 @@ math  :: #import "Math";
 #load "alloc.jai";
 #load "heap.jai";
 #load "temp.jai";
+#if OS == .WINDOWS then #load "win32.jai";
 
 init :: inline (ptr : *$T)
 {

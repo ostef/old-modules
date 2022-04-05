@@ -5,11 +5,11 @@ heap_allocator_proc :: (mode : Allocator_Mode, size : s64, old_size : s64, old_p
 	if #complete mode ==
 	{
 	case .ALLOCATE;
-		return os.heap_alloc (size);
+		return heap_alloc (size);
 	case .RESIZE;
-		return os.heap_realloc (old_ptr, size);
+		return heap_realloc (old_ptr, size);
 	case .FREE;
-		os.heap_free (old_ptr);
+		heap_free (old_ptr);
 	}
 	return null;
 }

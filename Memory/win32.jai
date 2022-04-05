@@ -1,6 +1,12 @@
 // @Note (stefan): Memory allocated with heap functions is MEMORY_ALLOCATION_ALIGNMENT
 // bytes aligned, which is defined to be 16 bytes in Win32/kernel32.jai.
 
+#scope_file
+
+win32 :: #import "Win32";
+
+#scope_export
+
 heap_alloc :: inline (size : s64) -> *void #must
 {
 	heap := win32.GetProcessHeap ();
