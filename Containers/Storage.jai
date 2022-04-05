@@ -183,11 +183,9 @@ get_slot_info :: (using storage : *Storage, item : *storage.T) -> valid : bool, 
 	info : Slot_Info;
 	for page : all_pages
 	{
-		first_item := *page.items[0];
-		last_item  := *page.items[items_per_page - 1];
-		if item >= first_item && item <= last_item
+		slot_index := array.get_index (page.items, item);
+		if slot_index != -1
 		{
-			slot_index := cast (s64) (item - first_item) / size_of (T);
 			info.version = page.slots[slot_index].version;
 			info.page_index = page.index;
 			info.slot_index = slot_index;
