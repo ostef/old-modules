@@ -10,3 +10,13 @@ ryu  :: #import "Ryu" (IMPORT_FLOAT_TO_SHORTEST = false);
 
 #load "parse.jai";
 #load "append.jai";
+
+Error :: enum
+{
+	OK :: 0;
+
+	BUFFER_TOO_SMALL :: 1;
+	MALFORMED_INPUT  :: 2;
+	OVERFLOW  :: 3;
+	UNDERFLOW :: 4;
+}
