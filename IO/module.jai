@@ -52,7 +52,7 @@ Error :: enum
 	UNKNOWN :: 1001;
 }
 
-error_from_os :: inline (err : fs.Error) -> Error #must
+to_error :: inline (err : fs.Error) -> Error #must
 {
 	if err ==
 	{
