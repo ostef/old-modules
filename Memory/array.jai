@@ -54,13 +54,13 @@ clone :: inline (arr : []$T, allocator : Allocator) -> []T #must
 	return result;
 }
 
-copy :: inline (dst : []$T, src : []T) -> []T
+copy :: inline (dst : []$T, src : []T) -> s64
 #no_context
 {
 	n := math.min (dst.count, src.count);
 	copy (dst.data, src.data, n * size_of (T));
 
-	return slice (dst, n);
+	return n;
 }
 
 copy :: inline (dst : *[]$T, src : []T)
