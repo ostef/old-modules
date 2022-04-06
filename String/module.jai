@@ -18,6 +18,14 @@ make :: inline (data : *u8, count : s64) -> string #must
 	return result;
 }
 
+length :: inline (cstr : *u8) -> s64 #must
+{
+	i := 0;
+	while cstr[i]
+		i += 1;
+	return i;
+}
+
 from_array :: inline (array : []u8) -> string #must
 #no_context
 {
