@@ -6,13 +6,16 @@ fs :: #import "File_System";
 #scope_export
 
 #load "file_stream.jai";
+#load "strconv.jai";
+
+// @Todo (stefan): Compatibility with Fmt module
 
 Stream :: struct
 {
 	// @Note (stefan): We don't have an Open_Proc because this is
 	// a procedure that is not called on a general Stream. You'd
 	// instead call an open_file procedure that can take any
-	// arguments for example.
+	// arguments and returns a Stream for example.
 	Close_Proc :: #type (*Stream) -> Error;
 	Write_Proc :: #type (*Stream, *void, s64) -> s64, Error;
 	Read_Proc  :: #type (*Stream, *void, s64) -> s64, Error;
@@ -47,8 +50,7 @@ Error :: enum
 
 	EOI :: 1;
 	EOF :: EOI;
-
-	NOT_IMPLEMENTED;
+	NOT_IMPLEMENTED  :: 2;
 	UNKNOWN :: 1001;
 }
 
@@ -120,4 +122,21 @@ get_cursor :: inline (s : *Stream) -> s64, Error
 {
 	cursor, err := seek (s, 0, .CURRENT);
 	return cursor, err;
+}
+
+read :: inline (stream : *Stream, $T : Type) -> T #must, Error
+{
+	result : T = ---;
+	bytes, err := read (stream, *result, size_of (T));
+	if bytes != size_of (T)
+		return 0, .EOI;
+	return result, err;
+}
+
+// @Todo (stefan): Big endian and little endian versions.
+
+write :: inline (stream : *Stream, val : $T) -> Error
+{
+	bytes, err := write (stream, *val, size_of (T));
+	return err;
 }
