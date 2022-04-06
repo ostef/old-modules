@@ -4,6 +4,7 @@
 
 fmt :: #import "Fmt";
 mem :: #import "Memory";
+str :: #import "String";
 
 #scope_export
 
@@ -11,6 +12,22 @@ mem :: #import "Memory";
 
 f32 :: float32;
 f64 :: float64;
+
+#scope_file
+
+cmd_line_args : []string;
+
+#scope_export
+
+get_cmd_line_args :: inline () -> []string #must
+{
+	if cmd_line_args.data
+		return cmd_line_args;
+	cmd_line_args = mem.alloc (string, __command_line_arguments.count, mem.HEAP_ALLOC);
+	for arg, i : __command_line_arguments
+		cmd_line_args[i] = str.make (arg, str.length (arg));
+	return cmd_line_args;
+}
 
 fill_default_context :: inline (ctx : *Context)
 {
