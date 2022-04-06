@@ -12,6 +12,7 @@ io    :: #import "IO";
 str   :: #import "String";
 math  :: #import "Math";
 time  :: #import "Apollo_Time";
+path  :: #import "Path";
 
 #scope_export
 
@@ -108,7 +109,8 @@ file_search :: inline (dirname : string, allocator : Allocator, flags := File_Se
 	result.flags = flags;
 	// Allocate for about filename_capacity files of about 100 characters in name and full_name combined
 	arena.init (*result.filename_arena, filename_capacity * 100, allocator, allocator);
-	result.dirname = standardize_path (str.clone (dirname, arena.to_allocator (*result.filename_arena)));
+	result.dirname =  str.clone (dirname, arena.to_allocator (*result.filename_arena));
+	path.standardize (*result.dirname);
 
 	return result;
 }
@@ -120,7 +122,8 @@ file_search :: inline (dirname : string, flags := File_Search.Flags.ALL, filenam
 	// Allocate for about filename_capacity files of about 100 characters in name and full_name combined
 	arena.init (*result.filename_arena, filename_capacity * 100, mem.HEAP_ALLOC, mem.HEAP_ALLOC);
 	result.flags = flags;
-	result.dirname = standardize_path (str.clone (dirname, arena.to_allocator (*result.filename_arena)));
+	result.dirname = str.clone (dirname, arena.to_allocator (*result.filename_arena));
+	path.standardize (*result.dirname);
 	result.in_loop = true;
 
 	return result;

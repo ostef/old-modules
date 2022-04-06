@@ -1,17 +1,3 @@
-#scope_module
-
-// @Cleanup (stefan): Put this either in Path or String
-// Converts \ into /
-standardize_path :: inline (filename : string) -> string
-{
-	for i : 0..filename.count - 1
-		if filename[i] == #char "\\"
-			filename[i] = #char "/";
-	return filename;
-}
-
-#scope_export
-
 // @Note (stefan): The for expansion below does not recurse directly down in directories,
 // but rather, it queues them and searches them after it finished searching the current one.
 // For a 'direct recurse' approach, see the direct_recurse for expansion below.
@@ -60,7 +46,7 @@ for_expansion :: (search : *File_Search, body : Code, flags : For_Flags) #expand
 		cursor += 1;
 		find_data : win32.WIN32_FIND_DATAW;
 		ts := mem.get_temporary_storage_state ();
-		wildcard := win32.utf8_to_wide (str.join (mem.TEMP_ALLOC, dirname, "/*"), mem.TEMP_ALLOC);
+		wildcard := win32.utf8_to_wide (path.join (mem.TEMP_ALLOC, dirname, "/*"), mem.TEMP_ALLOC);
 		find_handle := win32.FindFirstFileW (wildcard, *find_data);
 		mem.set_temporary_storage_state (ts);
 		if find_handle == win32.INVALID_HANDLE_VALUE
@@ -85,7 +71,7 @@ for_expansion :: (search : *File_Search, body : Code, flags : For_Flags) #expand
 				continue;
 			mem.init (*it);
 			it.name = filename;
-			it.full_name = str.join (allocator, dirname, "/", it.name);
+			it.full_name = path.join (allocator, dirname, it.name);
 			it.attributes = win32_to_file_attributes (find_data.dwFileAttributes);
 			it.size = cast (s64) (find_data.nFileSizeHigh << 32) + find_data.nFileSizeLow;
 			it.creation_time    = time.to_apollo (find_data.ftCreationTime);
@@ -142,7 +128,7 @@ direct_recurse :: (search : *File_Search, body : Code, flags : For_Flags) #expan
 		if !current.initialized
 		{
 			mem.temporary_block ();
-			wildcard := win32.utf8_to_wide (str.join (mem.TEMP_ALLOC, dirname, "/*"), mem.TEMP_ALLOC);
+			wildcard := win32.utf8_to_wide (path.join (mem.TEMP_ALLOC, dirname, "/*"), mem.TEMP_ALLOC);
 			current.find_handle = win32.FindFirstFileW (wildcard, *current.find_data);
 			current.initialized = true;
 			if current.find_handle == win32.INVALID_HANDLE_VALUE
@@ -182,7 +168,7 @@ direct_recurse :: (search : *File_Search, body : Code, flags : For_Flags) #expan
 			// Fill File_Info data
 			mem.init (*it);
 			it.name = filename;
-			it.full_name = str.join (allocator, dirname, "/", it.name);
+			it.full_name = path.join (allocator, dirname, it.name);
 			it.attributes = win32_to_file_attributes (current.find_data.dwFileAttributes);
 			it.size = cast (s64) (current.find_data.nFileSizeHigh << 32) + current.find_data.nFileSizeLow;
 			it.creation_time    = time.to_apollo (current.find_data.ftCreationTime);

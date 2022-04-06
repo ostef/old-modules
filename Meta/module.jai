@@ -9,6 +9,7 @@ map   :: #import "Containers/Hash_Map";
 for_expansion :: map.for_expansion;
 str   :: #import "String";
 fs    :: #import "File_System";
+path  :: #import "Path";
 
 #scope_export
 
@@ -135,6 +136,8 @@ build :: ()
 	options := jaic.get_build_options (w);
 	parse_arguments (*options);
 	files, run_strings := jaic.compiler_get_source_files ();
+	if files.count > 0
+		options.output_executable_name = path.remove_extension (files[0]);
 	jaic.set_build_options (options, w);
 	//jaic.remap_import (w, "*", "*", "");	// Block all imports so we can handle them ourselves
 	jaic.compiler_begin_intercept (w);
