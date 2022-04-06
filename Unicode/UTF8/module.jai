@@ -6,6 +6,44 @@ str :: #import "String";
 
 #scope_export
 
+Str :: struct
+{
+	count : s64;
+	data  : *u8;
+	#place count;
+	#as as_string : string;
+	#place count;
+	#as as_array : []u8;
+}
+
+make_str :: inline (data : *u8, count : s64) -> Str #must
+{
+	result : Str = ---;
+	result.data  = data;
+	result.count = count;
+	return result;
+}
+
+make_str :: inline (s : string) -> Str #must
+{
+	return make_str (s.data, s.count);
+}
+
+for_expansion :: (s : *Str, body : Code, flags : For_Flags) #expand
+{
+	`it_index := 0;
+	byte_offset := 0;
+	while byte_offset < s.count
+	{
+		`it, advance, valid := decode (s.as_array, byte_offset);
+		if !valid
+			break;
+		#insert body;
+		byte_offset += advance;
+		it_index += 1;
+	}
+}
+
 decode :: inline (s : string, allocator : Allocator) -> []u32 #must, valid : bool
 #no_abc
 {

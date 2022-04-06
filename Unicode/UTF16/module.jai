@@ -5,6 +5,42 @@ mem :: #import "Memory";
 
 #scope_export
 
+Str :: struct
+{
+	count : s64;
+	data  : *u16;
+	#place count;
+	#as as_array : []u16;
+}
+
+make_str :: inline (data : *u16, count : s64) -> Str #must
+{
+	result : Str = ---;
+	result.data  = data;
+	result.count = count;
+	return result;
+}
+
+make_str :: inline (arr : []u16) -> Str #must
+{
+	return make_str (arr.data, arr.count);
+}
+
+for_expansion :: (s : *Str, body : Code, flags : For_Flags) #expand
+{
+	`it_index := 0;
+	byte_offset := 0;
+	while byte_offset < s.count
+	{
+		`it, advance, valid := decode (s.as_array, byte_offset);
+		if !valid
+			break;
+		#insert body;
+		byte_offset += advance;
+		it_index += 1;
+	}
+}
+
 decode :: inline (s : []u16, allocator : Allocator) -> []u32 #must, valid : bool
 {
 	valid_input := true;
