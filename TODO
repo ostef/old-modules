@@ -5,7 +5,6 @@
 * String_Builder
 * Buffer IO
 * Scanning
-* Meta: output filename
 * Meta: custom importing
 * Hash_Map: tests
 * Storage: tests

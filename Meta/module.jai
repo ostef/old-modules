@@ -137,7 +137,7 @@ build :: ()
 	parse_arguments (*options);
 	files, run_strings := jaic.compiler_get_source_files ();
 	if files.count > 0
-		options.output_executable_name = path.remove_extension (files[0]);
+		options.output_executable_name = path.get_basename (path.remove_extension (files[0]));
 	jaic.set_build_options (options, w);
 	//jaic.remap_import (w, "*", "*", "");	// Block all imports so we can handle them ourselves
 	jaic.compiler_begin_intercept (w);

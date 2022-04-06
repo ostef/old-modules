@@ -87,7 +87,7 @@ get_basename :: inline (filename : string) -> string #must
 {
 	slash_index := str.find_last (filename, #char "/");
 	if slash_index == -1
-		return "";
+		return filename;
 	return str.advance (filename, slash_index + 1);
 }
 
