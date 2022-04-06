@@ -169,6 +169,7 @@ find_last :: inline (s : string, char : u8) -> s64 #must
 }
 
 join :: (allocator : Allocator, args : ..string) -> string #must
+#no_abc
 {
 	total_size := 0;
 	for args
