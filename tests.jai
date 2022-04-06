@@ -8,6 +8,7 @@ str   :: #import "String";
 fs    :: #import "File_System";
 for_expansion :: fs.for_expansion;
 jaic :: #import "Compiler";
+path :: #import "Path";
 
 Test_Entry :: struct
 {
@@ -16,32 +17,6 @@ Test_Entry :: struct
 	name : string;
 	workspace : Workspace;
 	compilation_success : bool;
-}
-
-// @Cleanup (stefan): Put this either in String, OS, or a Path module that we don't have yet.
-remove_extension :: inline (filename : string) -> string #must
-{
-	slash_index := str.find_last (filename, #char "/");
-	dot_index := str.find_last (filename, #char ".");
-	if dot_index == -1 || dot_index < slash_index
-		return filename;
-	return str.slice (filename, dot_index);
-}
-
-get_basename :: inline (filename : string) -> string #must
-{
-	slash_index := str.find_last (filename, #char "/");
-	if slash_index == -1
-		return "";
-	return str.advance (filename, slash_index + 1);
-}
-
-get_parent_dir :: inline (filename : string) -> string #must
-{
-	slash_index := str.find_last (filename, #char "/");
-	if slash_index == -1
-		return "";
-	return str.slice (filename, slash_index);
 }
 
 build :: ()
@@ -62,9 +37,9 @@ build :: ()
 				if str.ends_with (info.name, ".jai")
 				{
 					test := array.push (*tests);
-					test.module_name = get_basename (get_parent_dir (get_parent_dir (info.full_name)));
+					test.module_name = path.get_basename (path.get_parent_dir (path.get_parent_dir (info.full_name)));
 					test.filename = info.full_name;
-					test.name = remove_extension (get_basename (test.filename));
+					test.name = path.remove_extension (path.get_basename (test.filename));
 				}
 			}
 			continue;
@@ -73,7 +48,7 @@ build :: ()
 	context.logger = context.default_logger;
 	for * test : tests
 	{
-		workspace_name := str.join (mem.HEAP_ALLOC, test.module_name, "/", test.name);
+		workspace_name := path.join (mem.HEAP_ALLOC, test.module_name, test.name);
 		fmt.println ("Creating workspace %", workspace_name);
 		test.workspace = jaic.compiler_create_workspace (workspace_name);
 		options := jaic.get_build_options (test.workspace);
@@ -81,8 +56,8 @@ build :: ()
 		options.dead_code_elimination = .NONE;
 		options.output_type = .EXECUTABLE;
 		options.output_executable_name = test.name;
-		options.output_path = str.join (mem.HEAP_ALLOC, test.module_name, "/tests/");
-		options.intermediate_path = str.join (mem.HEAP_ALLOC, test.module_name, "/tests/.build/");
+		options.output_path = path.join (mem.HEAP_ALLOC, path.get_parent_dir (test.filename), "/");
+		options.intermediate_path = path.join (mem.HEAP_ALLOC, path.get_parent_dir (test.filename), ".build/");
 		options.import_path = .[ ".", "c:/jai/modules/" ];
 		jaic.set_build_options (options, test.workspace);
 		jaic.compiler_begin_intercept (test.workspace);
@@ -105,7 +80,7 @@ build :: ()
 	{
 		if !test.compilation_success
 			continue;
-		fs.set_working_directory (get_parent_dir (test.filename));
+		fs.set_working_directory (path.get_parent_dir (test.filename));
 	}
 	defer fs.set_working_directory (cwd);
 
