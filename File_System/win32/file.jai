@@ -1,4 +1,4 @@
-File :: *void;
+File :: win32.HANDLE;
 
 open :: (filename : string, flags : File_Open_Flags) -> File #must, Error
 {
