@@ -22,8 +22,24 @@ Test_Entry :: struct
 build :: ()
 {
 	fill_default_context ();
+	test_only : [..]string;
+	array.init (*test_only, 20, mem.HEAP_ALLOC);
 	tests : [..]Test_Entry;
 	array.init (*tests, 20, mem.HEAP_ALLOC);
+	user := jaic.compiler_get_command_line_arguments ();
+	i := 0;
+	while i < user.count
+	{
+		defer i += 1;
+		arg := user[i];
+		if arg ==
+		{
+		case "-module";
+			i += 1;
+			if i < user.count
+				array.push (*test_only, user[i]);
+		}
+	}
 	// Don't log temporary storage page allocation messages
 	context.logger = null;
 	// Find all tests
@@ -36,8 +52,11 @@ build :: ()
 			{
 				if str.ends_with (info.name, ".jai")
 				{
+					module_name := path.get_basename (path.get_parent_dir (path.get_parent_dir (info.full_name)));
+					if test_only.count != 0 && array.find_first (test_only, module_name) == -1
+						continue;
 					test := array.push (*tests);
-					test.module_name = path.get_basename (path.get_parent_dir (path.get_parent_dir (info.full_name)));
+					test.module_name = module_name;
 					test.filename = info.full_name;
 					test.name = path.remove_extension (path.get_basename (test.filename));
 				}
