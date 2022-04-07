@@ -97,7 +97,7 @@ hash    :: #import "Hash";
 io      :: #import "IO";
 linalg  :: #import "Linalg";
 arena   :: #import "Memory/Arena";
-strconv :: #import "Strconv";
+strconv :: #import "String/Convert";
 types   :: #import "Types";
 unicode :: #import "Unicode";
 utf8    :: #import "Unicode/UTF8";
