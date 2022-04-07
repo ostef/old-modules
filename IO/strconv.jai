@@ -50,6 +50,12 @@ append_f64 :: inline (stream : Stream, val : f64, precision : u32 = 6) -> writte
 	return written, err;
 }
 
+append_fmt :: inline (stream : Stream, fmt_str : string, args : ..Any)
+{
+	fmt :: #import "Fmt";
+	fmt.format (*stream, fmt_str, ..args);
+}
+
 parse_bool :: inline (stream : Stream) -> value : bool #must, bytes_read : s64, conv_err : strconv.Error, stream_err : Error
 {
 	buff : [5]u8 = ---;

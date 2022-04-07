@@ -8,8 +8,6 @@ fs :: #import "File_System";
 #load "file_stream.jai";
 #load "strconv.jai";
 
-// @Todo (stefan): Compatibility with Fmt module
-
 Stream :: struct
 {
 	// @Note (stefan): We don't have an Open_Proc because this is
@@ -31,6 +29,19 @@ Stream :: struct
 		flush : Flush_Proc;
 		seek  : Seek_Proc;
 		size  : Size_Proc;
+	}
+
+	// For fmt module
+	write_byte :: (s : *Stream, byte : u8)
+	{
+		if s && byte != 0
+		{
+			n : s64;
+			err := Error.NOT_IMPLEMENTED;
+			if s.write
+				n, err = s.write (s, *byte, 1);
+			assert (err == .OK, "Could not write to stream: %", err);
+		}
 	}
 
 	using procs : Procs;
