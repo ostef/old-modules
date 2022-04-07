@@ -3,8 +3,10 @@ get_working_directory :: inline (allocator : Allocator) -> string #must
 	len := win32.GetCurrentDirectoryW (0, null);
 	buff := mem.alloc (2 * (len + 1), mem.TEMP_ALLOC);
 	win32.GetCurrentDirectoryW (len + 1, buff);
+	result := win32.wide_to_utf8 (buff, allocator);
+	path.standardize (*result);
 
-	return win32.wide_to_utf8 (buff, allocator);
+	return result;
 }
 
 set_working_directory :: inline (dir : string) -> Error
