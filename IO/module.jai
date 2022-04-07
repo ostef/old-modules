@@ -16,12 +16,12 @@ Stream :: struct
 	// a procedure that is not called on a general Stream. You'd
 	// instead call an open_file procedure that can take any
 	// arguments and returns a Stream for example.
-	Close_Proc :: #type (*Stream) -> Error;
-	Write_Proc :: #type (*Stream, *void, s64) -> s64, Error;
-	Read_Proc  :: #type (*Stream, *void, s64) -> s64, Error;
-	Flush_Proc :: #type (*Stream) -> Error;
-	Seek_Proc  :: #type (*Stream, s64, Seek_From) -> s64, Error;
-	Size_Proc  :: #type (*Stream) -> s64, Error;
+	Close_Proc :: #type (Stream) -> Error;
+	Write_Proc :: #type (Stream, *void, s64) -> s64, Error;
+	Read_Proc  :: #type (Stream, *void, s64) -> s64, Error;
+	Flush_Proc :: #type (Stream) -> Error;
+	Seek_Proc  :: #type (Stream, s64, Seek_From) -> s64, Error;
+	Size_Proc  :: #type (Stream) -> s64, Error;
 
 	Procs :: struct
 	{
@@ -64,14 +64,14 @@ to_error :: inline (err : fs.Error) -> Error #must
 	return .UNKNOWN;
 }
 
-close :: inline (s : *Stream) -> Error
+close :: inline (s : Stream) -> Error
 {
 	if s.close
 		return s.close (s);
 	return .NOT_IMPLEMENTED;
 }
 
-write :: inline (s : *Stream, buff : *void, size : s64) -> bytes_written : s64, Error
+write :: inline (s : Stream, buff : *void, size : s64) -> bytes_written : s64, Error
 {
 	if s.write
 	{
@@ -81,7 +81,7 @@ write :: inline (s : *Stream, buff : *void, size : s64) -> bytes_written : s64, 
 	return 0, .NOT_IMPLEMENTED;
 }
 
-read :: inline (s : *Stream, buff : *void, size : s64) -> bytes_read : s64, Error
+read :: inline (s : Stream, buff : *void, size : s64) -> bytes_read : s64, Error
 {
 	if s.read
 	{
@@ -91,14 +91,14 @@ read :: inline (s : *Stream, buff : *void, size : s64) -> bytes_read : s64, Erro
 	return 0, .NOT_IMPLEMENTED;
 }
 
-flush :: inline (s : *Stream) -> Error
+flush :: inline (s : Stream) -> Error
 {
 	if s.flush
 		return s.flush (s);
 	return .NOT_IMPLEMENTED;
 }
 
-seek :: inline (s : *Stream, offset : s64, from : Seek_From) -> new_offset : s64, Error
+seek :: inline (s : Stream, offset : s64, from : Seek_From) -> new_offset : s64, Error
 {
 	if s.seek
 	{
@@ -108,7 +108,7 @@ seek :: inline (s : *Stream, offset : s64, from : Seek_From) -> new_offset : s64
 	return 0, .NOT_IMPLEMENTED;
 }
 
-size :: inline (s : *Stream) -> s64, Error
+size :: inline (s : Stream) -> s64, Error
 {
 	if s.size
 	{
@@ -118,13 +118,13 @@ size :: inline (s : *Stream) -> s64, Error
 	return 0, .NOT_IMPLEMENTED;
 }
 
-get_cursor :: inline (s : *Stream) -> s64, Error
+get_cursor :: inline (s : Stream) -> s64, Error
 {
 	cursor, err := seek (s, 0, .CURRENT);
 	return cursor, err;
 }
 
-read :: inline (stream : *Stream, $T : Type) -> T #must, Error
+read :: inline (stream : Stream, $T : Type) -> T #must, Error
 {
 	result : T = ---;
 	bytes, err := read (stream, *result, size_of (T));
@@ -135,7 +135,7 @@ read :: inline (stream : *Stream, $T : Type) -> T #must, Error
 
 // @Todo (stefan): Big endian and little endian versions.
 
-write :: inline (stream : *Stream, val : $T) -> Error
+write :: inline (stream : Stream, val : $T) -> Error
 {
 	bytes, err := write (stream, *val, size_of (T));
 	return err;

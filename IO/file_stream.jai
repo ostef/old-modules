@@ -17,35 +17,35 @@ open_file :: inline (filename : string, flags : fs.File_Open_Flags) -> Stream #m
 	return make_stream (file), err;
 }
 
-close_file :: inline (using stream : *Stream) -> Error
+close_file :: inline (using stream : Stream) -> Error
 {
 	return to_error (fs.close (data));
 }
 
-write_file :: inline (stream : *Stream, data : *void, size : s64) -> written : s64, Error
+write_file :: inline (stream : Stream, data : *void, size : s64) -> written : s64, Error
 {
 	written, err := fs.write (stream.data, data, size);
 	return written, to_error (err);
 }
 
-read_file :: inline (stream : *Stream, data : *void, size : s64) -> read : s64, Error
+read_file :: inline (stream : Stream, data : *void, size : s64) -> read : s64, Error
 {
 	read, err := fs.read (stream.data, data, size);
 	return read, to_error (err);
 }
 
-flush_file :: inline (using stream : *Stream) -> Error
+flush_file :: inline (using stream : Stream) -> Error
 {
 	return to_error (fs.flush (data));
 }
 
-seek_file :: inline (using stream : *Stream, offset : s64, from : Seek_From) -> new_offset : s64, Error
+seek_file :: inline (using stream : Stream, offset : s64, from : Seek_From) -> new_offset : s64, Error
 {
 	new_offset, err := fs.seek (data, offset, from);
 	return new_offset, to_error (err);
 }
 
-get_file_size :: inline (stream : *Stream) -> s64, Error
+get_file_size :: inline (stream : Stream) -> s64, Error
 {
 	size, err := fs.get_file_size (stream.data);
 	return size, to_error (err);

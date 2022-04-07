@@ -1,11 +1,11 @@
 #scope_module
 
 str     :: #import "String";
-strconv :: #import "Strconv";
+strconv :: #import "String/Convert";
 
 #scope_export
 
-append_bool :: inline (stream : *Stream, val : bool) -> written : s64, Error
+append_bool :: inline (stream : Stream, val : bool) -> written : s64, Error
 {
 	buff : [5]u8 = ---;
 	s, n := strconv.append_bool (buff, val);
@@ -13,7 +13,7 @@ append_bool :: inline (stream : *Stream, val : bool) -> written : s64, Error
 	return written, err;
 }
 
-append_u64 :: inline (stream : *Stream, val : u64, $$base := strconv.DECIMAL_BASE) -> written : s64, Error
+append_u64 :: inline (stream : Stream, val : u64, $$base := strconv.DECIMAL_BASE) -> written : s64, Error
 {
 	buff : [64]u8 = ---;
 	s, n := strconv.append_u64 (buff, val, base);
@@ -21,7 +21,7 @@ append_u64 :: inline (stream : *Stream, val : u64, $$base := strconv.DECIMAL_BAS
 	return written, err;
 }
 
-append_s64 :: inline (stream : *Stream, val : s64, $$base := strconv.DECIMAL_BASE) -> written : s64, Error
+append_s64 :: inline (stream : Stream, val : s64, $$base := strconv.DECIMAL_BASE) -> written : s64, Error
 {
 	buff : [65]u8 = ---;
 	s, n := strconv.append_s64 (buff, val, base);
@@ -29,7 +29,7 @@ append_s64 :: inline (stream : *Stream, val : s64, $$base := strconv.DECIMAL_BAS
 	return written, err;
 }
 
-append_f64 :: inline (stream : *Stream, val : f64, precision : u32 = 6) -> written : s64, Error
+append_f64 :: inline (stream : Stream, val : f64, precision : u32 = 6) -> written : s64, Error
 {
 	ryu :: #import "Ryu";
 
@@ -44,7 +44,7 @@ append_f64 :: inline (stream : *Stream, val : f64, precision : u32 = 6) -> writt
 	return written, err;
 }
 
-parse_bool :: inline (stream : *Stream) -> value : bool #must, bytes_read : s64, conv_err : strconv.Error, stream_err : Error
+parse_bool :: inline (stream : Stream) -> value : bool #must, bytes_read : s64, conv_err : strconv.Error, stream_err : Error
 {
 	buff : [5]u8 = ---;
 	size, stream_err := read (stream, buff.data, buff.count);
@@ -53,7 +53,7 @@ parse_bool :: inline (stream : *Stream) -> value : bool #must, bytes_read : s64,
 	return value, bytes, conv_err, stream_err;
 }
 
-parse_u64 :: inline (stream : *Stream) -> value : u64 #must, bytes_read : s64, conv_err : strconv.Error, stream_err : Error
+parse_u64 :: inline (stream : Stream) -> value : u64 #must, bytes_read : s64, conv_err : strconv.Error, stream_err : Error
 {
 	buff : [20]u8 = ---;
 	size, stream_err := read (stream, buff.data, buff.count);
@@ -62,7 +62,7 @@ parse_u64 :: inline (stream : *Stream) -> value : u64 #must, bytes_read : s64, c
 	return value, bytes, conv_err, stream_err;
 }
 
-parse_u32 :: inline (stream : *Stream) -> value : u32 #must, bytes_read : s64, conv_err : strconv.Error, stream_err : Error
+parse_u32 :: inline (stream : Stream) -> value : u32 #must, bytes_read : s64, conv_err : strconv.Error, stream_err : Error
 {
 	buff : [10]u8 = ---;
 	size, stream_err := read (stream, buff.data, buff.count);
@@ -71,7 +71,7 @@ parse_u32 :: inline (stream : *Stream) -> value : u32 #must, bytes_read : s64, c
 	return value, bytes, conv_err, stream_err;
 }
 
-parse_u16 :: inline (stream : *Stream) -> value : u16 #must, bytes_read : s64, conv_err : strconv.Error, stream_err : Error
+parse_u16 :: inline (stream : Stream) -> value : u16 #must, bytes_read : s64, conv_err : strconv.Error, stream_err : Error
 {
 	buff : [5]u8 = ---;
 	size, stream_err := read (stream, buff.data, buff.count);
@@ -80,7 +80,7 @@ parse_u16 :: inline (stream : *Stream) -> value : u16 #must, bytes_read : s64, c
 	return value, bytes, conv_err, stream_err;
 }
 
-parse_u8 :: inline (stream : *Stream) -> value : u8 #must, bytes_read : s64, conv_err : strconv.Error, stream_err : Error
+parse_u8 :: inline (stream : Stream) -> value : u8 #must, bytes_read : s64, conv_err : strconv.Error, stream_err : Error
 {
 	buff : [3]u8 = ---;
 	size, stream_err := read (stream, buff.data, buff.count);
@@ -89,7 +89,7 @@ parse_u8 :: inline (stream : *Stream) -> value : u8 #must, bytes_read : s64, con
 	return value, bytes, conv_err, stream_err;
 }
 
-parse_s64 :: inline (stream : *Stream) -> value : s64 #must, bytes_read : s64, conv_err : strconv.Error, stream_err : Error
+parse_s64 :: inline (stream : Stream) -> value : s64 #must, bytes_read : s64, conv_err : strconv.Error, stream_err : Error
 {
 	buff : [20]u8 = ---;
 	size, stream_err := read (stream, buff.data, buff.count);
@@ -98,7 +98,7 @@ parse_s64 :: inline (stream : *Stream) -> value : s64 #must, bytes_read : s64, c
 	return value, bytes, conv_err, stream_err;
 }
 
-parse_s32 :: inline (stream : *Stream) -> value : s32 #must, bytes_read : s64, conv_err : strconv.Error, stream_err : Error
+parse_s32 :: inline (stream : Stream) -> value : s32 #must, bytes_read : s64, conv_err : strconv.Error, stream_err : Error
 {
 	buff : [11]u8 = ---;
 	size, stream_err := read (stream, buff.data, buff.count);
@@ -107,7 +107,7 @@ parse_s32 :: inline (stream : *Stream) -> value : s32 #must, bytes_read : s64, c
 	return value, bytes, conv_err, stream_err;
 }
 
-parse_s16 :: inline (stream : *Stream) -> value : s16 #must, bytes_read : s64, conv_err : strconv.Error, stream_err : Error
+parse_s16 :: inline (stream : Stream) -> value : s16 #must, bytes_read : s64, conv_err : strconv.Error, stream_err : Error
 {
 	buff : [6]u8 = ---;
 	size, stream_err := read (stream, buff.data, buff.count);
@@ -116,7 +116,7 @@ parse_s16 :: inline (stream : *Stream) -> value : s16 #must, bytes_read : s64, c
 	return value, bytes, conv_err, stream_err;
 }
 
-parse_s8 :: inline (stream : *Stream) -> value : s8 #must, bytes_read : s64, conv_err : strconv.Error, stream_err : Error
+parse_s8 :: inline (stream : Stream) -> value : s8 #must, bytes_read : s64, conv_err : strconv.Error, stream_err : Error
 {
 	buff : [4]u8 = ---;
 	size, stream_err := read (stream, buff.data, buff.count);
@@ -125,7 +125,7 @@ parse_s8 :: inline (stream : *Stream) -> value : s8 #must, bytes_read : s64, con
 	return value, bytes, conv_err, stream_err;
 }
 
-parse_f32 :: inline (stream : *Stream) -> value : f32 #must, bytes_read : s64, conv_err : strconv.Error, stream_err : Error
+parse_f32 :: inline (stream : Stream) -> value : f32 #must, bytes_read : s64, conv_err : strconv.Error, stream_err : Error
 {
 	buff : [500]u8 = ---;
 	size, stream_err := read (stream, buff.data, buff.count);
@@ -134,7 +134,7 @@ parse_f32 :: inline (stream : *Stream) -> value : f32 #must, bytes_read : s64, c
 	return value, bytes, conv_err, stream_err;
 }
 
-parse_f64 :: inline (stream : *Stream) -> value : f64 #must, bytes_read : s64, conv_err : strconv.Error, stream_err : Error
+parse_f64 :: inline (stream : Stream) -> value : f64 #must, bytes_read : s64, conv_err : strconv.Error, stream_err : Error
 {
 	buff : [500]u8 = ---;
 	size, stream_err := read (stream, buff.data, buff.count);
