@@ -5,6 +5,12 @@ strconv :: #import "String/Convert";
 
 #scope_export
 
+append :: inline (stream : Stream, s : string) -> written : s64, Error
+{
+	n, err := write (stream, s.data, s.count);
+	return n, err;
+}
+
 append_bool :: inline (stream : Stream, val : bool) -> written : s64, Error
 {
 	buff : [5]u8 = ---;
