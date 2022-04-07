@@ -2,7 +2,6 @@
 * File_System: directory error codes
 * File_System: file search: metaprogram that checks you set in_loop to false when appropriate
 * Lexer
-* String_Builder
 * Buffer IO
 * Scanning
 * Meta: custom importing
@@ -11,4 +10,4 @@
 * List: tests
 * Streams: tests
 * Time: tests
-* Path string
+* String/Builder: tests
