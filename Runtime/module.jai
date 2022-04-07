@@ -46,6 +46,11 @@ default :: ($T : Type) -> T #must #expand
 	return val;
 }
 
+swap :: (a : $T, b : T) -> b : T, a : T #expand
+{
+	return b, a;
+}
+
 flagged :: (val : $T, flag : T) -> bool #expand
 {
 	return (val & flag) == flag;
