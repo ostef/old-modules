@@ -149,9 +149,9 @@ wrap :: inline (a : $T, max : T) -> T #must
 #no_context
 {
 	#if #run types.is_float (T)
-		a = fmod (a, (max - min));
+		a = fmod (a, max);
 	else
-		a %= (max - min);
+		a %= max;
 	if a < 0 then a += max;
 
 	return a;
