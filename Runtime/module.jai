@@ -30,6 +30,7 @@ get_cmd_line_args :: inline () -> []string #must
 }
 
 fill_default_context :: inline (ctx : *Context)
+#no_context
 {
 	ctx.assertion_failed = assertion_failed;
 	ctx.allocator = mem.HEAP_ALLOC;
