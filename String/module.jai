@@ -189,6 +189,37 @@ join :: (allocator : Allocator, args : ..string) -> string #must
 	return result;
 }
 
+join_sep :: (allocator : Allocator, sep : string, args : ..string) -> string #must
+#no_abc
+{
+	total_size := 0;
+	for args
+	{
+		if it_index != 0
+			total_size += sep.count;
+		total_size += it.count;
+	}
+	if total_size == 0
+		return "";
+	result : string = ---;
+	result.data = mem.alloc (total_size, allocator);
+	result.count = total_size;
+	i := 0;
+	for args
+	{
+		if it_index != 0
+		{
+			mem.copy (result.data + i, sep.data, sep.count);
+			i += sep.count;
+		}
+		mem.copy (result.data + i, it.data, it.count);
+		i += it.count;
+	}
+
+	return result;
+}
+
+
 format :: inline (allocator : Allocator, s : string, args : ..Any) -> string #must
 {
 	fmt :: #import "Fmt";
