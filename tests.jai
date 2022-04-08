@@ -8,8 +8,8 @@ str   :: #import "String";
 fs    :: #import "File_System";
 ps    :: #import "Process";
 for_expansion :: fs.for_expansion;
-jaic :: #import "Compiler";
-path :: #import "Path";
+jaic  :: #import "Compiler";
+path  :: #import "Path";
 
 Test_Entry :: struct
 {
@@ -140,3 +140,5 @@ types   :: #import "Types";
 unicode :: #import "Unicode";
 utf8    :: #import "Unicode/UTF8";
 utf16   :: #import "Unicode/UTF16";
+rand    :: #import "Math/Random";
+noise   :: #import "Math/Noise";
