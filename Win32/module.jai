@@ -227,6 +227,7 @@ TIME_ZONE_INFORMATION :: struct
 
 // Handle types
 HANDLE       :: *VOID;
+HGLRC        :: HANDLE;
 HACCEL       :: HANDLE;
 HBITMAP      :: HANDLE;
 HBRUSH       :: HANDLE;
