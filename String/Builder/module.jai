@@ -131,9 +131,33 @@ build :: (builder : Builder, allocator : Allocator) -> string #must
 	return result;
 }
 
+build_cstr :: (builder : Builder, allocator : Allocator) -> *u8 #must
+{
+	result := cast (*u8) mem.alloc (builder.count + 1, allocator);
+	i := 0;
+	buff := *builder.base_buffer;
+	while buff && buff.count > 0
+	{
+		mem.copy (result + i, buff.data.data, buff.count);
+		i += buff.count;
+		buff = buff.next;
+	}
+	result[i] = 0;
+
+	return result;
+}
+
 build_and_reset :: inline (builder : *Builder, allocator : Allocator) -> string #must
 {
 	result := build (builder, allocator);
+	reset (builder);
+	return result;
+}
+
+
+build_cstr_and_reset :: inline (builder : *Builder, allocator : Allocator) -> *u8 #must
+{
+	result := build_cstr (builder, allocator);
 	reset (builder);
 	return result;
 }
