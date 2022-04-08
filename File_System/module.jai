@@ -219,10 +219,19 @@ read_entire_file :: (filename : string, allocator : Allocator) -> string #must, 
 	if !file
 		return "", err;
 	defer close (file);
+	s : string;
+	s, err = read_entire_file (file, allocator);
+
+	return s, err;
+}
+
+read_entire_file :: (file : File, allocator : Allocator) -> string #must, Error
+{
 	size := get_file_size (file);
 	data := cast (*u8) mem.alloc (size, allocator);
 	if !data
 		return "", .ALLOCATION_FAILURE;
+	err : Error;
 	size, err = read (file, data, size);
 	if err != .OK
 	{
