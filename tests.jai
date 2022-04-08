@@ -6,6 +6,7 @@ log   :: #import "Log";
 math  :: #import "Math";
 str   :: #import "String";
 fs    :: #import "File_System";
+ps    :: #import "Process";
 for_expansion :: fs.for_expansion;
 jaic :: #import "Compiler";
 path :: #import "Path";
@@ -22,6 +23,7 @@ Test_Entry :: struct
 build :: ()
 {
 	fill_default_context ();
+	context.temporary_storage.overflow_allocator = mem.HEAP_ALLOC;
 	test_only : [..]string;
 	array.init (*test_only, 20, mem.HEAP_ALLOC);
 	tests : [..]Test_Entry;
@@ -94,14 +96,31 @@ build :: ()
 		if !test.compilation_success
 			log.error ("Failed to compile workspace '%'.", workspace_name);
 	}
-	cwd := fs.get_working_directory (mem.HEAP_ALLOC);
 	for test : tests
 	{
 		if !test.compilation_success
 			continue;
-		fs.set_working_directory (path.get_parent_dir (test.filename));
+		test_filename := path.join (mem.TEMP_ALLOC, path.get_parent_dir (test.filename), test.name);
+		exit_code, out_str, err_str := ps.run_command (
+			test_filename,
+			working_directory = path.get_parent_dir (test.filename),
+			output = .CAPTURE
+		);
+		if exit_code != 0
+		{
+			fmt.println ("Test %/% failed.", test.module_name, test.name);
+			if out_str
+			{
+				fmt.println (" => STDOUT");
+				fmt.println (out_str);
+			}
+			if err_str
+			{
+				fmt.println (" => STDERR");
+				fmt.println (err_str);
+			}
+		}
 	}
-	defer fs.set_working_directory (cwd);
 
 	jaic.set_build_options_dc (.{ do_output = false, write_added_strings = false });
 }
