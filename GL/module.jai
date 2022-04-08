@@ -18,7 +18,7 @@ GL_Context_Creation_Flags :: enum_flags
 
 load :: inline ($log_errors := false) -> bool
 {
-	load_functions :: (ptr : *$T)
+	load_functions :: (ptr : *$T, $prefix := "")
 	{
 		#insert -> string
 		{
@@ -27,22 +27,25 @@ load :: inline ($log_errors := false) -> bool
 			info := type_info (T);
 			code : builder.Builder;
 			builder.init (*code, mem.HEAP_ALLOC);
-			builder.append_line (*code, "proc_name : [500]u8 = ---;");
+			builder.append_line (*code, "member_ptr : **void;");
 			for * info.members
 			{
 				if flagged (it.flags, .CONSTANT)
 					continue;
 				if it.type.type == .PROCEDURE || flagged (it.flags, .PROCEDURE_WITH_VOID_POINTER_TYPE_INFO)
 				{
-					builder.append_line (*code, "mem.copy (proc_name.data, \"gl\", 2);");
-					builder.append_line (*code, "mem.copy (proc_name.data + 2, it.name.data, it.name.count);");
-					builder.append_line (*code, "proc_name[2 + it.name.count] = 0;");
-					builder.append_line (*code, "member_ptr := cast (**void) (cast (*u8) ptr + %);", it.offset_in_bytes);
-					builder.append_line (*code, "<<member_ptr = get_proc_address (proc_name.data);");
+					builder.append_line (*code, "member_ptr = cast (**void) (cast (*u8) ptr + %);", it.offset_in_bytes);
+					if prefix
+						builder.append_line (*code, "<<member_ptr = get_proc_address (\"{}{}\");", prefix, it.name);
+					else
+						builder.append_line (*code, "<<member_ptr = get_proc_address (\"{}\");", it.name);
 					#if log_errors
 					{
 						builder.append_line (*code, "if !(<<member_ptr)");
-						builder.append_line (*code, "\tlog.warning (\"get_proc_address returned null for procedure %.\");", it.name);
+						if prefix
+							builder.append_line (*code, "\tlog.warning (\"get_proc_address returned null for procedure {}{}.\");", prefix, it.name);
+						else
+							builder.append_line (*code, "\tlog.warning (\"get_proc_address returned null for procedure {}.\");", it.name);
 					}
 				}
 			}
@@ -51,15 +54,15 @@ load :: inline ($log_errors := false) -> bool
 		};
 	}
 
-	load_functions (*gl);
+	load_functions (*gl, "gl");
 	load_functions (*gl_extensions);
+	return true;
 }
 
 using gl : GL;
 using gl_extensions : GL_Extensions;
 
-GL :: struct
-	#type_info_none
+GL :: struct #type_info_none
 {
 	GLenum     :: u32;
 	GLboolean  :: bool;
