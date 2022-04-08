@@ -142,3 +142,6 @@ utf8    :: #import "Unicode/UTF8";
 utf16   :: #import "Unicode/UTF16";
 rand    :: #import "Math/Random";
 noise   :: #import "Math/Noise";
+gl      :: #import "GL";
+input   :: #import "Input";
+window  :: #import "Window";
