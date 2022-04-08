@@ -349,7 +349,7 @@ ERROR_INVALID_EA_NAME :: 254;
 // The extended attributes are inconsistent.
 ERROR_EA_LIST_INCONSISTENT :: 255;
 // The wait operation timed out.
-WAIT_TIMEOUT :: 258;
+//WAIT_TIMEOUT :: 258;
 // No more data is available.
 ERROR_NO_MORE_ITEMS :: 259;
 // The copy functions cannot be used.

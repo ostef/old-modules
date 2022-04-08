@@ -392,7 +392,6 @@ else             CreateFileTransacted :: CreateFileTransactedA;
 //CreateNamedPipeA	3.51 and higher	documented
 //CreateNamedPipeW	3.51 and higher	documented
 //CreateNlsSecurityDescriptor	5.1 from Windows XP SP1 to 5.2	 
-//CreatePipe	3.51 and higher	documented
 //CreatePrivateNamespaceA	6.0 and higher	documented
 //CreatePrivateNamespaceW	6.0 and higher	documented
 //CreateProcessA	3.51 and higher	documented
@@ -405,7 +404,6 @@ else             CreateFileTransacted :: CreateFileTransactedA;
 //CreateProcessInternalWSecure	some 5.0 and 5.1 only;
 //begins in 5.0 from Windows 2000 SP4;
 //begins in 5.1 from Windows XP SP2	 
-//CreateProcessW	3.51 and higher	documented
 //CreateRemoteThread	3.51 and higher	documented
 //CreateRemoteThreadEx	6.1 and higher	documented
 //CreateSemaphoreA	3.51 and higher	documented
@@ -564,8 +562,6 @@ else             DeleteFileTransacted :: DeleteFileTransactedA;
 //EraseTape	3.51 and higher	documented
 //EscapeCommFunction	3.51 and higher	documented
 //ExecuteUmsThread	6.1 and higher (x64 only)	documented
-//ExitProcess	3.51 and higher	documented
-//ExitThread	3.51 and higher	documented
 //ExitVDM	3.51 and higher (NT only)	 
 //ExpandEnvironmentStringsA	3.51 and higher	documented
 //ExpandEnvironmentStringsW	3.51 and higher	documented
@@ -851,8 +847,8 @@ else             GetCurrentDirectory :: GetCurrentDirectoryA;
 //GetCurrentPackageId	6.2 and higher	documented
 //GetCurrentPackageInfo	6.2 and higher	documented
 //GetCurrentPackagePath	6.2 and higher	documented
-//GetCurrentProcess	3.51 and higher	documented
-//GetCurrentProcessId	3.51 and higher	documented
+GetCurrentProcess :: () -> HANDLE #foreign kernel32;
+GetCurrentProcessId :: () -> DWORD #foreign kernel32;
 //GetCurrentProcessorNumber	5.2 and higher	documented
 //GetCurrentProcessorNumberEx	6.1 and higher	documented
 //GetCurrentThread	3.51 and higher	documented
@@ -888,13 +884,9 @@ GetCurrentThreadId :: () -> DWORD #foreign kernel32;
 //GetEnvironmentStrings	3.51 and higher	documented
 //GetEnvironmentStringsA	3.51 and higher	documented
 //GetEnvironmentStringsW	3.51 and higher	documented
-//GetEnvironmentVariableA	3.51 and higher	documented
-//GetEnvironmentVariableW	3.51 and higher	documented
 //GetEraNameCountedString	6.1 and higher	 
 //GetErrorMode	4.0 to 4.90 (Windows);
 //6.0 and higher (NT)	documented
-//GetExitCodeProcess	3.51 and higher	documented
-//GetExitCodeThread	3.51 and higher	documented
 //GetExpandedNameA	5.1 and higher	documented
 //GetExpandedNameW	5.1 and higher	documented
 //GetExtendedContextLength	6.1 before Windows 7 SP1	documented
@@ -2110,7 +2102,11 @@ SetFilePointerEx :: (
 //SetHandleContext	4.0 to 4.90 (Windows);
 //5.1 and higher (NT, x86 only)	 
 //SetHandleCount	3.51 and higher	documented
-//SetHandleInformation	3.51 and higher	documented
+SetHandleInformation :: (hObject : HANDLE, dwMask : DWORD, dwFlags : DWORD) -> BOOL #foreign kernel32;
+
+HANDLE_FLAG_INHERIT :: 0x00000001;
+HANDLE_FLAG_PROTECT_FROM_CLOSE :: 0x00000002;
+
 //SetInformationJobObject	5.0 and higher	documented
 //SetIoRateControlInformationJobObject	10.0 and higher	documented
 //SetLastConsoleEventActive	3.51 and higher (NT only)	 
@@ -2214,9 +2210,6 @@ SystemTimeToFileTime :: (lpSystemTime : *SYSTEMTIME, lpFileTime : *FILETIME) -> 
 SystemTimeToTzSpecificLocalTime :: (lpTimeZone : *TIME_ZONE_INFORMATION, lpUniversalTime : *SYSTEMTIME, lpLocalTime : *SYSTEMTIME) -> BOOL #foreign kernel32;
 //SystemTimeToTzSpecificLocalTimeEx	6.2 and higher	documented
 //TerminateJobObject	5.0 and higher	documented
-//TerminateProcess	3.51 and higher	documented
-//TerminateThread	3.51 and higher	documented
-//TerminateThreadEx (100)	4.0 to 4.90 (Windows only)	 
 //TermsrvAppInstallMode	5.0 and higher	 
 //TermsrvConvertSysRootToUserDir	6.2 and higher	 
 //TermsrvCreateRegEntry	6.2 and higher	 
@@ -2336,10 +2329,6 @@ SystemTimeToTzSpecificLocalTime :: (lpTimeZone : *TIME_ZONE_INFORMATION, lpUnive
 //WaitCommEvent	3.51 and higher	documented
 //WaitForDebugEvent	3.51 and higher	documented
 //WaitForDebugEventEx	10.0 and higher	documentation
-//WaitForMultipleObjects	3.51 and higher	documented
-//WaitForMultipleObjectsEx	3.51 and higher	documented
-//WaitForSingleObject	3.51 and higher	documented
-//WaitForSingleObjectEx	3.51 and higher	documented
 //WaitForThreadpoolIoCallbacks	6.0 and higher	documented
 //WaitForThreadpoolTimerCallbacks	6.0 and higher	documented
 //WaitForThreadpoolWaitCallbacks	6.0 and higher	documented
@@ -2482,6 +2471,143 @@ MB_ERR_INVALID_CHARS :: ;
 MB_PRECOMPOSED :: ;
 MB_USEGLYPHCHARS :: ;
 */
+
+/* processthreadsapi */
+
+CreateProcessW :: (
+	lpApplicationName : *CHAR,
+	lpCommandLine : *CHAR,
+	lpProcessAttributes : *SECURITY_ATTRIBUTES,
+	lpThreadAttributes : *SECURITY_ATTRIBUTES,
+	bInheritHandles : BOOL,
+	dwCreationFlags : DWORD,
+	lpEnvironment : *void,
+	lpCurrentDirectory : *CHAR,
+	lpStartupInfo : *STARTUPINFOA,
+	lpProcessInformation : *PROCESS_INFORMATION
+) -> BOOL #foreign kernel32;
+
+CreateProcessW :: (
+	lpApplicationName : *WCHAR,
+	lpCommandLine : *WCHAR,
+	lpProcessAttributes : *SECURITY_ATTRIBUTES,
+	lpThreadAttributes : *SECURITY_ATTRIBUTES,
+	bInheritHandles : BOOL,
+	dwCreationFlags : DWORD,
+	lpEnvironment : *void,
+	lpCurrentDirectory : *WCHAR,
+	lpStartupInfo : *STARTUPINFOW,
+	lpProcessInformation : *PROCESS_INFORMATION
+) -> BOOL #foreign kernel32;
+
+#if UNICODE then CreateProcess :: CreateProcessW;
+else             CreateProcess :: CreateProcessA;
+
+STARTUPINFOA :: struct
+{
+	cb : DWORD;
+	lpReserved : *CHAR;
+	lpDesktop : *CHAR;
+	lpTitle : *CHAR;
+	dwX : DWORD;
+	dwY : DWORD;
+	dwXSize : DWORD;
+	dwYSize : DWORD;
+	dwXCountChars : DWORD;
+	dwYCountChars : DWORD;
+	dwFillAttribute : DWORD;
+	dwFlags : DWORD;
+	wShowWindow : WORD;
+	cbReserved2 : WORD;
+	lpReserved2 : *BYTE;
+	hStdInput : HANDLE;
+	hStdOutput : HANDLE;
+	hStdError : HANDLE;
+}
+
+STARTUPINFOW :: struct
+{
+	cb : DWORD;
+	lpReserved : *WCHAR;
+	lpDesktop : *WCHAR;
+	lpTitle : *WCHAR;
+	dwX : DWORD;
+	dwY : DWORD;
+	dwXSize : DWORD;
+	dwYSize : DWORD;
+	dwXCountChars : DWORD;
+	dwYCountChars : DWORD;
+	dwFillAttribute : DWORD;
+	dwFlags : DWORD;
+	wShowWindow : WORD;
+	cbReserved2 : WORD;
+	lpReserved2 : *BYTE;
+	hStdInput : HANDLE;
+	hStdOutput : HANDLE;
+	hStdError : HANDLE;
+}
+
+STARTF_FORCEONFEEDBACK  :: 0x00000040;
+STARTF_FORCEOFFFEEDBACK :: 0x00000080;
+STARTF_PREVENTPINNING   :: 0x00002000;
+STARTF_RUNFULLSCREEN    :: 0x00000020;
+STARTF_TITLEISAPPID     :: 0x00001000;
+STARTF_TITLEISLINKNAME  :: 0x00000800;
+STARTF_UNTRUSTEDSOURCE  :: 0x00008000;
+STARTF_USECOUNTCHARS    :: 0x00000008;
+STARTF_USEFILLATTRIBUTE :: 0x00000010;
+STARTF_USEHOTKEY        :: 0x00000200;
+STARTF_USEPOSITION      :: 0x00000004;
+STARTF_USESHOWWINDOW    :: 0x00000001;
+STARTF_USESIZE          :: 0x00000002;
+STARTF_USESTDHANDLES    :: 0x00000100;
+
+PROCESS_INFORMATION :: struct
+{
+	hProcess : HANDLE;
+	hThread : HANDLE;
+	dwProcessId : DWORD;
+	dwThreadId : DWORD;
+}
+
+TerminateProcess :: (hProcess : HANDLE, uExitCode : UINT) -> BOOL #foreign kernel32;
+TerminateThread :: (hThread : HANDLE, dwExitCode : DWORD) -> BOOL #foreign kernel32;
+
+ExitProcess :: (uExitCode : UINT) #foreign kernel32;
+ExitThread :: (dwExitCode : DWORD) #foreign kernel32;
+GetExitCodeProcess :: (hProcess : HANDLE, lpExitCode : *DWORD) -> BOOL #foreign kernel32;
+GetExitCodeThread :: (hThread : HANDLE, lpExitCode : *DWORD) -> BOOL #foreign kernel32;
+
+WaitForMultipleObjects :: (
+	nCount : DWORD,
+	lpHandles : *HANDLE,
+	bWaitAll : BOOL,
+	dwMilliseconds : DWORD
+) -> DWORD #foreign kernel32;
+
+WaitForMultipleObjectsEx :: (
+	nCount : DWORD,
+	lpHandles : *HANDLE,
+	bWaitAll : BOOL,
+	dwMilliseconds : DWORD,
+	bAlertable : BOOL
+) -> DWORD #foreign kernel32;
+
+WaitForSingleObject :: (hHandle : HANDLE, dwMilliseconds : DWORD) -> DWORD #foreign kernel32;
+WaitForSingleObjectEx :: (hHandle : HANDLE, dwMilliseconds : DWORD, bAlertable : BOOL) -> DWORD #foreign kernel32;
+
+INFINITE :: 0xffff_ffff;
+WAIT_OBJECT_0 :: 0;
+WAIT_ABANDONED_0 :: 0x80;
+WAIT_TIMEOUT :: 258;
+WAIT_FAILED  :: 0xffff_ffff;
+
+CreatePipe :: (hReadPipe : *HANDLE, hWritePipe : *HANDLE, lpPipeAttributes : *SECURITY_ATTRIBUTES, nSize : DWORD) -> BOOL #foreign kernel32;
+
+GetEnvironmentVariableA :: (lpName : *CHAR, lpBuffer : *CHAR, nSize : DWORD) -> DWORD #foreign kernel32;
+GetEnvironmentVariableW :: (lpName : *WCHAR, lpBuffer : *WCHAR, nSize : DWORD) -> DWORD #foreign kernel32;
+#if UNICODE then GetEnvironmentVariable :: GetEnvironmentVariableW;
+else             GetEnvironmentVariable :: GetEnvironmentVariableA;
 
 #scope_file
 
