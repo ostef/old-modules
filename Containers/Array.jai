@@ -147,6 +147,11 @@ ordered_remove_at :: inline (arr : *[..]$T, at : s64) -> T
 	arr.count -= 1;
 }
 
+top :: inline (arr : []$T) -> T #must
+{
+	return arr[arr.count - 1];
+}
+
 find_first :: inline (arr : []$T, val : T) -> s64 #must
 #no_context
 #no_abc
