@@ -9,6 +9,7 @@ types :: #import "Types";
 #load "ieee754.jai";
 #load "easing.jai";
 #load "crt.jai";
+#load "rect.jai";
 
 abs :: (val : $T) -> T #expand
 #modify { return types.is_numeric (T); }
