@@ -54,8 +54,21 @@ load :: inline ($log_errors := false) -> bool
 		};
 	}
 
+	dummy_window := window.create ("Dummy", -1, -1, -1, -1, .NONE);
+	if !dummy_window
+		return log.error ("Could not create dummy window to load GL functions.");
+	defer window.destroy (dummy_window);
+	dummy_ctx := create_context (dummy_window);
+	if !dummy_ctx
+		return log.error ("Could not create dummy GL context to load GL functions.");
+	defer destroy_context (dummy_window, dummy_ctx);
+
+	gl.GetIntegerv (gl.MAJOR_VERSION, *gl.version_major);
+	gl.GetIntegerv (gl.MINOR_VERSION, *gl.version_minor);
 	load_functions (*gl, "gl");
 	load_functions (*gl_extensions);
+	log.message ("OpenGL version is %.%", gl.version_major, gl.version_minor);
+
 	return true;
 }
 
