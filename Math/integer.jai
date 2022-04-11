@@ -29,3 +29,13 @@ decimal_length :: inline (value : $T, $$base : u64 = 10) -> s64 #must
 
 	return length;
 }
+
+next_power_of_two :: inline (x : s64) -> s64 #must
+#no_context
+{
+	contextless_assert (x > 0, "Invalid x.");
+	p := 1;
+	while x > p
+		p += p;
+	return p;
+}
