@@ -42,6 +42,8 @@ alloc :: inline ($T : Type, allocator : Allocator, $initialize := true) -> *T #m
 realloc :: inline (ptr : *void, old_size : s64, new_size : s64, allocator : Allocator) -> *void #must
 {
 	assert (allocator.proc != null, "Allocator is null.");
+	if new_size == old_size
+		return ptr;
 	if new_size <= 0
 		return free (ptr, allocator);
 	if !ptr
