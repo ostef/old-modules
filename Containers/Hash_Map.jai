@@ -7,19 +7,47 @@ hash :: #import "Hash";
 
 #scope_export
 
+// Hash_Map implementation, copied from jai/modules/Hash_Table.
+// This uses linear probing for resolving hash collisions, meaning
+// when we have a collision we iterate over the next slots until we
+// find an emtpy one. This method of resolving hash collisions is
+// quite sensitive to the quality of the hash functions. We do however
+// search different paths for different hashes, like the hash table
+// in jai/modules.
+// Contrary to the original implementation, this map cannot have
+// more than one entry with a given key.
+// Functions:
+//	- clear: Remove all the entries in the map, but keep any allocated
+// memory.
+//	- reset: Clear the map and free the allocated memory, resetting
+// it to a valid state.
+//	- grow: Grow the map by a factor of 2.
+//	- insert: Insert a key-value pair. If an entry with the given
+// key already exists, then the value is replaced, otherwise a new
+// entry is added.
+//	- remove_at: Remove a key-value pair.
+//	- set: Set the value of the entry with the given key, if the
+// key-value pair exists.
+//	- get: Get the value mapped to the given key, or a fallback
+// value if it does not exist.
+//	- get_ptr: Get the pointer to the value mapped to the given
+// key, or null if it does not exist.
+
 Hash_Map :: struct (
-	TKey : Type,
-	TVal : Type,
-	hash_func : (TKey) -> u32 = null,
-	comp_func : (TKey, TKey) -> bool = null,
-	EXPAND_LIMIT := 70
+	Key : Type,
+	Val : Type,
+	hash_func : (Key) -> u32 = null,
+	comp_func : (Key, Key) -> bool = null,
+	LOAD_FACTOR := 70
 )
 {
+	#assert LOAD_FACTOR > 0 && LOAD_FACTOR < 100;
+
 	Entry :: struct
 	{
 		hash  : u32;
-		key   : TKey;
-		value : TVal;
+		key   : Key;
+		value : Val;
 	}
 
 	count     : s64;
@@ -37,17 +65,17 @@ else
 	compare_keys :: comp_func;
 else
 	compare_keys :: (left, right) => left == right;
-
-	MIN_CAPACITY        :: 32;
-	NEVER_OCCUPIED_HASH :: 0;
-	REMOVED_HASH        :: 1;
-	FIRST_OCCUPIED_HASH :: 2;
 }
+
+MIN_CAPACITY        :: 32;
+NEVER_OCCUPIED_HASH :: 0;
+REMOVED_HASH        :: 1;
+FIRST_OCCUPIED_HASH :: 2;
 
 init :: inline (map : *Hash_Map, capacity : s64, allocator : Allocator)
 {
-	capacity = math.max (capacity, map.MIN_CAPACITY);
-	capacity = next_power_of_two (capacity);
+	capacity = math.max (capacity, MIN_CAPACITY);
+	capacity = math.next_power_of_two (capacity);
 
 	map.count = 0;
 	map.occupied = 0;
@@ -55,7 +83,7 @@ init :: inline (map : *Hash_Map, capacity : s64, allocator : Allocator)
 	map.allocator = allocator;
 	map.entries = mem.alloc (map.Entry, capacity, allocator);
 	for * map.entries
-		it.hash = map.NEVER_OCCUPIED_HASH;
+		it.hash = NEVER_OCCUPIED_HASH;
 }
 
 reset :: inline (using map : *Hash_Map)
@@ -76,130 +104,105 @@ clear :: inline (using map : *Hash_Map)
 		it.hash = NEVER_OCCUPIED_HASH;
 }
 
-grow :: inline (map : *Hash_Map, additional_capacity : s64)
+grow :: inline (map : *Hash_Map)
 {
-	if additional_capacity <= 0
-		return;
 	old_entries := map.entries;
 	defer mem.free (old_entries, map.allocator);
-	new_capacity := math.max (map.allocated + additional_capacity, map.MIN_CAPACITY);
-	new_capacity = next_power_of_two (new_capacity);
-
+	new_capacity := math.max (map.allocated * 2, MIN_CAPACITY);
 	map.entries = mem.alloc (map.Entry, new_capacity, map.allocator);
 	map.count = 0;
 	map.occupied = 0;
 	map.allocated = new_capacity;
 	for entry : old_entries
-	{
-		if entry.hash >= map.FIRST_OCCUPIED_HASH
+		if entry.hash >= FIRST_OCCUPIED_HASH
 			insert (map, entry.key, entry.value);
-	}
 }
 
-insert :: (map : *Hash_Map, key : map.TKey, $initialize := true) -> *map.TVal #must, was_present : bool
+probe :: inline (map : Hash_Map, key : map.Key) -> h : u32, index : s64, is_present : bool
 {
-	if (map.occupied + 1) * 100 >= map.allocated * map.EXPAND_LIMIT
-		grow (map, map.allocated);
-	assert (map.occupied <= map.allocated);
+	mask := cast, trunc (u32) (map.allocated - 1);
 	h := map.hash_key (key);
-	if h < map.FIRST_OCCUPIED_HASH then h += map.FIRST_OCCUPIED_HASH;
-	index := h & (map.allocated - 1);
-
-	// Check if the key-value pair is already in the map
+	if h < FIRST_OCCUPIED_HASH then h += FIRST_OCCUPIED_HASH;
+	index := h & mask;
+	// @Note (stefan): See initial_probe_increment in jai/modules/Hash_Table.jai
+	increment := 1 + (h >> 27);
 	while map.entries[index].hash
 	{
 		entry := *map.entries[index];
 		if entry.hash == h && map.compare_keys (entry.key, key)
-			return *entry.value, true;
-		index += 1;
-		if index >= map.allocated then index = 0;
+			return h, index, true;
+		index += increment;
+		index &= mask;
+		increment += 1;
 	}
 
-	map.occupied += 1;
-	map.count    += 1;
+	return h, index, false;
+}
 
+insert :: (map : *Hash_Map, key : map.Key, $initialize := true) -> *map.Val #must, is_present : bool
+{
+	if (map.occupied + 1) * 100 >= map.allocated * map.LOAD_FACTOR
+		grow (map);
+	assert (map.occupied <= map.allocated);
+	h, index, is_present := probe (map, key);
 	entry := *map.entries[index];
+	#if initialize then mem.init (*entry.value);
+	if is_present
+		return *entry.value, true;
 	entry.hash = h;
 	entry.key  = key;
-#if initialize then mem.init (*entry.value);
+	map.occupied += 1;
+	map.count    += 1;
 
 	return *entry.value, false;
 }
 
-insert :: inline (map : *Hash_Map, key : map.TKey, value : map.TVal) -> *map.TVal, was_present : bool
+insert :: inline (map : *Hash_Map, key : map.Key, value : map.Val) -> *map.Val, is_present : bool
 {
-	ptr, was_present := insert (map, key);
+	ptr, is_present := insert (map, key);
 	<<ptr = value;
-	
-	return ptr, was_present;
+	return ptr, is_present;
 }
 
-remove_at :: (map : *Hash_Map, key : map.TKey) -> found : bool, removed : map.TVal
+remove_at :: (map : *Hash_Map, key : map.Key) -> found : bool, removed : map.Val
 {
-	h := map.hash_key (key);
-	if h < map.FIRST_OCCUPIED_HASH then h += map.FIRST_OCCUPIED_HASH;
+	h, index, is_present := probe (map, key);
+	if !is_present
+		return false, default (map.Val);
+	entry := *map.entries[index];
+	entry.hash = REMOVED_HASH;
+	map.count -= 1;
 
-	index := h & (map.allocated - 1);
-	while map.entries[index].hash
-	{
-		entry := *map.entries[index];
-		
-		if entry.hash == h && map.compare_keys (entry.key, key)
-		{
-			entry.hash = map.REMOVED_HASH;
-			map.count -= 1;
-
-			return true, entry.value;
-		}
-		
-		index += 1;
-		if index >= map.allocated then index = 0;
-	}
-
-	return false, default (map.TVal);
+	return true, entry.value;
 }
 
-set :: inline (map : *Hash_Map, key : map.TKey, value : map.TVal)
+set :: inline (map : *Hash_Map, key : map.Key, value : map.Val)
 {
 	ptr := get_ptr (map, key);
 	if ptr then <<ptr = value;
 }
 
-get_ptr :: (map : Hash_Map, key : map.TKey) -> *map.TVal #must
+get_ptr :: (map : Hash_Map, key : map.Key) -> *map.Val #must
 {
 	if map.count == 0 then return null;
-	
-	h := map.hash_key (key);
-	if h < map.FIRST_OCCUPIED_HASH then h += map.FIRST_OCCUPIED_HASH;
-	index := h & (map.allocated - 1);
-	
-	while map.entries[index].hash
-	{
-		entry := *map.entries[index];
-		if entry.hash == h && map.compare_keys (entry.key, key)
-			return *entry.value;
-		index += 1;
-		if index >= map.allocated then index = 0;
-	}
-	
+	h, index, is_present := probe (map, key);
+	if is_present
+		return *map.entries[index].value;
 	return null;
 }
 
-get :: inline (map : Hash_Map, key : map.TKey, fallback : map.TVal) -> map.TVal #must, found : bool
+get :: inline (map : Hash_Map, key : map.Key, fallback : map.Val) -> map.Val #must, found : bool
 {
 	ptr := get_ptr (map, key);
 	if ptr then return <<ptr, true;
-
 	return fallback, false;
 }
 
-get :: inline (map : Hash_Map, key : map.TKey) -> map.TVal #must, found : bool
+get :: inline (map : Hash_Map, key : map.Key) -> map.Val #must, found : bool
 {
-	fallback : map.TVal;	// Default value
 	ptr := get_ptr (map, key);
 	if ptr then return <<ptr, true;
-
-	return fallback, false;
+	return default (map.Val), false;
 }
 
 for_expansion :: (map : *Hash_Map, body : Code, flags : For_Flags) #expand
@@ -209,7 +212,7 @@ for_expansion :: (map : *Hash_Map, body : Code, flags : For_Flags) #expand
 
 	for * <=REVERSE entry, i : map.entries
 	{
-		if entry.hash < map.FIRST_OCCUPIED_HASH then continue;
+		if entry.hash < FIRST_OCCUPIED_HASH then continue;
 
 		`it_index := entry.key;
 		#if BY_POINTER
@@ -218,15 +221,4 @@ for_expansion :: (map : *Hash_Map, body : Code, flags : For_Flags) #expand
 			`it := entry.value;
 		#insert (remove = { entry.hash = REMOVED_HASH; map.count -= 1; }) body;
 	}
-}
-
-#scope_module
-
-next_power_of_two :: inline (x : s64) -> s64 #must
-{
-	assert (x > 0, "Invalid x (got %, expected x > 0).", x);
-	p := 1;
-	while x > p
-		p += p;
-	return p;
 }
