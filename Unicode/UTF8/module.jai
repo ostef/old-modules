@@ -1,5 +1,6 @@
 #scope_module
 
+#import "Runtime";
 #import "Unicode";
 mem :: #import "Memory";
 str :: #import "String";
@@ -31,6 +32,8 @@ make_str :: inline (s : string) -> Str #must
 
 for_expansion :: (s : *Str, body : Code, flags : For_Flags) #expand
 {
+	fmt :: #import "Fmt";
+
 	`it_index := 0;
 	byte_offset := 0;
 	while byte_offset < s.count
@@ -79,7 +82,7 @@ decode :: (buffer : []u8) -> codepoint : u32, size : s64, valid : bool
 		if x >= 0xf0
 		{
 			mask := (cast (u32) x << 31) >> 31;
-			return (cast (u32) b0 & (~mask)) | (CODEPOINT_INVALID & mask), 1, false;
+			return (cast (u32) b0 & (~mask)) | (CODEPOINT_INVALID & mask), 1, true;
 		}
 		else if b0 < 0x80
 			return b0, 1, true;
