@@ -10,6 +10,7 @@ types :: #import "Types";
 #load "easing.jai";
 #load "crt.jai";
 #load "rect.jai";
+#load "rgba.jai";
 
 abs :: (val : $T) -> T #expand
 #modify { return types.is_numeric (T); }
@@ -39,7 +40,7 @@ sign :: (val : $T) -> T #expand
 	#if #run types.is_unsigned (T)
 		return 1;
 	else
-		return ifx val < 0 then -1 else 1;
+		return ifx val < 0 then cast (T) -1 else cast (T) 1;
 }
 
 clamp :: (x : $T, min : T, max : T) -> T #expand
@@ -48,7 +49,15 @@ clamp :: (x : $T, min : T, max : T) -> T #expand
 {
 	if x > max then x = max;
 	if x < min then x = min;
+	return x;
+}
 
+saturate :: (x : $T) -> T #expand
+#modify { return types.is_numeric (T); }
+#no_context
+{
+	if x > 1 then x = 1;
+	if x < 0 then x = 0;
 	return x;
 }
 
