@@ -53,3 +53,13 @@ set :: inline (dst : *void, value : u8, size : s64) -> *void
 }
 
 compare :: memcmp;
+
+equals :: inline (a : *void, b : *void, size : s64) -> bool #must
+{
+	return compare (a, b, size) == 0;
+}
+
+equals :: inline (a : $T, b : T) -> bool #must
+{
+	return compare (*a, *b, size_of (T)) == 0;
+}
