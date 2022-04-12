@@ -6,7 +6,7 @@ win32 :: #import "Win32";
 
 GL_Context :: win32.HGLRC;
 
-create_context :: inline (win : window.Window, flags := GL_Context_Creation_Flags.NONE) -> GL_Context #must
+create_context :: inline (win : window.Window, flags := GL_Context_Creation_Flags.MULTISAMPLED) -> GL_Context #must
 {
 	hdc := win32.GetDC (win);
 	pfd : win32.PIXELFORMATDESCRIPTOR;
