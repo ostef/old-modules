@@ -139,16 +139,17 @@ probe :: inline (map : Hash_Map, key : map.Key) -> h : u32, index : s64, is_pres
 	return h, index, false;
 }
 
-insert :: (map : *Hash_Map, key : map.Key, $initialize := true) -> *map.Val #must, is_present : bool
+// If the entry is already present, it not modified and returned as-is
+insert :: (map : *Hash_Map, key : map.Key, $initialize_if_new := true) -> *map.Val #must, is_present : bool
 {
 	if (map.occupied + 1) * 100 >= map.allocated * map.LOAD_FACTOR
 		grow (map);
 	assert (map.occupied <= map.allocated);
 	h, index, is_present := probe (map, key);
 	entry := *map.entries[index];
-	#if initialize then mem.init (*entry.value);
 	if is_present
 		return *entry.value, true;
+	#if initialize_if_new then mem.init (*entry.value);
 	entry.hash = h;
 	entry.key  = key;
 	map.occupied += 1;
