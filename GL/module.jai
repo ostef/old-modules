@@ -27,6 +27,7 @@ load :: inline ($log_errors := false) -> bool
 			info := type_info (T);
 			code : builder.Builder;
 			builder.init (*code, mem.HEAP_ALLOC);
+			builder.append_line (*code, "// load_functions for T = %", T);
 			builder.append_line (*code, "member_ptr : **void;");
 			for * info.members
 			{
@@ -58,7 +59,7 @@ load :: inline ($log_errors := false) -> bool
 	if !dummy_window
 		return log.error ("Could not create dummy window to load GL functions.");
 	defer window.destroy (dummy_window);
-	dummy_ctx := create_context (dummy_window);
+	dummy_ctx := create_context (dummy_window, .NONE);
 	if !dummy_ctx
 		return log.error ("Could not create dummy GL context to load GL functions.");
 	defer destroy_context (dummy_window, dummy_ctx);
