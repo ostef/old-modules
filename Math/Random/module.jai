@@ -1,43 +1,41 @@
-// https://en.wikipedia.org/wiki/Pseudorandom_number_generator
-// https://en.wikipedia.org/wiki/Lehmer_random_number_generator
+// MCG random number generator, from Random.jai in jai/modules, using the Int128 module.
+// https://www.pcg-random.org/posts/does-it-beat-the-minimal-standard.html
 
 #scope_module
 
 #import "Runtime";
-
-#scope_file
-
-// @Todo (stefan): 64-bit
-
-M :: 0x7fff_ffff;	// The modulus is the mersene prime M31: 2^31 - 1 = 2,147,483,647
-A :: 16_807;
+math :: #import "Math";
+#import "Math/Int128";
 
 RAND_RANGE :: cast (u32) 0x1000_0000;
 MASK       :: RAND_RANGE - 1;
 #assert (RAND_RANGE & MASK) == 0;
 
-_state := cast (s32) 0x0173_965;
-
 #scope_export
 
-seed :: inline (x : s32)
+#add_context random_current := u128.{ 69, 105 };	// Must be odd
+
+seed :: inline (x : u64)
 {
-	_state = x & M;
-	if _state == 0 || _state == 1 then _state += 2;
+	context.random_current.low  = 1;
+	context.random_current.high = x;
 }
 
-get :: inline () -> u32
+seed :: inline (x : u128)
 {
-	x := _state;
-	hi := x / 127773;
-	lo := x % 127773;
-	_state = A * lo - 2836 * hi;
-	if _state <= 0 then _state += M;
-
-	return cast (u32) _state;
+	context.random_current = x;
+	if context.random_current.low & 1 == 0
+		context.random_current.low += 1;
 }
 
-range :: inline (low : f32, high : f32) -> f32
+get :: inline () -> u64
+{
+	MULTIPLIER :: u128.{ 0x0fc9_4e3b_f4e9_ab32, 0x8664_58cd_56f5_e605 };
+	context.random_current *= MULTIPLIER;
+	return context.random_current.high;
+}
+
+range :: inline (low : f32, high : f32) -> f32 #must
 {
 	rand := get () & MASK;
 	t := (rand / cast (f32) RAND_RANGE) * (high - low);
@@ -45,12 +43,13 @@ range :: inline (low : f32, high : f32) -> f32
 	return low + t;
 }
 
-rangei :: inline (low : int, high : int) -> int
+rangei :: inline (low : s64, high : s64) -> s64 #must
 {
-	return cast (int) range (xx low, xx high);
+	rand := cast, trunc (s64) get ();
+	return math.wrap (rand, low, high);
 }
 
-chance :: inline (x : f32) -> bool
+chance :: inline (x : f32) -> bool #must
 {
 	return range (0, 1) <= x;
 }
