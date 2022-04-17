@@ -140,6 +140,7 @@ types   :: #import "Types";
 unicode :: #import "Unicode";
 utf8    :: #import "Unicode/UTF8";
 utf16   :: #import "Unicode/UTF16";
+int128  :: #import "Math/Int128";
 rand    :: #import "Math/Random";
 noise   :: #import "Math/Noise";
 gl      :: #import "GL";
