@@ -5,6 +5,7 @@ FNV_OFFSET_BASIS_64 : u64 : 0xcbf2_9ce4_8422_2325;
 FNV_PRIME_64        : u64 : 0x0000_0100_0000_01b3;
 
 fnv1 :: inline (data : *void, count : s64) -> u32 #must
+#no_context
 {
 	h := FNV_OFFSET_BASIS_32;
 	for i : 0..count - 1 #no_abc
@@ -17,6 +18,7 @@ fnv1 :: inline (data : *void, count : s64) -> u32 #must
 }
 
 fnv1a :: inline (data : *void, count : s64) -> u32 #must
+#no_context
 {
 	h := FNV_OFFSET_BASIS_32;
 	for i : 0..count - 1 #no_abc
@@ -29,6 +31,7 @@ fnv1a :: inline (data : *void, count : s64) -> u32 #must
 }
 
 fnv1_64 :: inline (data : *void, count : s64) -> u64 #must
+#no_context
 {
 	h := FNV_OFFSET_BASIS_64;
 	for i : 0..count - 1 #no_abc
@@ -41,6 +44,7 @@ fnv1_64 :: inline (data : *void, count : s64) -> u64 #must
 }
 
 fnv1a_64 :: inline (data : *void, count : s64) -> u64 #must
+#no_context
 {
 	h := FNV_OFFSET_BASIS_64;
 	for i : 0..count - 1 #no_abc
@@ -63,6 +67,7 @@ fnv1a_64 :: inline (data : *void, count : s64) -> u64 #must
  */
 DJB2_DEFAULT_BASIS :: 5_381;
 djb2 :: inline (data : *void, count : s64, h : u32 = DJB2_DEFAULT_BASIS) -> u32 #must
+#no_context
 #no_abc
 {
 	for i : 0..count - 1
@@ -84,6 +89,7 @@ djb2 :: inline (data : *void, count : s64, h : u32 = DJB2_DEFAULT_BASIS) -> u32 
  */
 SDBM_DEFAULT_BASIS :: 5_381;
 sdbm :: inline (data : *void, count : s64, h : u32 = SDBM_DEFAULT_BASIS) -> u32 #must
+#no_context
 #no_abc
 {
 	for i : 0..count - 1
@@ -92,16 +98,19 @@ sdbm :: inline (data : *void, count : s64, h : u32 = SDBM_DEFAULT_BASIS) -> u32 
 }
 
 default :: inline (str : string) -> u32 #must
+#no_context
 {
 	return fnv1a (str.data, str.count);
 }
 
 default64 :: inline (str : string) -> u64 #must
+#no_context
 {
 	return fnv1a_64 (str.data, str.count);
 }
 
 default :: inline (val : $T) -> u32 #must
+#no_context
 {
 	return sdbm (*val, size_of (T));
 }
