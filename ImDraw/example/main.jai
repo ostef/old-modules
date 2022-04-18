@@ -66,8 +66,8 @@ main :: ()
 	is_running = true;
 	while is_running
 	{
-		t := time.to_float_seconds (time.current_monotonic ());
 		mem.reset_temporary_storage ();
+		t := time.to_float_seconds (time.current_monotonic ());
 		window.poll_messages (main_window);
 		msg : window.Message;
 		while window.get_next_message (main_window, *msg)
@@ -81,7 +81,7 @@ main :: ()
 			prev_texture := imdraw.set_texture (*uv_grid);
 			imdraw.draw_circle (vec2f (500, 200), 150 + math.sin (cast (f32) t) * 50, math.RGBA_WHITE);
 			imdraw.set_texture (prev_texture);
-			
+
 			cos := vec2f (xx t, math.cos (cast (f32) t));
 			sin := vec2f (xx t, math.sin (cast (f32) t));
 			pos := vec2f (math.wrap (cos.x * 69.105, 0, cast (f32) width), 30 + cos.y * 10);
@@ -92,6 +92,11 @@ main :: ()
 			imdraw.draw_text (*noto_sans_jp, 30, round (pos), "こんにちはセーラー！", math.RGBA_WHITE);
 			pos = vec2f (math.wrap (sin.x * 4, 0, cast (f32) width), 420 + sin.y * 32);
 			imdraw.draw_text (*noto_sans_kr, 30, round (pos), "안녕하세요 선원님!", math.RGBA_WHITE);
+
+			datetime := time.to_calendar (time.current_consensus (), .LOCAL);
+			datetime_str := time.format (datetime, "{DD}, {MM} {d}, {Y}\n{hr:02}:{mn:02}:{sc:02} {AMPM}", mem.TEMP_ALLOC);
+			size := font.calculate_text_extents (*jetbrains_mono, 22, datetime_str);
+			imdraw.draw_text (*jetbrains_mono, 22, round (vec2f (width - 10.0, height - 10.0) - size), datetime_str, math.RGBA_WHITE);
 		}
 		imdraw.end ();
 		window.swap_buffers (main_window);
