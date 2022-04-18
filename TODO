@@ -1,13 +1,9 @@
 * File_System: file search tests
 * File_System: directory error codes
-* File_System: file search: metaprogram that checks you set in_loop to false when appropriate
-* Processes
 * Buffer IO
 * Threads
 * Lexer
-* Sorting
 * Searching
-* GL
 * Test module
 * Meta: custom importing
 * Hash_Map: tests
@@ -17,3 +13,4 @@
 * Time: tests
 * String/Builder: tests
 * Int128: tests
+* Apollo_Time: tests
