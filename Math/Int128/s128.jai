@@ -52,7 +52,7 @@ to_s64 :: inline (a : s128, $no_check := false) -> s64 #must
 	#if no_check
 		if (a.low & 0x8000_0000_0000_0000) != 0 || (a.high & 0x0fff_ffff_ffff_ffff) != 0
 			contextless_panic ("Cast from s128 to s64 bounds check failed.");
-	return cast, no_check (s64) (a.low | cast, no_check (u64) a.high);
+	return cast, no_check (s64) (a.low | cast, no_check (u64) (a.high & 0x8000_0000_0000_0000));
 }
 
 add :: inline (a : s128, b : s128) -> s128 #must
@@ -62,17 +62,17 @@ add :: inline (a : s128, b : s128) -> s128 #must
 	p := *result;
 	#asm
 	{
-		mov	al:, [a + 0];
-		mov	ah:, [a + 8];
+		mov	al:, [a + 8];
+		mov	ah:, [a + 0];
 
-		mov	bl:, [b + 0];
-		mov	bh:, [b + 8];
+		mov	bl:, [b + 8];
+		mov	bh:, [b + 0];
 
-		mov	[p + 0], al;
-		mov	[p + 8], ah;
+		mov	[p + 8], al;
+		mov	[p + 0], ah;
 
-		add	[p + 0], bl;
-		adc	[p + 8], bh;
+		add	[p + 8], bl;
+		adc	[p + 0], bh;
 	}
 	return result;
 }
@@ -84,17 +84,17 @@ sub :: inline (a : s128, b : s128) -> s128 #must
 	p := *result;
 	#asm
 	{
-		mov	al:, [a + 0];
-		mov	ah:, [a + 8];
+		mov	al:, [a + 8];
+		mov	ah:, [a + 0];
 
-		mov	bl:, [b + 0];
-		mov	bh:, [b + 8];
+		mov	bl:, [b + 8];
+		mov	bh:, [b + 0];
 
-		mov	[p + 0], al;
-		mov	[p + 8], ah;
+		mov	[p + 8], al;
+		mov	[p + 0], ah;
 
-		sub	[p + 0], bl;
-		sbb	[p + 8], bh;
+		sub	[p + 8], bl;
+		sbb	[p + 0], bh;
 	}
 	return result;
 }
@@ -108,8 +108,8 @@ neg :: inline (a : s128) -> s128 #must
 	p := *result;
 	#asm
 	{
-		add	[p + 0], 1;
-		adc	[p + 8], 0;
+		add	[p + 8], 1;
+		adc	[p + 0], 0;
 	}
 	return result;
 }
@@ -160,23 +160,23 @@ mul :: inline (a : s128, b : s128) -> s128 #must
 		mul_op2  : gpr;			// Second operand of mul
 		high_sum : gpr;
 		// a.low * b.low
-		mov		mul_low, [pa + 0];
-		mov		mul_op2, [pb + 0];
+		mov		mul_low, [pa + 8];
+		mov		mul_op2, [pb + 8];
 		mul		mul_high, mul_low, mul_op2;	// mul gpr.d, gpr.a, gpr
 		// Store the low part of the mul into result, high part into high_sum
-		mov		[r + 0],  mul_low;
+		mov		[r + 8],  mul_low;
 		mov		high_sum, mul_high;
 		// a.high * b.low
-		mov		mul_low, [pa + 8];	// Store a.high into the first operand mul_low
+		mov		mul_low, [pa + 0];	// Store a.high into the first operand mul_low
 		imul	mul_high, mul_low, mul_op2;	// At this point: mul_op2 = b.low
 		add		high_sum, mul_low;
 		// a.low * b.high
-		mov		mul_low, [pa + 0];
-		mov		mul_op2, [pb + 8];
+		mov		mul_low, [pa + 8];
+		mov		mul_op2, [pb + 0];
 		imul	mul_high, mul_low, mul_op2;
 		add		high_sum, mul_low;
 		// Store the high part in the result
-		mov		[r + 8], high_sum;
+		mov		[r + 0], high_sum;
 	}
 	if negate
 		return -result;
@@ -214,17 +214,17 @@ mul :: inline (a : s128, b : s64) -> s128 #must
 		mul_high : gpr === d;	// High destination operand of mul
 		high_sum : gpr;
 		// a.low * b.low
-		mov		mul_low, [pa + 0];
+		mov		mul_low, [pa + 8];
 		mul		mul_high, mul_low, b;
 		// Store the low part of the mul into result, high part into high_sum
-		mov		[r + 0],  mul_low;
+		mov		[r + 8],  mul_low;
 		mov		high_sum, mul_high;
 		// a.high * b.low
-		mov		mul_low, [pa + 8];	// Store a.high into the first operand mul_low
+		mov		mul_low, [pa + 0];	// Store a.high into the first operand mul_low
 		imul	mul_high, mul_low, b;
 		add		high_sum, mul_low;
 		// Store the high part in the result
-		mov		[r + 8], high_sum;
+		mov		[r + 0], high_sum;
 	}
 	if negate
 		return -result;
@@ -267,9 +267,9 @@ lshift :: inline (a : s128, x : u8) -> s128 #must
 	#asm
 	{
 		x === c;
-		mov		low:, [p + 0];
-		shld	[p + 8], low, x;
-		shl		[p + 0], x;
+		mov		low:, [p + 8];
+		shld	[p + 0], low, x;
+		shl		[p + 8], x;
 	}
 	return result;
 }
@@ -283,9 +283,9 @@ rlshift :: inline (a : s128, x : u8) -> s128 #must
 	#asm
 	{
 		x === c;
-		mov		high:, [p + 8];
-		shrd	[p + 0], high, x;
-		shr		[p + 8], x;
+		mov		high:, [p + 0];
+		shrd	[p + 8], high, x;
+		shr		[p + 0], x;
 	}
 	return result;
 }
@@ -299,9 +299,9 @@ rshift :: inline (a : s128, x : u8) -> s128 #must
 	#asm
 	{
 		x === c;
-		mov		high:, [p + 8];
-		shrd	[p + 0], high, x;
-		sar		[p + 8], x;
+		mov		high:, [p + 0];
+		shrd	[p + 8], high, x;
+		sar		[p + 0], x;
 	}
 	return result;
 }
@@ -322,6 +322,12 @@ operator - :: inline (a : s128) -> s128 #must
 #no_context
 {
 	return neg (a);
+}
+
+operator * :: inline (a : s128, b : s64) -> s128 #must
+#no_context
+{
+	return mul (a, b);
 }
 
 operator * :: inline (a : s128, b : s128) -> s128 #must
@@ -366,10 +372,10 @@ operator < :: inline (a : s128, b : s128) -> bool #must
 	result : bool = ---;
 	#asm
 	{
-		mov		al:, [a + 0];
-		mov		ah:, [a + 8];
-		mov		bl:, [b + 0];
-		mov		bh:, [b + 8];
+		mov		al:, [a + 8];
+		mov		ah:, [a + 0];
+		mov		bl:, [b + 8];
+		mov		bh:, [b + 0];
 		sub		al, bl;
 		sbb		ah, bh;
 		setl	result;

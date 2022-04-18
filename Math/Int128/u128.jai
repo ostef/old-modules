@@ -50,17 +50,17 @@ add :: inline (a : u128, b : u128) -> u128 #must
 	p := *result;
 	#asm
 	{
-		mov	al:, [a + 0];
-		mov	ah:, [a + 8];
+		mov	al:, [a + 8];
+		mov	ah:, [a + 0];
 
-		mov	bl:, [b + 0];
-		mov	bh:, [b + 8];
+		mov	bl:, [b + 8];
+		mov	bh:, [b + 0];
 
-		mov	[p + 0], al;
-		mov	[p + 8], ah;
+		mov	[p + 8], al;
+		mov	[p + 0], ah;
 
-		add		[p + 0], bl;
-		adc		[p + 8], bh;	// @Incomplete (stefan): Shouldn't we use ADCX instead ?
+		add		[p + 8], bl;
+		adc		[p + 0], bh;	// @Incomplete (stefan): Shouldn't we use ADCX instead ?
 	}
 	return result;
 }
@@ -72,17 +72,17 @@ sub :: inline (a : u128, b : u128) -> u128 #must
 	p := *result;
 	#asm
 	{
-		mov	al:, [a + 0];
-		mov	ah:, [a + 8];
+		mov	al:, [a + 8];
+		mov	ah:, [a + 0];
 
-		mov	bl:, [b + 0];
-		mov	bh:, [b + 8];
+		mov	bl:, [b + 8];
+		mov	bh:, [b + 0];
 
-		mov	[p + 0], al;
-		mov	[p + 8], ah;
+		mov	[p + 8], al;
+		mov	[p + 0], ah;
 
-		sub	[p + 0], bl;
-		sbb	[p + 8], bh;
+		sub	[p + 8], bl;
+		sbb	[p + 0], bh;
 	}
 	return result;
 }
@@ -126,23 +126,23 @@ mul :: inline (a : u128, b : u128) -> u128 #must
 		mul_op2  : gpr;			// Second operand of mul
 		high_sum : gpr;
 		// a.low * b.low
-		mov	mul_low, [pa + 0];
-		mov	mul_op2, [pb + 0];
+		mov	mul_low, [pa + 8];
+		mov	mul_op2, [pb + 8];
 		mul	mul_high, mul_low, mul_op2;	// mul gpr.d, gpr.a, gpr
 		// Store the low part of the mul into result, high part into high_sum
-		mov	[r + 0],  mul_low;
+		mov	[r + 8],  mul_low;
 		mov	high_sum, mul_high;
 		// a.high * b.low
-		mov	mul_low, [pa + 8];	// Store a.high into the first operand mul_low
+		mov	mul_low, [pa + 0];	// Store a.high into the first operand mul_low
 		mul	mul_high, mul_low, mul_op2;	// At this point: mul_op2 = b.low
 		add	high_sum, mul_low;
 		// a.low * b.high
-		mov	mul_low, [pa + 0];
-		mov	mul_op2, [pb + 8];
+		mov	mul_low, [pa + 8];
+		mov	mul_op2, [pb + 0];
 		mul	mul_high, mul_low, mul_op2;
 		add	high_sum, mul_low;
 		// Store the high part in the result
-		mov	[r + 8], high_sum;
+		mov	[r + 0], high_sum;
 	}
 	return result;
 }
@@ -165,17 +165,17 @@ mul :: inline (a : u128, b : u64) -> u128 #must
 		mul_high : gpr === d;	// High destination operand of mul
 		high_sum : gpr;
 		// a.low * b.low
-		mov	mul_low, [pa + 0];
+		mov	mul_low, [pa + 8];
 		mul	mul_high, mul_low, b;
 		// Store the low part of the mul into result, high part into high_sum
-		mov	[r + 0],  mul_low;
+		mov	[r + 8],  mul_low;
 		mov	high_sum, mul_high;
 		// a.high * b.low
-		mov	mul_low, [pa + 8];	// Store a.high into the first operand mul_low
+		mov	mul_low, [pa + 0];	// Store a.high into the first operand mul_low
 		mul	mul_high, mul_low, b;
 		add	high_sum, mul_low;
 		// Store the high part in the result
-		mov	[r + 8], high_sum;
+		mov	[r + 0], high_sum;
 	}
 	return result;
 }
@@ -199,8 +199,8 @@ div :: inline (a : u128, b : u128) -> u128 #must
 			high : gpr === d;
 			low  : gpr === a;
 
-			mov	low,  [p + 0];
-			mov	high, [p + 8];
+			mov	low,  [p + 8];
+			mov	high, [p + 0];
 			div	high, low, b;
 			mov	quotient, low;
 		}
@@ -256,9 +256,9 @@ lshift :: inline (a : u128, x : u8) -> u128 #must
 	#asm
 	{
 		x === c;
-		mov		low:, [p + 0];
-		shld	[p + 8], low, x;
-		shl		[p + 0], x;
+		mov		low:, [p + 8];
+		shld	[p + 0], low, x;
+		shl		[p + 8], x;
 	}
 	return result;
 }
@@ -271,9 +271,9 @@ rshift :: inline (a : u128, x : u8) -> u128 #must
 	#asm
 	{
 		x === c;
-		mov		high:, [p + 8];
-		shrd	[p + 0], high, x;
-		shr		[p + 8], x;
+		mov		high:, [p + 0];
+		shrd	[p + 8], high, x;
+		shr		[p + 0], x;
 	}
 	return result;
 }
@@ -291,6 +291,12 @@ operator - :: inline (a : u128, b : u128) -> u128 #must
 }
 
 operator * :: inline (a : u128, b : u128) -> u128 #must
+#no_context
+{
+	return mul (a, b);
+}
+
+operator * :: inline (a : u128, b : u64) -> u128 #must
 #no_context
 {
 	return mul (a, b);
@@ -326,10 +332,10 @@ operator < :: inline (a : u128, b : u128) -> bool #must
 	result : bool = ---;
 	#asm
 	{
-		mov		al:, [a + 0];
-		mov		ah:, [a + 8];
-		mov		bl:, [b + 0];
-		mov		bh:, [b + 8];
+		mov		al:, [a + 8];
+		mov		ah:, [a + 0];
+		mov		bl:, [b + 8];
+		mov		bh:, [b + 0];
 		sub		al, bl;
 		sbb		ah, bh;
 		setl	result;
