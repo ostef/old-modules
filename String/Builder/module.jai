@@ -167,6 +167,11 @@ append :: inline (builder : *Builder, s : string)
 	write (builder, s.data, s.count);
 }
 
+append_byte :: inline (builder : *Builder, byte : u8)
+{
+	write (builder, *byte, 1);
+}
+
 append_bool :: inline (builder : *Builder, val : bool)
 {
 	io.append_bool (to_stream (builder), val);
