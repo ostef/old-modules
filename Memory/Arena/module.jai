@@ -1,3 +1,5 @@
+#module_parameters (LOG_PAGE_ALLOCATIONS := false);
+
 #scope_module
 
 #import "Runtime";
@@ -130,10 +132,13 @@ add_page :: inline (arena : *Memory_Arena, min_size : s64) -> bool
 	data_size := arena.original_size - ALIGNED_OVERFLOW_PAGE_ALLOCATION;
 	data_size = math.max (data_size, min_size);
 	total_size := data_size + ALIGNED_OVERFLOW_PAGE_ALLOCATION;
-	if arena == context.temporary_storage
-		log.message ("Allocating new page of % bytes for temporary storage.", data_size);
-	else
-		log.message ("Allocating new page of % bytes for arena %.", data_size, arena);
+	#if LOG_PAGE_ALLOCATIONS
+	{
+		if arena == context.temporary_storage
+			log.message ("Allocating new page of % bytes for temporary storage.", data_size);
+		else
+			log.message ("Allocating new page of % bytes for arena %.", data_size, arena);
+	}
 	assert (arena.overflow_allocator.proc != null, "Overflow allocator was null.");
 	ptr := mem.alloc (total_size, arena.overflow_allocator);
 	if !ptr
