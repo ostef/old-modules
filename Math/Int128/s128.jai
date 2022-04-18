@@ -10,15 +10,24 @@ s128 :: struct
 }
 
 make_s128 :: inline (x : s64) -> s128 #must
+#no_context
 {
-	result : s128;
-	result.low  = cast, no_check (u64) x;
+	result : s128 = ---;
 	if x < 0
+	{
 		result.high = -1;
+		result.low  = cast (u64) -x;
+	}
+	else
+	{
+		result.high = 0;
+		result.low  = cast (u64) x;
+	}
 	return result;
 }
 
 make_s128 :: inline (high : s64, low : u64) -> s128 #must
+#no_context
 {
 	result : s128 = ---;
 	result.high = high;
@@ -26,7 +35,28 @@ make_s128 :: inline (high : s64, low : u64) -> s128 #must
 	return result;
 }
 
+to_u128 :: inline (a : s128, $no_check := false) -> u128 #must
+{
+	result : u128 = ---;
+	result.low = a.low;
+	#if no_check
+		result.high = cast, no_check (u64) a.high;
+	else
+		result.high = cast (u64) a.high;
+	return result;
+}
+
+to_s64 :: inline (a : s128, $no_check := false) -> s64 #must
+#no_context
+{
+	#if no_check
+		if (a.low & 0x8000_0000_0000_0000) != 0 || (a.high & 0x0fff_ffff_ffff_ffff) != 0
+			contextless_panic ("Cast from s128 to s64 bounds check failed.");
+	return cast, no_check (s64) (a.low | cast, no_check (u64) a.high);
+}
+
 add :: inline (a : s128, b : s128) -> s128 #must
+#no_context
 {
 	result : s128 = ---;
 	p := *result;
@@ -48,6 +78,7 @@ add :: inline (a : s128, b : s128) -> s128 #must
 }
 
 sub :: inline (a : s128, b : s128) -> s128 #must
+#no_context
 {
 	result : s128 = ---;
 	p := *result;
@@ -69,6 +100,7 @@ sub :: inline (a : s128, b : s128) -> s128 #must
 }
 
 neg :: inline (a : s128) -> s128 #must
+#no_context
 {
 	result : s128 = ---;
 	result.low  = ~a.low;
@@ -83,6 +115,7 @@ neg :: inline (a : s128) -> s128 #must
 }
 
 mul :: inline (left : s64, right : s64) -> s128 #must
+#no_context
 {
 	low := cast, no_check (u64) left;
 	high : s64 = ---;
@@ -98,6 +131,7 @@ mul :: inline (left : s64, right : s64) -> s128 #must
 }
 
 mul :: inline (a : s128, b : s128) -> s128 #must
+#no_context
 {
 	mut_a := a;
 	mut_b := b;
@@ -150,6 +184,7 @@ mul :: inline (a : s128, b : s128) -> s128 #must
 }
 
 mul :: inline (a : s128, b : s64) -> s128 #must
+#no_context
 {
 	mut_a := a;
 	negate := false;
@@ -197,6 +232,7 @@ mul :: inline (a : s128, b : s64) -> s128 #must
 }
 
 div :: inline (a : s128, b : s128) -> s128 #must
+#no_context
 {
 	mut_a := a;
 	mut_b := b;
@@ -218,11 +254,13 @@ div :: inline (a : s128, b : s128) -> s128 #must
 }
 
 div :: inline (a : s128, b : s64) -> s128 #must
+#no_context
 {
 	return a / make_s128 (b);
 }
 
 lshift :: inline (a : s128, x : u8) -> s128 #must
+#no_context
 {
 	result := a;
 	p := *result;
@@ -238,6 +276,7 @@ lshift :: inline (a : s128, x : u8) -> s128 #must
 
 // Logical (unsigned) shift
 rlshift :: inline (a : s128, x : u8) -> s128 #must
+#no_context
 {
 	result := a;
 	p := *result;
@@ -253,6 +292,7 @@ rlshift :: inline (a : s128, x : u8) -> s128 #must
 
 // Arithmetic (signed) shift
 rshift :: inline (a : s128, x : u8) -> s128 #must
+#no_context
 {
 	result := a;
 	p := *result;
@@ -267,51 +307,61 @@ rshift :: inline (a : s128, x : u8) -> s128 #must
 }
 
 operator + :: inline (a : s128, b : s128) -> s128 #must
+#no_context
 {
 	return add (a, b);
 }
 
 operator - :: inline (a : s128, b : s128) -> s128 #must
+#no_context
 {
 	return sub (a, b);
 }
 
 operator - :: inline (a : s128) -> s128 #must
+#no_context
 {
 	return neg (a);
 }
 
 operator * :: inline (a : s128, b : s128) -> s128 #must
+#no_context
 {
 	return mul (a, b);
 }
 
 operator / :: inline (a : s128, b : s128) -> s128 #must
+#no_context
 {
 	return div (a, b);
 }
 
 operator / :: inline (a : s128, b : s64) -> s128 #must
+#no_context
 {
 	return div (a, b);
 }
 
 operator << :: inline (a : s128, x : u8) -> s128 #must
+#no_context
 {
 	return lshift (a, x);
 }
 
 operator >> :: inline (a : s128, x : u8) -> s128 #must
+#no_context
 {
 	return rshift (a, x);
 }
 
 operator == :: inline (a : s128, b : s128) -> bool #must
+#no_context
 {
 	return a.low == b.low && a.high == b.high;
 }
 
 operator < :: inline (a : s128, b : s128) -> bool #must
+#no_context
 {
 	result : bool = ---;
 	#asm
@@ -328,16 +378,19 @@ operator < :: inline (a : s128, b : s128) -> bool #must
 }
 
 operator <= :: inline (a : s128, b : s128) -> bool #must
+#no_context
 {
 	return a < b || a == b;
 }
 
 operator > :: inline (a : s128, b : s128) -> bool #must
+#no_context
 {
 	return !(a <= b);
 }
 
 operator >= :: inline (a : s128, b : s128) -> bool #must
+#no_context
 {
 	return !(a < b);
 }

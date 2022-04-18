@@ -5,6 +5,7 @@ u128 :: struct
 }
 
 make_u128 :: inline (low : u64) -> u128 #must
+#no_context
 {
 	result : u128 = ---;
 	result.high = 0;
@@ -13,6 +14,7 @@ make_u128 :: inline (low : u64) -> u128 #must
 }
 
 make_u128 :: inline (high : u64, low : u64) -> u128 #must
+#no_context
 {
 	result : u128 = ---;
 	result.high = high;
@@ -21,6 +23,7 @@ make_u128 :: inline (high : u64, low : u64) -> u128 #must
 }
 
 to_s128 :: inline (x : u128, $no_check := false) -> s128 #must
+#no_context
 {
 	result : s128 = ---;
 	#if no_check
@@ -31,7 +34,17 @@ to_s128 :: inline (x : u128, $no_check := false) -> s128 #must
 	return result;
 }
 
+to_u64 :: inline (a : u128, $no_check := false) -> u64 #must
+#no_context
+{
+	#if no_check
+		if a.high != 0
+			contextless_panic ("Cast from u128 to u64 bounds check failed.");
+	return a.low;
+}
+
 add :: inline (a : u128, b : u128) -> u128 #must
+#no_context
 {
 	result : u128 = ---;
 	p := *result;
@@ -53,6 +66,7 @@ add :: inline (a : u128, b : u128) -> u128 #must
 }
 
 sub :: inline (a : u128, b : u128) -> u128 #must
+#no_context
 {
 	result : u128 = ---;
 	p := *result;
@@ -74,6 +88,7 @@ sub :: inline (a : u128, b : u128) -> u128 #must
 }
 
 mul :: inline (left : u64, right : u64) -> u128 #must
+#no_context
 {
 	low := left;
 	high : u64 = ---;
@@ -89,6 +104,7 @@ mul :: inline (left : u64, right : u64) -> u128 #must
 }
 
 mul :: inline (a : u128, b : u128) -> u128 #must
+#no_context
 {
 	// For a = 2^64 * ah + al, b = 2^64 * bh + bl:
 	// c = a * b = 2^128 * ah * bh + 2^64 * ah * bl + 2^64 * bh * al + al * bl
@@ -132,6 +148,7 @@ mul :: inline (a : u128, b : u128) -> u128 #must
 }
 
 mul :: inline (a : u128, b : u64) -> u128 #must
+#no_context
 {
 	// For a = 2^64 * ah + al, b a 64-bit unsigned integer:
 	// c = a * b = 2^64 * ah * b + al * b
@@ -164,11 +181,13 @@ mul :: inline (a : u128, b : u64) -> u128 #must
 }
 
 div :: inline (a : u128, b : u128) -> u128 #must
+#no_context
 {
 	// Code adapted from Hacker's Delight by Henry S. Warren, Jr., Second Edition, section 9-5.
 	// That listing was for 64-bit division, but here we do 128-bit division.
 
 	div128_64 :: inline (a : u128, b : u64) -> u64 #must
+	#no_context
 	{
 		// On x86_64, the div instruction allows a 128-bit dividend to be
 		// divided by a 64-bit divisor, resulting in a 64-bit quotient.
@@ -230,6 +249,7 @@ div :: inline (a : u128, b : u128) -> u128 #must
 }
 
 lshift :: inline (a : u128, x : u8) -> u128 #must
+#no_context
 {
 	result := a;
 	p := *result;
@@ -244,6 +264,7 @@ lshift :: inline (a : u128, x : u8) -> u128 #must
 }
 
 rshift :: inline (a : u128, x : u8) -> u128 #must
+#no_context
 {
 	result := a;
 	p := *result;
@@ -258,41 +279,49 @@ rshift :: inline (a : u128, x : u8) -> u128 #must
 }
 
 operator + :: inline (a : u128, b : u128) -> u128 #must
+#no_context
 {
 	return add (a, b);
 }
 
 operator - :: inline (a : u128, b : u128) -> u128 #must
+#no_context
 {
 	return sub (a, b);
 }
 
 operator * :: inline (a : u128, b : u128) -> u128 #must
+#no_context
 {
 	return mul (a, b);
 }
 
 operator / :: inline (a : u128, b : u128) -> u128 #must
+#no_context
 {
 	return div (a, b);
 }
 
 operator << :: inline (a : u128, x : u8) -> u128 #must
+#no_context
 {
 	return lshift (a, x);
 }
 
 operator >> :: inline (a : u128, x : u8) -> u128 #must
+#no_context
 {
 	return rshift (a, x);
 }
 
 operator == :: inline (a : u128, b : u128) -> bool #must
+#no_context
 {
 	return a.low == b.low && a.high == b.high;
 }
 
 operator < :: inline (a : u128, b : u128) -> bool #must
+#no_context
 {
 	result : bool = ---;
 	#asm
@@ -309,16 +338,19 @@ operator < :: inline (a : u128, b : u128) -> bool #must
 }
 
 operator <= :: inline (a : u128, b : u128) -> bool #must
+#no_context
 {
 	return a < b || a == b;
 }
 
 operator > :: inline (a : u128, b : u128) -> bool #must
+#no_context
 {
 	return !(a <= b);
 }
 
 operator >= :: inline (a : u128, b : u128) -> bool #must
+#no_context
 {
 	return !(a < b);
 }
