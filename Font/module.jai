@@ -240,20 +240,17 @@ render_glyph :: (using page : *Font_Page, codepoint : u32) -> *Font_Glyph
 	assert (ft_error == ft.Err_Ok, "Could not load glyph %.", codepoint);
 	slot := font.ft_face.glyph;
 
-	if !was_present
-	{
-		glyph.codepoint = codepoint;
-		glyph.width     = xx (slot.metrics.width  >> 6);
-		glyph.height    = xx (slot.metrics.height >> 6);
-		glyph.bearing_x = xx (slot.metrics.horiBearingX >> 6);
-		glyph.bearing_y = xx (slot.metrics.horiBearingY >> 6);
-		glyph.advance   = xx (slot.metrics.horiAdvance >> 6);
-		
-		glyph.bitmap_width     = xx slot.bitmap.width;
-		glyph.bitmap_height    = xx slot.bitmap.rows;
-		glyph.bitmap_bearing_x = xx slot.bitmap_left;
-		glyph.bitmap_bearing_y = xx slot.bitmap_top;
-	}
+	glyph.codepoint = codepoint;
+	glyph.width     = xx (slot.metrics.width  >> 6);
+	glyph.height    = xx (slot.metrics.height >> 6);
+	glyph.bearing_x = xx (slot.metrics.horiBearingX >> 6);
+	glyph.bearing_y = xx (slot.metrics.horiBearingY >> 6);
+	glyph.advance   = xx (slot.metrics.horiAdvance >> 6);
+	
+	glyph.bitmap_width     = xx slot.bitmap.width;
+	glyph.bitmap_height    = xx slot.bitmap.rows;
+	glyph.bitmap_bearing_x = xx slot.bitmap_left;
+	glyph.bitmap_bearing_y = xx slot.bitmap_top;
 
 	atlas : *Font_Atlas;
 	for * atlases
