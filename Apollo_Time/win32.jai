@@ -17,11 +17,13 @@ current_consensus :: inline () -> Apollo_Time #must
 current_monotonic :: inline () -> Apollo_Time #must
 {
 	pc, freq : s64;
-	win32.QueryPerformanceCounter (*pc);
-	win32.QueryPerformanceFrequency (*freq);
+	ok := win32.QueryPerformanceCounter (*pc);
+	assert (ok != 0);
+	ok = win32.QueryPerformanceFrequency (*freq);
+	assert (ok != 0 && freq != 0);
 	a : Apollo_Time;
 	a.low = cast, no_check (u64) pc;
-	a *= make_s128 (FEMTOSECONDS);
+	a *= FEMTOSECONDS;
 	a /= freq;
 
 	return a;
@@ -35,7 +37,7 @@ to_apollo :: inline (ft : win32.FILETIME) -> Apollo_Time #must
 	else
 		delta = FILETIME_APOLLO.QuadPart - ft.QuadPart;
 	apollo := make_s128 (FILETIME_FACTOR);
-	apollo.as_u128 *= make_u128 (delta);
+	apollo.as_u128 *= delta;
 	// Because we took delta in the opposite direction, negate the result.
 	if ft.QuadPart < FILETIME_APOLLO.QuadPart
 		apollo = -apollo;
