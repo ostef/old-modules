@@ -56,7 +56,7 @@ FRENCH_ASCII_NAMES :: Calendar_Names.{
 // Usage:
 // 		format (time, "{D} {d} {M} {Y}, {hr:02}:{mn:02} {AMPM}", allocator) => "Mon 10 Feb 2022, 10:04 AM"
 // y : time.year % 100,
-// Y : time.year,
+// yy : time.year,
 // m : time.month + 1,
 // M : names.short_months[time.month],
 // MM : names.months[time.month],
@@ -77,7 +77,7 @@ format :: (time : Calendar_Time, fmt_str : string, allocator : Allocator, names 
 	str :: #import "String";
 	builder :: #import "String/Builder";
 
-	FMT_STRINGS :: string.[ "y", "Y", "m", "M", "MM", "d", "D", "DD", "ampm", "AMPM", "hr", "HR", "mn", "sc", "ms", "tz" ];
+	FMT_STRINGS :: string.[ "y", "yy", "m", "M", "MM", "d", "D", "DD", "ampm", "AMPM", "hr", "HR", "mn", "sc", "ms", "tz" ];
 
 	new_fmt_str : string;
 	{
