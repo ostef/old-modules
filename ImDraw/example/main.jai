@@ -1,3 +1,7 @@
+// This file actually tests more than just ImDraw. It has Math,
+// Linalg, Apollo_Time, Input, Window, Font, Random things in it.
+// We might want to move this elsewhere at some point.
+
 #import "Runtime";
 mem    :: #import "Memory";
 fmt    :: #import "Fmt";
