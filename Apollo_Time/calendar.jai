@@ -86,6 +86,7 @@ format :: (time : Calendar_Time, fmt_str : string, allocator : Allocator, names 
 		builder.init (*b, mem.TEMP_ALLOC);
 		i := 0;
 		while i < fmt_str.count
+		#no_abc
 		{
 			if fmt_str[i] == #char "{"
 			{
