@@ -94,7 +94,7 @@ main :: ()
 			imdraw.draw_text (*noto_sans_kr, 30, round (pos), "안녕하세요 선원님!", math.RGBA_WHITE);
 
 			datetime := time.to_calendar (time.current_consensus (), .LOCAL);
-			datetime_str := time.format (datetime, "{DD}, {MM} {d}, {Y}\n{hr:02}:{mn:02}:{sc:02} {AMPM}", mem.TEMP_ALLOC);
+			datetime_str := time.format (datetime, "{DD}, {MM} {d}, {yy}\n{hr:02}:{mn:02}:{sc:02} {AMPM}", mem.TEMP_ALLOC);
 			size := font.calculate_text_extents (*jetbrains_mono, 22, datetime_str);
 			imdraw.draw_text (*jetbrains_mono, 22, round (vec2f (width - 10.0, height - 10.0) - size), datetime_str, math.RGBA_WHITE);
 		}
