@@ -3,6 +3,7 @@
 #import "Runtime";
 mem     :: #import "Memory";
 builder :: #import "String/Builder";
+window  :: #import "Window";
 
 #scope_export
 
