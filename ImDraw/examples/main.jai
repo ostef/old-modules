@@ -21,6 +21,7 @@ is_running : bool;
 
 handle_window_message :: (msg : window.Message)
 {
+	input.handle_window_message (msg);
 	if msg.kind ==
 	{
 	case .WINDOW_CLOSED;
@@ -41,7 +42,7 @@ main :: ()
 	if !main_window
 		error ("Could not create window.");
 	defer window.destroy (main_window);
-	gl_ctx := gl.create_context (main_window, );
+	gl_ctx := gl.create_context (main_window);
 	if !gl_ctx
 		error ("Could not create GL context.");
 	defer gl.destroy_context (main_window, gl_ctx);
