@@ -9,8 +9,8 @@
 
 #scope_file
 
-error_wide_buffer : [128]u16;
-error_utf8_buffer : [512]u8;
+g_error_wide_buffer : [128]u16;
+g_error_utf8_buffer : [512]u8;
 
 #scope_export
 
@@ -26,22 +26,22 @@ get_error_string :: inline (error_code : DWORD) -> string #must
 		null,
 		error_code,
 		MAKELANGID (LANG_NEUTRAL, SUBLANG_DEFAULT),
-		error_wide_buffer.data,
-		error_wide_buffer.count,
+		g_error_wide_buffer.data,
+		g_error_wide_buffer.count,
 		null
 	);
 	utf8_count := WideCharToMultiByte (
 		CP_UTF8,
 		0,
-		error_wide_buffer.data,
+		g_error_wide_buffer.data,
 		cast (INT) wide_count,
-		cast (*CHAR) error_utf8_buffer.data,
-		error_utf8_buffer.count,
+		cast (*CHAR) g_error_utf8_buffer.data,
+		g_error_utf8_buffer.count,
 		null,
 		null
 	);
 	result : string = ---;
-	result.data  = error_utf8_buffer.data;
+	result.data  = g_error_utf8_buffer.data;
 	result.count = utf8_count;
 
 	return result;
