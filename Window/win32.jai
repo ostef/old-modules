@@ -634,9 +634,14 @@ win32_custom_caption_wnd_proc :: (window : win32.HWND, msg : u32, wparam : win32
 			cursor.x = win32.LOWORD (lparam);
 			cursor.y = win32.HIWORD (lparam);
 			win32.ScreenToClient (window, *cursor);
-			if cursor.y > 0 && cursor.y < win32.GetSystemMetrics (win32.SM_CYFRAME) + win32.GetSystemMetrics (win32.SM_CXPADDEDBORDER)
+			on_caption := data.caption_hit_test && data.caption_hit_test (window, cursor.x, cursor.y);
+			on_resize_border := cursor.y > 0 && cursor.y < win32.GetSystemMetrics (win32.SM_CYFRAME) + win32.GetSystemMetrics (win32.SM_CXPADDEDBORDER);
+			// Don't resize when we are not on the caption, because we could be on
+			// some UI elements. If we don't have a caption_hit_test, then ignore
+			// that. The user should provide a hit test function anyway...
+			if on_resize_border && (on_caption || !data.caption_hit_test)
 				return win32.HTTOP;
-			if data.caption_hit_test && data.caption_hit_test (window, cursor.x, cursor.y)
+			else if on_caption
 				return win32.HTCAPTION;
 			return win32.HTCLIENT;
 		}
