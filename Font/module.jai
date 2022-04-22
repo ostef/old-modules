@@ -93,38 +93,38 @@ Vertex :: struct
 	];
 }
 
-ft_lib : *ft.Library;
-rect_vertex_buffer : render.Vertex_Buffer;
+g_ft_lib : *ft.Library;
+g_rect_vertex_buffer : render.Vertex_Buffer;
 
 #scope_export
 
-glyph_shader : render.Shader;
+g_glyph_shader : render.Shader;
 
 init :: inline () -> bool
 {
-	ft_err := ft.Init_FreeType (*ft_lib);
+	ft_err := ft.Init_FreeType (*g_ft_lib);
 	if ft_err != ft.Err_Ok
 		return log.error ("Could not initialize FreeType. Error was %.", ft_err);
-	ok, info_log := render.init_shader (*glyph_shader, GL_GLYPH_VERTEX_SHADER, GL_GLYPH_FRAGMENT_SHADER);
+	ok, info_log := render.init_shader (*g_glyph_shader, GL_GLYPH_VERTEX_SHADER, GL_GLYPH_FRAGMENT_SHADER);
 	if !ok
 		return log.error ("Could not initialize glyph shader:\n%", info_log);
-	render.init_vertex_buffer (*rect_vertex_buffer, Vertex.LAYOUT);
-	render.allocate_vertex_buffer_data (*rect_vertex_buffer, 6 * size_of (Vertex), .DYNAMIC_DRAW);
+	render.init_vertex_buffer (*g_rect_vertex_buffer, Vertex.LAYOUT);
+	render.allocate_vertex_buffer_data (*g_rect_vertex_buffer, 6 * size_of (Vertex), .DYNAMIC_DRAW);
 
 	return true;
 }
 
 cleanup :: inline ()
 {
-	ft.Done_FreeType (ft_lib);
+	ft.Done_FreeType (g_ft_lib);
 }
 
 load_from_file :: inline (font : *Font, filename : string) -> bool
 {
-	if !ft_lib && !init ()
+	if !g_ft_lib && !init ()
 		return false;
 	ft_face : ft.Face;
-	ft_err := ft.New_Face (ft_lib, str.clone_to_cstring (filename, mem.TEMP_ALLOC), 0, *ft_face);
+	ft_err := ft.New_Face (g_ft_lib, str.clone_to_cstring (filename, mem.TEMP_ALLOC), 0, *ft_face);
 	if ft_err != ft.Err_Ok
 		return log.error ("Could not load FT_Face from file '%'. Error was %.", filename, ft_err);
 	font.filename = filename;
@@ -285,9 +285,9 @@ render_glyph :: (using page : *Font_Page, codepoint : u32) -> *Font_Glyph
 	defer render.use_texture (*prev_texture);
 	prev_framebuffer := render.use_framebuffer_for_drawing (*atlas.framebuffer);
 	defer render.use_framebuffer_for_drawing (*prev_framebuffer);
-	prev_shader := render.use_shader (*glyph_shader);
+	prev_shader := render.use_shader (*g_glyph_shader);
 	defer render.use_shader (*prev_shader);
-	prev_vertex_buffer := render.use_vertex_buffer (*rect_vertex_buffer);
+	prev_vertex_buffer := render.use_vertex_buffer (*g_rect_vertex_buffer);
 	defer render.use_vertex_buffer (*prev_vertex_buffer);
 	gl.Viewport (0, 0, xx atlas.width, xx atlas.height);
 	gl.Disable (gl.SCISSOR_TEST);
@@ -313,9 +313,9 @@ render_glyph :: (using page : *Font_Page, codepoint : u32) -> *Font_Glyph
 	rect_vertices[5].color = math.RGBA_WHITE;
 
 	view_projection := mat4f_orthographic_projection (0, cast (f32) atlas.width, cast (f32) atlas.height, 0, 0, 1);
-	render.set_shader_parameter (*glyph_shader, "u_View_Projection_Matrix", view_projection);
-	render.set_shader_parameter (*glyph_shader, "u_Use_Texture", true);
-	render.set_vertex_buffer_data (*rect_vertex_buffer, rect_vertices.data, rect_vertices.count * size_of (Vertex));
+	render.set_shader_parameter (*g_glyph_shader, "u_View_Projection_Matrix", view_projection);
+	render.set_shader_parameter (*g_glyph_shader, "u_Use_Texture", true);
+	render.set_vertex_buffer_data (*g_rect_vertex_buffer, rect_vertices.data, rect_vertices.count * size_of (Vertex));
 	gl.DrawArrays (gl.TRIANGLES, 0, rect_vertices.count);
 
 	atlas.pen_x += glyph.bitmap_width;

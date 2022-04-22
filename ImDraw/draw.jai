@@ -568,7 +568,7 @@ draw_text :: inline (
 	check_init ();
 	prev_texture := get_texture ();
 	defer set_texture (prev_texture);
-	prev_shader := set_shader (*font.glyph_shader);
+	prev_shader := set_shader (*font.g_glyph_shader);
 	defer set_shader (prev_shader);
 
 	page := font.load_page (fnt, height);
