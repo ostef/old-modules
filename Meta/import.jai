@@ -46,7 +46,7 @@ handle_failed_import :: (import : *jaic.Message_Failed_Import)
 	{
 		mount_name = str.slice (module_name, colon_index);
 		module_name = str.advance (module_name, colon_index + 1);
-		base_dir, has_mapping := map.get (module_search_map, mount_name);
+		base_dir, has_mapping := map.get (g_module_search_map, mount_name);
 		if has_mapping
 		{
 			mounted_path := path.join (mem.HEAP_ALLOC, base_dir, module_name);
@@ -58,7 +58,7 @@ handle_failed_import :: (import : *jaic.Message_Failed_Import)
 	}
 	else
 	{
-		for module_search_dirs
+		for g_module_search_dirs
 		{
 			full_path := path.join (mem.HEAP_ALLOC, it, import.target_module_name);
 			full_path = fs.get_full_filename (full_path, mem.HEAP_ALLOC);

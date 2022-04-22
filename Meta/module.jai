@@ -15,14 +15,14 @@ path  :: #import "Path";
 
 #load "import.jai";
 
-module_search_map : map.Hash_Map (string, string);
-module_search_dirs : [..]string;
-procedures_to_run : [..]*jaic.Code_Procedure_Header;
+g_module_search_map : map.Hash_Map (string, string);
+g_module_search_dirs : [..]string;
+g_procedures_to_run : [..]*jaic.Code_Procedure_Header;
 
 run_after_typechecking :: inline (header : *jaic.Code_Procedure_Header)
 {
-	procedures_to_run.allocator = mem.HEAP_ALLOC;
-	array.push (*procedures_to_run, header);
+	g_procedures_to_run.allocator = mem.HEAP_ALLOC;
+	array.push (*g_procedures_to_run, header);
 }
 
 handle_compiler_message :: (msg : *jaic.Message)
@@ -55,17 +55,17 @@ handle_compiler_message :: (msg : *jaic.Message)
 		phase := cast (*jaic.Message_Phase) msg;
 		if phase.phase == .TYPECHECKED_ALL_WE_CAN
 		{
-			for procedures_to_run
+			for g_procedures_to_run
 				jaic.add_build_string (fmt.format (mem.HEAP_ALLOC, "#run % ();\t// Run after typechecking", it.name), msg.workspace);
-			array.clear (*procedures_to_run);
+			array.clear (*g_procedures_to_run);
 		}
 	}
 }
 
 parse_arguments :: (options : *jaic.Build_Options)
 {
-	map.init (*module_search_map, 10, mem.HEAP_ALLOC);
-	array.init (*module_search_dirs, 10, mem.HEAP_ALLOC);
+	map.init (*g_module_search_map, 10, mem.HEAP_ALLOC);
+	array.init (*g_module_search_dirs, 10, mem.HEAP_ALLOC);
 	user, system := jaic.compiler_get_command_line_arguments ();
 	i := 0;
 	while i < system.count
@@ -86,8 +86,8 @@ parse_arguments :: (options : *jaic.Build_Options)
 			if dir
 			{
 				fullpath := fs.get_full_filename (dir, mem.HEAP_ALLOC);
-				if array.find_first (module_search_dirs, fullpath) == -1
-					array.push (*module_search_dirs, fullpath);
+				if array.find_first (g_module_search_dirs, fullpath) == -1
+					array.push (*g_module_search_dirs, fullpath);
 			}
 		}
 	}
@@ -109,9 +109,9 @@ parse_arguments :: (options : *jaic.Build_Options)
 			if mount && dir
 			{
 				fullpath := fs.get_full_filename (dir, mem.HEAP_ALLOC);
-				map.insert (*module_search_map, mount, fullpath);
-				if array.find_first (module_search_dirs, fullpath) == -1
-					array.push (*module_search_dirs, fullpath);
+				map.insert (*g_module_search_map, mount, fullpath);
+				if array.find_first (g_module_search_dirs, fullpath) == -1
+					array.push (*g_module_search_dirs, fullpath);
 			}
 
 		case "-import_dir";
@@ -122,12 +122,12 @@ parse_arguments :: (options : *jaic.Build_Options)
 			if dir
 			{
 				fullpath := fs.get_full_filename (dir, mem.HEAP_ALLOC);
-				if array.find_first (module_search_dirs, fullpath) == -1
-					array.push (*module_search_dirs, fullpath);
+				if array.find_first (g_module_search_dirs, fullpath) == -1
+					array.push (*g_module_search_dirs, fullpath);
 			}
 		}
 	}
-	options.import_path = module_search_dirs;
+	options.import_path = g_module_search_dirs;
 }
 
 build :: ()
