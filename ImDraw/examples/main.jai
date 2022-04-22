@@ -16,8 +16,8 @@ render :: #import "Render_Core";
 imdraw :: #import "ImDraw";
 time   :: #import "Apollo_Time";
 
-main_window : window.Window;
-is_running : bool;
+g_window : window.Window;
+g_is_running : bool;
 
 handle_window_message :: (msg : window.Message)
 {
@@ -25,7 +25,7 @@ handle_window_message :: (msg : window.Message)
 	if msg.kind ==
 	{
 	case .WINDOW_CLOSED;
-		is_running = false;
+		g_is_running = false;
 	}
 }
 
@@ -38,15 +38,15 @@ main :: ()
 	}
 
 	gl.load ();
-	main_window := window.create ("ImDraw Example", -1, -1, -1, -1, .VISIBLE);
-	if !main_window
+	g_window := window.create ("ImDraw Example", -1, -1, -1, -1, .VISIBLE);
+	if !g_window
 		error ("Could not create window.");
-	defer window.destroy (main_window);
-	gl_ctx := gl.create_context (main_window);
+	defer window.destroy (g_window);
+	gl_ctx := gl.create_context (g_window);
 	if !gl_ctx
 		error ("Could not create GL context.");
-	defer gl.destroy_context (main_window, gl_ctx);
-	imdraw_ctx := imdraw.create_context (main_window, gl_ctx);
+	defer gl.destroy_context (g_window, gl_ctx);
+	imdraw_ctx := imdraw.create_context (g_window, gl_ctx);
 	if !imdraw_ctx
 		error ("Could not create ImDraw context.");
 	defer imdraw.destroy_context (imdraw_ctx);
@@ -68,17 +68,17 @@ main :: ()
 		error ("Could not load UV grid texture.");
 	defer render.destroy_texture (*uv_grid);
 
-	is_running = true;
-	while is_running
+	g_is_running = true;
+	while g_is_running
 	{
 		mem.reset_temporary_storage ();
 		t := time.to_float_seconds (time.current_monotonic ());
-		window.poll_messages (main_window);
+		window.poll_messages (g_window);
 		msg : window.Message;
-		while window.get_next_message (main_window, *msg)
+		while window.get_next_message (g_window, *msg)
 			handle_window_message (msg);
 		
-		width, height := window.get_viewport_size (main_window);
+		width, height := window.get_viewport_size (g_window);
 		gl.ClearColor (0.1, 0.1, 0.1, 1);
 		gl.Clear (gl.COLOR_BUFFER_BIT);
 		imdraw.begin (imdraw_ctx);
@@ -104,6 +104,6 @@ main :: ()
 			imdraw.draw_text (*jetbrains_mono, 22, round (vec2f (width - 10.0, height - 10.0) - size), datetime_str, math.RGBA_WHITE);
 		}
 		imdraw.end ();
-		window.swap_buffers (main_window);
+		window.swap_buffers (g_window);
 	}
 }
