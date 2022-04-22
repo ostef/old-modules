@@ -5,6 +5,7 @@ mem   :: #import "Memory";
 array :: #import "Containers/Array";
 fmt   :: #import "Fmt";
 input :: #import "Input";
+math  :: #import "Math";
 
 #scope_export
 
@@ -18,7 +19,16 @@ Creation_Flags :: enum_flags
 	NONE :: 0x00;
 	VISIBLE :: 0x01;
 	USE_CLIENT_COORDINATES  :: 0x02;
+	CUSTOM_CAPTION :: 0x04;
 }
+
+Flags :: enum_flags
+{
+	NONE :: 0x00;
+	CUSTOM_CAPTION :: 0x01;
+}
+
+Caption_Hit_Test_Proc :: #type (Window, mouse_x : s32, mouse_y : s32) -> on_caption : bool;
 
 Message :: struct
 {
