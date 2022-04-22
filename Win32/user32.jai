@@ -83,6 +83,7 @@ CreateWindowExW :: (
 else             CreateWindowEx :: CreateWindowExA;
 
 DestroyWindow :: (hWnd : HWND) -> BOOL #foreign user32;
+CloseWindow :: (hWnd : HWND) -> BOOL #foreign user32;
 EnableWindow :: (hWnd : HWND, bEnable : BOOL) -> BOOL #foreign user32;
 ShowWindow :: (hWnd : HWND, nCmdShow : INT) -> BOOL #foreign user32;
 SetWindowLongPtrW :: (hWnd : HWND, nIndex : INT, dwNewLong : *LONG) -> *LONG #foreign user32;
@@ -116,7 +117,63 @@ GetClientRect :: (hWnd : HWND, lpRect : *RECT) -> BOOL #foreign user32;
 SetWindowPos :: (hWnd : HWND, hWndInsertAfter : HWND, X : s32, Y : s32, cx : s32, cy : s32, uFlags : UINT) -> BOOL #foreign user32;
 AdjustWindowRect :: (lpRect : *RECT, dwStyle : DWORD, bMenu : BOOL) -> BOOL #foreign user32;
 AdjustWindowRectEx :: (lpRect : *RECT, dwStyle : DWORD, bMenu : BOOL, dwExStyle : DWORD) -> BOOL #foreign user32;
+AdjustWindowRectExForDpi :: (lpRect : *RECT, dwStyle : DWORD, bMenu : BOOL, dwExStyle : DWORD, dpi : UINT) -> BOOL #foreign user32;
 GetFocus :: () -> HWND #foreign user32;
+GetWindowPlacement :: (hWnd : HWND, lpwndpl : *WINDOWPLACEMENT) -> BOOL #foreign user32;
+PostQuitMessage :: (nExitCode : s32) #foreign user32;
+PostMessageA :: (hWnd : HWND, Msg : UINT, wParam : WPARAM, lParam : LPARAM) -> BOOL #foreign user32;
+PostMessageW :: (hWnd : HWND, Msg : UINT, wParam : WPARAM, lParam : LPARAM) -> BOOL #foreign user32;
+#if UNICODE then PostMessage :: PostMessageW;
+else             PostMessage :: PostMessageA;
+
+LoadCursorA :: (hInstance : HINSTANCE, lpCursorName : *CHAR) -> HCURSOR #foreign user32;
+LoadCursorW :: (hInstance : HINSTANCE, lpCursorName : *WCHAR) -> HCURSOR #foreign user32;
+#if UNICODE then LoadCursor :: LoadCursorW;
+else             LoadCursor :: LoadCursorA;
+SetCursor :: (hCursor : HCURSOR) -> HCURSOR #foreign user32;
+
+IDC_APPSTARTING :: 32650;
+IDC_ARROW :: 32512;
+IDC_CROSS :: 32515;
+IDC_HAND :: 32649;
+IDC_HELP :: 32651;
+IDC_IBEAM :: 32513;
+IDC_ICON :: 32641;
+IDC_NO :: 32648;
+IDC_SIZE :: 32640;
+IDC_SIZEALL :: 32646;
+IDC_SIZENESW :: 32643;
+IDC_SIZENS :: 32645;
+IDC_SIZENWSE :: 32642;
+IDC_SIZEWE :: 32644;
+IDC_UPARROW :: 32516;
+IDC_WAIT :: 32514;
+
+WINDOWPOS :: struct
+{
+	hwnd : HWND;
+	hwndInsertAfter : HWND;
+	x : s32;
+	y : s32;
+	cx : s32;
+	cy : s32;
+	flags : UINT;
+}
+
+WINDOWPLACEMENT :: struct
+{
+	length : UINT;
+	flags : UINT;
+	showCmd : UINT;
+	ptMinPosition : POINT;
+	ptMaxPosition : POINT;
+	rcNormalPosition : RECT;
+	rcDevice : RECT;
+}
+
+WPF_SETMINPOSITON        :: 0x01;
+WPF_RESTORETOMAXIMIZED   :: 0x02;
+WPF_ASYNCWINDOWPLACEMENT :: 0x04;
 
 ScreenToClient :: (hWnd : HWND, lpPoint : *POINT) -> BOOL #foreign user32;
 ClientToScreen :: (hWnd : HWND, lpPoint : *POINT) -> BOOL #foreign user32;
@@ -125,6 +182,126 @@ SetCursorPos :: (X : s32, Y : s32) -> BOOL #foreign user32;
 ShowCursor :: (bShow : BOOL) -> s32 #foreign user32;
 GetAsyncKeyState :: (vKey : s32) -> SHORT #foreign user32;
 GetKeyState :: (vKey : s32) -> SHORT #foreign user32;
+GetDpiForWindow :: (hWnd : HWND) -> UINT #foreign user32;
+GetSystemMetrics :: (nIndex : s32) -> s32 #foreign user32;
+GetSystemMetricsForDpi :: (nIndex : s32, dpi : UINT) -> s32 #foreign user32;
+InvalidateRect :: (hWnd : HWND, lpRect : *RECT, bErase : BOOL) -> BOOL #foreign user32;
+
+SetProcessDpiAwarenessContext :: (dpiContext : DPI_AWARENESS_CONTEXT) -> DPI_AWARENESS_CONTEXT #foreign user32;
+SetThreadDpiAwarenessContext :: (dpiContext : DPI_AWARENESS_CONTEXT) -> DPI_AWARENESS_CONTEXT #foreign user32;
+
+using DPI_AWARENESS_CONTEXT :: enum s32
+{
+	DPI_AWARENESS_CONTEXT_UNAWARE :: -1;
+	DPI_AWARENESS_CONTEXT_SYSTEM_AWARE :: -2;
+	DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE :: -3;
+	DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 :: -4;
+	DPI_AWARENESS_CONTEXT_UNAWARE_GDISCALED :: -5;
+}
+
+using DPI_AWARENESS :: enum s32
+{
+	DPI_AWARENESS_INVALID :: -1;
+	DPI_AWARENESS_UNAWARE :: 0;
+	DPI_AWARENESS_SYSTEM_AWARE :: 1;
+	DPI_AWARENESS_PER_MONITOR_AWARE :: 2;
+}
+
+SM_ARRANGE :: 56;
+SM_CLEANBOOT :: 67;
+SM_CMONITORS :: 80;
+SM_CMOUSEBUTTONS :: 43;
+SM_CONVERTIBLESLATEMODE :: 0x2003;
+SM_CXBORDER :: 5;
+SM_CXCURSOR :: 13;
+SM_CXDLGFRAME :: 7;
+SM_CXDOUBLECLK :: 36;
+SM_CXDRAG :: 68;
+SM_CXEDGE :: 45;
+SM_CXFIXEDFRAME :: 7;
+SM_CXFOCUSBORDER :: 83;
+SM_CXFRAME :: 32;
+SM_CXFULLSCREEN :: 16;
+SM_CXHSCROLL :: 21;
+SM_CXHTHUMB :: 10;
+SM_CXICON :: 11;
+SM_CXICONSPACING :: 38;
+SM_CXMAXIMIZED :: 61;
+SM_CXMAXTRACK :: 59;
+SM_CXMENUCHECK :: 71;
+SM_CXMENUSIZE :: 54;
+SM_CXMIN :: 28;
+SM_CXMINIMIZED :: 57;
+SM_CXMINSPACING :: 47;
+SM_CXMINTRACK :: 34;
+SM_CXPADDEDBORDER :: 92;
+SM_CXSCREEN :: 0;
+SM_CXSIZE :: 30;
+SM_CXSIZEFRAME :: 32;
+SM_CXSMICON :: 49;
+SM_CXSMSIZE :: 52;
+SM_CXVIRTUALSCREEN :: 78;
+SM_CXVSCROLL :: 2;
+SM_CYBORDER :: 6;
+SM_CYCAPTION :: 4;
+SM_CYCURSOR :: 14;
+SM_CYDLGFRAME :: 8;
+SM_CYDOUBLECLK :: 37;
+SM_CYDRAG :: 69;
+SM_CYEDGE :: 46;
+SM_CYFIXEDFRAME :: 8;
+SM_CYFOCUSBORDER :: 84;
+SM_CYFRAME :: 33;
+SM_CYFULLSCREEN :: 17;
+SM_CYHSCROLL :: 3;
+SM_CYICON :: 12;
+SM_CYICONSPACING :: 39;
+SM_CYKANJIWINDOW :: 18;
+SM_CYMAXIMIZED :: 62;
+SM_CYMAXTRACK :: 60;
+SM_CYMENU :: 15;
+SM_CYMENUCHECK :: 72;
+SM_CYMENUSIZE :: 55;
+SM_CYMIN :: 29;
+SM_CYMINIMIZED :: 58;
+SM_CYMINSPACING :: 48;
+SM_CYMINTRACK :: 35;
+SM_CYSCREEN :: 1;
+SM_CYSIZE :: 31;
+SM_CYSIZEFRAME :: 33;
+SM_CYSMCAPTION :: 51;
+SM_CYSMICON :: 50;
+SM_CYSMSIZE :: 53;
+SM_CYVIRTUALSCREEN :: 79;
+SM_CYVSCROLL :: 20;
+SM_CYVTHUMB :: 9;
+SM_DBCSENABLED :: 42;
+SM_DEBUG :: 22;
+SM_DIGITIZER :: 94;
+SM_IMMENABLED :: 82;
+SM_MAXIMUMTOUCHES :: 95;
+SM_MEDIACENTER :: 87;
+SM_MENUDROPALIGNMENT :: 40;
+SM_MIDEASTENABLED :: 74;
+SM_MOUSEPRESENT :: 19;
+SM_MOUSEHORIZONTALWHEELPRESENT :: 91;
+SM_MOUSEWHEELPRESENT :: 75;
+SM_NETWORK :: 63;
+SM_PENWINDOWS :: 41;
+SM_REMOTECONTROL :: 0x2001;
+SM_REMOTESESSION :: 0x1000;
+SM_SAMEDISPLAYFORMAT :: 81;
+SM_SECURE :: 44;
+SM_SERVERR2 :: 89;
+SM_SHOWSOUNDS :: 70;
+SM_SHUTTINGDOWN :: 0x2000;
+SM_SLOWMACHINE :: 73;
+SM_STARTER :: 88;
+SM_SWAPBUTTON :: 23;
+SM_SYSTEMDOCKED :: 0x2004;
+SM_TABLETPC :: 86;
+SM_XVIRTUALSCREEN :: 76;
+SM_YVIRTUALSCREEN :: 77;
 
 HIWORD :: (wparam: WPARAM) -> s16 #expand { return cast, no_check (s16) ((cast, no_check (s32) (wparam) >> 16) & 0xffff); }
 LOWORD :: (wparam: WPARAM) -> s16 #expand { return cast, no_check (s16) (wparam); }
@@ -161,27 +338,27 @@ PM_REMOVE   :: 0x0001;
 PM_NOYIELD  :: 0x0002;
 
 // ShowWindow, nCmdShow
-SW_HIDE            : INT : 0;
-SW_SHOWNORMAL      : INT : 1;
-SW_SHOWMINIMIZED   : INT : 2;
-SW_MAXIMIZE        : INT : 3;
-SW_SHOWMAXIMIZED   : INT : 3;
-SW_SHOWNOACTIVATE  : INT : 4;
-SW_SHOW            : INT : 5;
-SW_MINIMIZE        : INT : 6;
-SW_SHOWMINNOACTIVE : INT : 7;
-SW_SHOWNA          : INT : 8;
-SW_RESTORE         : INT : 9;
-SW_SHOWDEFAULT     : INT : 10;
-SW_FORCEMINIMIZE   : INT : 11;
+SW_HIDE            :: 0;
+SW_SHOWNORMAL      :: 1;
+SW_SHOWMINIMIZED   :: 2;
+SW_MAXIMIZE        :: 3;
+SW_SHOWMAXIMIZED   :: 3;
+SW_SHOWNOACTIVATE  :: 4;
+SW_SHOW            :: 5;
+SW_MINIMIZE        :: 6;
+SW_SHOWMINNOACTIVE :: 7;
+SW_SHOWNA          :: 8;
+SW_RESTORE         :: 9;
+SW_SHOWDEFAULT     :: 10;
+SW_FORCEMINIMIZE   :: 11;
 
 // SetWindowLongPtrW, GetWindowLongPtrW
-GWLP_USERDATA  : INT : -21;
-GWL_EXSTYLE    : INT : -20;
-GWL_STYLE      : INT : -16;
-GWLP_ID        : INT : -12;
-GWLP_HINSTANCE : INT : -6;
-GWLP_WNDPROC   : INT : -4;
+GWLP_USERDATA  :: -21;
+GWL_EXSTYLE    :: -20;
+GWL_STYLE      :: -16;
+GWLP_ID        :: -12;
+GWLP_HINSTANCE :: -6;
+GWLP_WNDPROC   :: -4;
 
 WNDPROC :: #type (HWND, UINT, WPARAM, LPARAM) -> LRESULT #c_call;
 
@@ -445,6 +622,7 @@ WM_DESTROY :: 0x0002;
 WM_MOVE    :: 0x0003;
 
 WM_SIZE            :: 0x0005;
+WM_ACTIVATE        :: 0x0006;
 WM_SETFOCUS        :: 0x0007;
 WM_KILLFOCUS       :: 0x0008;
 WM_ENABLE          :: 0x000A;
@@ -576,6 +754,39 @@ WM_MOUSELAST         :: 0x020E;
 
 WM_EXITSIZEMOVE :: 0x0232;
 WM_DPICHANGED   :: 0x02E0;
+
+NCCALCSIZE_PARAMS :: struct
+{
+	rgrc : [3]RECT;
+	lppos : *WINDOWPOS;
+}
+
+HTBORDER :: 18;
+HTBOTTOM :: 15;
+HTBOTTOMLEFT :: 16;
+HTBOTTOMRIGHT :: 17;
+HTCAPTION :: 2;
+HTCLIENT :: 1;
+HTCLOSE :: 20;
+HTERROR :: -2;
+HTGROWBOX :: 4;
+HTHELP :: 21;
+HTHSCROLL :: 6;
+HTLEFT :: 10;
+HTMENU :: 5;
+HTMAXBUTTON :: 9;
+HTMINBUTTON :: 8;
+HTNOWHERE :: 0;
+HTREDUCE :: 8;
+HTRIGHT :: 11;
+HTSIZE :: 4;
+HTSYSMENU :: 3;
+HTTOP :: 12;
+HTTOPLEFT :: 13;
+HTTOPRIGHT :: 14;
+HTTRANSPARENT :: -1;
+HTVSCROLL :: 7;
+HTZOOM :: 9;
 
 KF_EXTENDED :: 256;
 KF_DLGMODE  :: 2048;
