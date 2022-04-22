@@ -73,8 +73,8 @@ load :: inline ($log_errors := false) -> bool
 	return true;
 }
 
-using gl : GL;
-using gl_extensions : GL_Extensions;
+using g_gl : GL;
+using g_gl_extensions : GL_Extensions;
 
 GL :: struct #type_info_none
 {
