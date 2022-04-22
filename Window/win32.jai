@@ -614,7 +614,7 @@ win32_custom_caption_wnd_proc :: (window : win32.HWND, msg : u32, wparam : win32
 
 		case win32.WM_NCHITTEST;
 			hit := win32.DefWindowProcW (window, msg, wparam, lparam);
-			if !data || !data.caption_hit_test
+			if !data
 				return hit;
 			if hit ==
 			{
@@ -636,7 +636,7 @@ win32_custom_caption_wnd_proc :: (window : win32.HWND, msg : u32, wparam : win32
 			win32.ScreenToClient (window, *cursor);
 			if cursor.y > 0 && cursor.y < win32.GetSystemMetrics (win32.SM_CYFRAME) + win32.GetSystemMetrics (win32.SM_CXPADDEDBORDER)
 				return win32.HTTOP;
-			if data.caption_hit_test (window, cursor.x, cursor.y)
+			if data.caption_hit_test && data.caption_hit_test (window, cursor.x, cursor.y)
 				return win32.HTCAPTION;
 			return win32.HTCLIENT;
 		}
