@@ -2,17 +2,13 @@
 
 win32 :: #import "Win32";
 
+g_wndclass : win32.WNDCLASSEXW;
+g_custom_caption_wndclass : win32.WNDCLASSEXW;
+g_initialized_window_classes : bool;
+
 #scope_export
 
 Window :: win32.HWND;
-
-Win32_Window_Context :: struct
-{
-	wndclass : win32.WNDCLASSEXW;
-	custom_caption_wndclass : win32.WNDCLASSEXW;
-}
-
-#add_context win32_window_context : *Win32_Window_Context;
 
 Win32_Window_Data :: struct
 {
@@ -25,33 +21,33 @@ Win32_Window_Data :: struct
 
 win32_init_window_context :: inline () -> bool
 {
-	context.win32_window_context = mem.alloc (Win32_Window_Context, mem.HEAP_ALLOC);
 	{
-		using context.win32_window_context.wndclass;
+		using g_wndclass;
 		cbSize        = size_of (win32.WNDCLASSEXW);
 		style         = win32.CS_DBLCLKS | win32.CS_OWNDC;
 		lpfnWndProc   = win32_wnd_proc;
 		hInstance     = win32.GetModuleHandleW (null);
 		lpszClassName = win32.utf8_to_wide ("WindowClass", mem.HEAP_ALLOC);
-		if !win32.RegisterClassExW (*context.win32_window_context.wndclass)
+		if !win32.RegisterClassExW (*g_wndclass)
 		{
-			show_error_box ("RegisterClassExW failed: %", win32.get_last_error_string ());
+			show_error_box ("RegisterClassExW for WindowClass failed: %", win32.get_last_error_string ());
 			return false;
 		}
 	}
 	{
-		using context.win32_window_context.custom_caption_wndclass;
+		using g_custom_caption_wndclass;
 		cbSize        = size_of (win32.WNDCLASSEXW);
 		style         = win32.CS_DBLCLKS | win32.CS_OWNDC;
 		lpfnWndProc   = win32_custom_caption_wnd_proc;
 		hInstance     = win32.GetModuleHandleW (null);
 		lpszClassName = win32.utf8_to_wide ("CustomCaptionWindowClass", mem.HEAP_ALLOC);
-		if !win32.RegisterClassExW (*context.win32_window_context.custom_caption_wndclass)
+		if !win32.RegisterClassExW (*g_custom_caption_wndclass)
 		{
-			show_error_box ("RegisterClassExW failed: %", win32.get_last_error_string ());
+			show_error_box ("RegisterClassExW for CustomCaptionWindowClass failed: %", win32.get_last_error_string ());
 			return false;
 		}
 	}
+	g_initialized_window_classes = true;
 
 	return true;
 }
@@ -83,22 +79,21 @@ create :: inline (
 	parent : Window = null
 ) -> Window #must
 {
-	if !context.win32_window_context
+	if !g_initialized_window_classes
 		win32_init_window_context ();
+	if x == DEFAULT then x = win32.CW_USEDEFAULT;
+	if y == DEFAULT then y = win32.CW_USEDEFAULT;
+	if width  == DEFAULT then width  = win32.CW_USEDEFAULT;
+	if height == DEFAULT then height = win32.CW_USEDEFAULT;
 
-	if x == WINDOW_DEFAULT then x = win32.CW_USEDEFAULT;
-	if y == WINDOW_DEFAULT then y = win32.CW_USEDEFAULT;
-	if width  == WINDOW_DEFAULT then width  = win32.CW_USEDEFAULT;
-	if height == WINDOW_DEFAULT then height = win32.CW_USEDEFAULT;
-
-	wndclass := *context.win32_window_context.wndclass;
+	wndclass := *g_wndclass;
 	window_flags : Flags;
 	style : win32.DWORD = win32.WS_OVERLAPPEDWINDOW;
 	if flagged (flags, .CUSTOM_CAPTION)
 	{
 		style = win32.WS_THICKFRAME | win32.WS_SYSMENU | win32.WS_MAXIMIZEBOX | win32.WS_MINIMIZEBOX;
 		window_flags |= .CUSTOM_CAPTION;
-		wndclass = *context.win32_window_context.custom_caption_wndclass;
+		wndclass = *g_custom_caption_wndclass;
 	}
 	if flagged (flags, .VISIBLE)
 		style |= win32.WS_VISIBLE;
@@ -160,10 +155,27 @@ win32_get_window_data :: inline (window : Window) -> *Win32_Window_Data #must
 	return cast (*Win32_Window_Data) win32.GetWindowLongPtrW (window, win32.GWLP_USERDATA);
 }
 
-set_caption_hit_test :: inline (window : Window, proc : Caption_Hit_Test_Proc)
+get_flags :: inline (window : Window) -> Flags #must
+#no_context
 {
 	data := win32_get_window_data (window);
-	assert (data != null, "Could not retrieve window data.");
+	contextless_assert (data != null, "Could not retrieve window data.");
+	return data.flags;
+}
+
+get_caption_hit_test :: inline (window : Window) -> Caption_Hit_Test_Proc #must
+#no_context
+{
+	data := win32_get_window_data (window);
+	contextless_assert (data != null, "Could not retrieve window data.");
+	return data.caption_hit_test;
+}
+
+set_caption_hit_test :: inline (window : Window, proc : Caption_Hit_Test_Proc)
+#no_context
+{
+	data := win32_get_window_data (window);
+	contextless_assert (data != null, "Could not retrieve window data.");
 	data.caption_hit_test = proc;
 }
 
@@ -579,8 +591,6 @@ win32_wnd_proc :: (window : win32.HWND, msg : u32, wparam : win32.WPARAM, lparam
 win32_custom_caption_wnd_proc :: (window : win32.HWND, msg : u32, wparam : win32.WPARAM, lparam : win32.LPARAM) -> win32.LRESULT
 #c_call
 {
-	using data := win32_get_window_data (window);
-
 	ctx : Context;
 	fill_default_context (*ctx);
 	push_context ctx
@@ -614,6 +624,7 @@ win32_custom_caption_wnd_proc :: (window : win32.HWND, msg : u32, wparam : win32
 
 		case win32.WM_NCHITTEST;
 			hit := win32.DefWindowProcW (window, msg, wparam, lparam);
+			using data := win32_get_window_data (window);
 			if !data
 				return hit;
 			if hit ==
@@ -634,12 +645,12 @@ win32_custom_caption_wnd_proc :: (window : win32.HWND, msg : u32, wparam : win32
 			cursor.x = win32.LOWORD (lparam);
 			cursor.y = win32.HIWORD (lparam);
 			win32.ScreenToClient (window, *cursor);
-			on_caption := data.caption_hit_test && data.caption_hit_test (window, cursor.x, cursor.y);
+			on_caption := caption_hit_test && caption_hit_test (window, cursor.x, cursor.y);
 			on_resize_border := cursor.y > 0 && cursor.y < win32.GetSystemMetrics (win32.SM_CYFRAME) + win32.GetSystemMetrics (win32.SM_CXPADDEDBORDER);
 			// Don't resize when we are not on the caption, because we could be on
 			// some UI elements. If we don't have a caption_hit_test, then ignore
 			// that. The user should provide a hit test function anyway...
-			if on_resize_border && (on_caption || !data.caption_hit_test)
+			if on_resize_border && (on_caption || !caption_hit_test)
 				return win32.HTTOP;
 			else if on_caption
 				return win32.HTCAPTION;

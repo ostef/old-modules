@@ -115,7 +115,6 @@ main :: ()
 			imdraw.draw_circle (get_button_position (.CLOSE), BUTTON_RADIUS, math.rgba (255, 0, 0));
 		else
 			imdraw.draw_circle (get_button_position (.CLOSE), BUTTON_RADIUS, math.rgba (200, 0, 0));
-
 		if is_button_hovered (.MAXIMIZE) && input.is_mouse_button_down (.LEFT)
 			imdraw.draw_circle (get_button_position (.MAXIMIZE), BUTTON_RADIUS, math.rgba (50, 255, 50));
 		else if is_button_hovered (.MAXIMIZE)

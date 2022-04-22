@@ -12,7 +12,7 @@ math  :: #import "Math";
 #if OS == .WINDOWS
 	#load "win32.jai";
 
-WINDOW_DEFAULT :: -1;
+DEFAULT :: -1;
 
 Creation_Flags :: enum_flags
 {
