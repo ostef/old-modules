@@ -19,6 +19,7 @@ RGBA_BLUE  :: RGBA.{ 0, 0, 255, 255 };
 
 rgba :: make_rgba;
 make_rgba :: inline (r : u8, g : u8, b : u8, a : u8 = 255) -> RGBA #must
+#no_context
 {
 	result : RGBA = ---;
 	result.r = r;
@@ -30,6 +31,7 @@ make_rgba :: inline (r : u8, g : u8, b : u8, a : u8 = 255) -> RGBA #must
 }
 
 make_rgba :: inline (r : f32, g : f32, b : f32, a : f32 = 1) -> RGBA #must
+#no_context
 {
 	result : RGBA = ---;
 	result.r = cast (u8) (r * 255);
@@ -41,6 +43,7 @@ make_rgba :: inline (r : f32, g : f32, b : f32, a : f32 = 1) -> RGBA #must
 }
 
 make_rgba :: inline (using color : RGBAf) -> RGBA #must
+#no_context
 {
 	result : RGBA = ---;
 	result.r = cast (u8) (r * 255);
@@ -52,6 +55,7 @@ make_rgba :: inline (using color : RGBAf) -> RGBA #must
 }
 
 make_rgba :: inline (color : RGBA, a : u8) -> RGBA #must
+#no_context
 {
 	result : RGBA = ---;
 	result.r = color.r;
@@ -63,6 +67,7 @@ make_rgba :: inline (color : RGBA, a : u8) -> RGBA #must
 }
 
 blend :: inline (a : RGBA, b : RGBA, t : f32) -> RGBA #must
+#no_context
 {
 	result : RGBA = ---;
 	result.r = cast, trunc (u8) (a.r * (1 - t) + b.r * t);
@@ -74,6 +79,7 @@ blend :: inline (a : RGBA, b : RGBA, t : f32) -> RGBA #must
 }
 
 operator == :: inline (left : RGBA, right : RGBA) -> bool #must
+#no_context
 {
 	return left.r == right.r && left.g == right.g && left.b == right.b && left.a == right.a;
 }
@@ -93,6 +99,7 @@ RGBAF_BLACK :: RGBAf.{ 0, 0, 0, 1 };
 
 rgbaf :: make_rgbaf;
 make_rgbaf :: inline (r : f32 = 0, g : f32 = 0, b : f32 = 0, a : f32 = 0) ->  RGBAf #must
+#no_context
 {
 	result : RGBAf = ---;
 	result.r = saturate (r);
@@ -104,6 +111,7 @@ make_rgbaf :: inline (r : f32 = 0, g : f32 = 0, b : f32 = 0, a : f32 = 0) ->  RG
 }
 
 make_rgbaf :: inline (using color : RGBA) -> RGBAf #must
+#no_context
 {
 	result : RGBAf = ---;
 	result.r = r / 255.0;
@@ -115,6 +123,7 @@ make_rgbaf :: inline (using color : RGBA) -> RGBAf #must
 }
 
 invert :: inline (using color : RGBA) -> RGBA #must
+#no_context
 {
 	result : RGBA = ---;
 	result.r = 255 - r;
@@ -126,6 +135,7 @@ invert :: inline (using color : RGBA) -> RGBA #must
 }
 
 dim :: inline (using color : RGBA, factor : f32) -> RGBA #must
+#no_context
 {
 	result : RGBA = ---;
 	result.r = xx clamp (r / factor, 0, 255);
@@ -137,6 +147,7 @@ dim :: inline (using color : RGBA, factor : f32) -> RGBA #must
 }
 
 operator == :: inline (left : RGBAf, right : RGBAf) -> bool #must
+#no_context
 {
 	return left.r == right.r && left.g == right.g && left.b == right.b && left.a == right.a;
 }
