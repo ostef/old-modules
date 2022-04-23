@@ -142,6 +142,11 @@ terminate_process :: inline (process : Process, exit_code : s32) -> exit_code : 
 	return cast, no_check (s32) uexit_code, .OK;
 }
 
+sleep :: inline (ms : u32)
+{
+	win32.Sleep (ms);
+}
+
 exit :: inline (code : s32)
 {
 	win32.ExitProcess (cast, no_check (u32) code);
