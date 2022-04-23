@@ -553,13 +553,34 @@ draw_line :: inline (
 	draw_triangle (start - offset, end + offset, end - offset, color);
 }
 
+Anchor :: enum_flags
+{
+	TOP :: 0x01;
+	VCENTER :: 0x02;
+	BOTTOM :: 0x04;
+	LEFT :: 0x08;
+	HCENTER :: 0x10;
+	RIGHT :: 0x20;
+
+	TOP_LEFT   :: TOP | LEFT;
+	TOP_CENTER :: TOP | HCENTER;
+	TOP_RIGHT  :: TOP | RIGHT;
+	CENTER_LEFT  :: VCENTER | LEFT;
+	CENTER       :: VCENTER | HCENTER;
+	CENTER_RIGHT :: VCENTER | RIGHT;
+	BOTTOM_LEFT   :: BOTTOM | LEFT;
+	BOTTOM_CENTER :: BOTTOM | HCENTER;
+	BOTTOM_RIGHT  :: BOTTOM | RIGHT;
+}
+
 draw_text :: inline (
 	fnt : *Font,
 	height : u32,
 	position : Vec2f,
 	text : string,
-	color : RGBA
-)
+	color : RGBA,
+	anchor := Anchor.TOP_LEFT
+) -> text_rect : Rectf
 #no_abc
 {
 	utf8 :: #import "Unicode/UTF8";
@@ -572,8 +593,17 @@ draw_text :: inline (
 	defer set_shader (prev_shader);
 
 	page := font.load_page (fnt, height);
-	pen : Vec2f;
-	pen.y += page.ascent;
+	pen := vec2f (0, cast (f32) page.ascent);
+	offset : Vec2f;
+	size := font.calculate_text_extents (fnt, height, text);
+	if flagged (anchor, .VCENTER)
+		offset.y = -size.y * 0.5;
+	else if flagged (anchor, .BOTTOM)
+		offset.y = -size.y;
+	if flagged (anchor, .HCENTER)
+		offset.x = -size.x * 0.5;
+	else if flagged (anchor, .RIGHT)
+		offset.x = -size.x;
 	for codepoint, i : utf8.make_str (text)
 	{
 		if codepoint ==
@@ -587,8 +617,8 @@ draw_text :: inline (
 		case;
 			glyph := font.render_glyph (page, codepoint);
 			glyph_rect := math.xywhf (
-				math.round (cast (f32) position.x) + pen.x + glyph.bitmap_bearing_x,
-				math.round (cast (f32) position.y) + pen.y - glyph.bitmap_bearing_y,
+				math.round (position.x + offset.x) + pen.x + glyph.bitmap_bearing_x,
+				math.round (position.y + offset.y) + pen.y - glyph.bitmap_bearing_y,
 				cast (f32) glyph.bitmap_width,
 				cast (f32) glyph.bitmap_height
 			);
@@ -597,4 +627,6 @@ draw_text :: inline (
 			draw_rect (glyph_rect, color, glyph.uv_rect);
 		}
 	}
+
+	return math.xywhf (math.round (position.x + offset.x), math.round (position.y + offset.y), size.x, size.y);
 }
