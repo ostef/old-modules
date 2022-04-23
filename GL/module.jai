@@ -64,11 +64,11 @@ load :: inline ($log_errors := false) -> bool
 		return log.error ("Could not create dummy GL context to load GL functions.");
 	defer destroy_context (dummy_window, dummy_ctx);
 
-	gl.GetIntegerv (gl.MAJOR_VERSION, *gl.version_major);
-	gl.GetIntegerv (gl.MINOR_VERSION, *gl.version_minor);
-	load_functions (*gl, "gl");
-	load_functions (*gl_extensions);
-	log.message ("OpenGL version is %.%", gl.version_major, gl.version_minor);
+	GetIntegerv (MAJOR_VERSION, *version_major);
+	GetIntegerv (MINOR_VERSION, *version_minor);
+	load_functions (*g_gl, "gl");
+	load_functions (*g_gl_extensions);
+	log.message ("OpenGL version is %.%", version_major, version_minor);
 
 	return true;
 }
