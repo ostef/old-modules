@@ -53,19 +53,19 @@ main :: ()
 	jetbrains_mono := font.load_family ("data/jetbrains-mono/", "JetBrainsMono", mem.HEAP_ALLOC);
 	if !jetbrains_mono
 		error ("Could not load JetBrainsMono.");
-	defer font.destroy_family (*jetbrains_mono);
+	defer font.destroy_family (*jetbrains_mono, mem.HEAP_ALLOC);
 	beau_rivage := font.load_family ("data/beau-rivage-regular/", "BeauRivage", mem.HEAP_ALLOC);
 	if !beau_rivage
 		error ("Could not load BeauRivage.");
-	defer font.destroy_family (*beau_rivage);
+	defer font.destroy_family (*beau_rivage, mem.HEAP_ALLOC);
 	noto_sans_jp := font.load_family ("data/noto-sans-japanese/", "NotoSansJP", mem.HEAP_ALLOC);
 	if !noto_sans_jp
 		error ("Could not load NotoSansJP.");
-	defer font.destroy_family (*noto_sans_jp);
+	defer font.destroy_family (*noto_sans_jp, mem.HEAP_ALLOC);
 	noto_sans_kr := font.load_family ("data/noto-sans-korean/", "NotoSansKR", mem.HEAP_ALLOC);
 	if !noto_sans_kr
 		error ("Could not load NotoSansKR.");
-	defer font.destroy_family (*noto_sans_kr);
+	defer font.destroy_family (*noto_sans_kr, mem.HEAP_ALLOC);
 	uv_grid : render.Texture;
 	if !render.load_texture_from_file (*uv_grid, "data/uv_grid.png")
 		error ("Could not load UV grid texture.");
