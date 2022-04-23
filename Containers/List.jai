@@ -20,8 +20,7 @@ push :: inline (list : **$T, node : *T)
 	node.next = null;
 	if (<<list)
 		insert_before (<<list, node);
-	if should_replace
-		then <<list = node;
+	if should_replace then <<list = node;
 }
 
 pop :: inline (list : **$T, node : *T)
@@ -31,8 +30,10 @@ pop :: inline (list : **$T, node : *T)
 	next := node.next;
 	unlink (node);
 	if node == <<list
+	{
 		if next then <<list = next;
 		else         <<list = prev;
+	}
 }
 
 push_front :: push;
@@ -119,7 +120,8 @@ for_expansion :: (list : *$T, body : Code, flags : For_Flags) #expand
 	`it_index := 0;
 	while it
 	{
-		defer { it = it.next; it_index += 1; }
+		next := it.next;
+		defer { it = next; it_index += 1; }
 		#insert body;
 	}
 }
