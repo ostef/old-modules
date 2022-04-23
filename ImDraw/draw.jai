@@ -1,5 +1,3 @@
-#import "Font";
-
 draw_triangle :: inline (
 	p0 : Vec2f,
 	p1 : Vec2f,
@@ -574,7 +572,24 @@ Anchor :: enum_flags
 }
 
 draw_text :: inline (
-	fnt : *Font,
+	fnt : *font.Font,
+	height : u32,
+	position : Vec2f,
+	text : string,
+	color : RGBA,
+	weight : font.Weight,
+	effects := font.Effects.NONE,
+	anchor := Anchor.TOP_LEFT
+) -> text_rect : Rectf
+{
+	fnt = font.find_font (fnt, weight, effects);
+	if !fnt
+		return .{};
+	return draw_text (fnt, height, position, text, color, anchor);
+}
+
+draw_text :: (
+	fnt : *font.Font,
 	height : u32,
 	position : Vec2f,
 	text : string,

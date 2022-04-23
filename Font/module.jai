@@ -25,23 +25,48 @@
 #import "Runtime";
 mem    :: #import "Memory";
 str    :: #import "String";
+path   :: #import "Path";
 log    :: #import "Log";
 using linalg :: #import "Linalg";
 math   :: #import "Math";
 array  :: #import "Containers/Array";
 map    :: #import "Containers/Hash_Map";
 for_expansion :: map.for_expansion;
+list   :: #import "Containers/List";
+for_expansion :: list.for_expansion;
 gl     :: #import "GL";
 render :: #import "Render_Core";
 ft     :: #import "freetype255";
 
 #scope_export
 
+Weight :: enum
+{
+	INVALID :: -1;
+	UNKNOWN :: 0;
+	THIN    :: 100;
+	LIGHT   :: 300;
+	REGULAR :: 400;
+	MEDIUM  :: 500;
+	BOLD    :: 700;
+	BLACK   :: 800;
+}
+
+Effects :: enum_flags
+{
+	NONE :: 0x00;
+	ITALIC :: 0x01;
+}
+
 Font :: struct
 {
 	filename : string;
+	weight  : Weight;
+	effects : Effects;
 	ft_face : ft.Face;
 	pages : map.Hash_Map (u32, Font_Page);
+	prev : *Font;	// In a Font_Family
+	next : *Font;	// In a Font_Family
 }
 
 Font_Glyph :: struct
@@ -119,6 +144,48 @@ cleanup :: inline ()
 	ft.Done_FreeType (g_ft_lib);
 }
 
+find_font :: inline (family : *Font, weight : Weight, effects : Effects) -> *Font #must
+{
+	for family
+	{
+		if it.weight == weight && it.effects == effects
+			return it;
+	}
+	return null;
+}
+
+get_weight_and_effects :: (suffix : string) -> Weight, Effects
+{
+	if suffix ==
+	{
+	case "-Thin";
+		return .THIN, .NONE;
+	case "-ThinItalic";
+		return .THIN, .ITALIC;
+	case "-Light";
+		return .LIGHT, .NONE;
+	case "-LightItalic";
+		return .LIGHT, .ITALIC;
+	case "-Regular";
+		return .REGULAR, .NONE;
+	case "-Italic";
+		return .REGULAR, .ITALIC;
+	case "-Medium";
+		return .MEDIUM, .NONE;
+	case "-MediumItalic";
+		return .MEDIUM, .ITALIC;
+	case "-Bold";
+		return .BOLD, .NONE;
+	case "-BoldItalic";
+		return .BOLD, .ITALIC;
+	case "-Black";
+		return .BLACK, .NONE;
+	case "-BlackItalic";
+		return .BLACK, .ITALIC;
+	}
+	return .INVALID, .NONE;
+}
+
 load_from_file :: inline (font : *Font, filename : string) -> bool
 {
 	if !g_ft_lib && !init ()
@@ -130,26 +197,62 @@ load_from_file :: inline (font : *Font, filename : string) -> bool
 	font.filename = filename;
 	font.ft_face = ft_face;
 	map.init (*font.pages, 10, mem.HEAP_ALLOC);
-
-	return true;
-}
-
-reload_from_file :: inline (font : *Font, filename : string) -> bool
-{
-	cached := <<font;
-	mem.init (font);
-	if !load_from_file (font, filename)
+	suffix := path.remove_extension (font.filename);
+	dash_index := str.find_last (suffix, #char "-");
+	if dash_index != -1
 	{
-		destroy (font);
-		<<font = cached;
-		return false;
+		suffix = str.advance (suffix, dash_index);
+		font.weight, font.effects = get_weight_and_effects (suffix);
 	}
-	destroy (*cached);
 
 	return true;
 }
 
-destroy :: inline (using font : *Font)
+load_family :: inline (search_dir : string, name : string, allocator : Allocator) -> *Font #must
+{
+	fs :: #import "File_System";
+	for_expansion :: fs.for_expansion;
+
+	result : *Font;
+	tmp_font : Font;
+	for info : fs.file_search (search_dir, .VISIT_FILES)
+	{
+		basename := path.remove_extension (info.name);
+		if str.starts_with (basename, name)
+		{
+			weight, effects := get_weight_and_effects (str.advance (basename, name.count));
+			if weight == .INVALID
+				continue;
+			mem.init (*tmp_font);
+			if load_from_file (*tmp_font, info.full_name)
+			{
+				ptr := mem.alloc (Font, allocator);
+				<<ptr = tmp_font;
+				list.push (*result, ptr);
+			}
+		}
+	}
+	// Make regular font the first in the family
+	regular := find_font (result, .REGULAR, .NONE);
+	if regular
+	{
+		list.pop (*result, regular);
+		list.push_front (*result, regular);
+	}
+	return result;
+}
+
+destroy_family :: inline (family : **Font, allocator : Allocator)
+{
+	for (<<family)
+	{
+		destroy (it);
+		mem.free (it, allocator);
+	}
+	family = null;
+}
+
+destroy :: (using font : *Font)
 {
 	filename = "";
 	ft.Done_Face (ft_face);
