@@ -587,8 +587,8 @@ draw_text :: inline (
 		case;
 			glyph := font.render_glyph (page, codepoint);
 			glyph_rect := math.xywhf (
-				cast (f32) position.x + pen.x + glyph.bitmap_bearing_x,
-				cast (f32) position.y + pen.y - glyph.bitmap_bearing_y,
+				math.round (cast (f32) position.x) + pen.x + glyph.bitmap_bearing_x,
+				math.round (cast (f32) position.y) + pen.y - glyph.bitmap_bearing_y,
 				cast (f32) glyph.bitmap_width,
 				cast (f32) glyph.bitmap_height
 			);
