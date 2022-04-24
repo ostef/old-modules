@@ -93,8 +93,11 @@ get_basename :: inline (filename : string) -> string #must
 
 get_parent_dir :: inline (filename : string) -> string #must
 {
-	slash_index := str.find_last (filename, #char "/");
+	name := filename;
+	if name.count > 0 && name[name.count - 1] == #char "/"
+		name.count -= 1;
+	slash_index := str.find_last (name, #char "/");
 	if slash_index == -1
 		return "";
-	return str.slice (filename, slash_index);
+	return str.slice (name, slash_index);
 }
