@@ -28,6 +28,7 @@ Error :: enum
 {
 	OK :: 0;
 
+	INVALID_PARAMETERS;
 	ALLOCATION_FAILURE;
 
 	ACCESS_DENIED;
@@ -240,4 +241,46 @@ read_entire_file :: (file : File, allocator : Allocator) -> string #must, Error
 	}
 
 	return str.make (data, size), .OK;
+}
+
+
+create_directory_tree :: (tree : string) -> Error
+{
+	dirname := tree;
+	while dirname.count != 0 && dirname[dirname.count - 1] == #char "/"
+		dirname.count -= 1;
+	if dirname == ""
+		return .OK;
+	parent := path.get_parent_dir (dirname);
+	create_directory_tree (parent);
+
+	return create_directory (dirname);
+}
+
+purge_directory :: (dir : string)
+{
+	for info : file_search (dir, File_Search.Flags.VISIT_FILES | .VISIT_DIRECTORIES)
+	{
+		if flagged (info.attributes, .DIRECTORY)
+			delete_directory (info.full_name);
+		else
+			delete_file (info.full_name);
+	}
+}
+
+delete_directory :: inline (dir : string) -> Error
+{
+	purge_directory (dir);
+	return delete_empty_directory (dir);
+}
+
+copy_directory :: (source : string, dest : string)
+{
+	for info : file_search (source)
+	{
+		if flagged (info.attributes, .DIRECTORY)
+			create_directory_tree (info.full_name);
+		else
+			copy_file (info.full_name, info.full_name);
+	}
 }
