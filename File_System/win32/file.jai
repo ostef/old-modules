@@ -104,6 +104,15 @@ seek :: inline (file : File, offset : s64, from : Seek_From) -> moved : s64, Err
 	return (cast (s64) hi) << 32 + cast (s64) lo_moved, .OK;
 }
 
+copy_file :: inline (src : string, dst : string, overwrite := false) -> bool
+{
+	return win32.CopyFileW (
+		win32.utf8_to_wide (src, mem.TEMP_ALLOC),
+		win32.utf8_to_wide (dst, mem.TEMP_ALLOC),
+		xx (!overwrite)
+	) != 0;
+}
+
 get_file_size :: inline (file : File) -> s64 #must, Error
 {
 	len : win32.LARGE_INTEGER;
