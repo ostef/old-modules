@@ -18,6 +18,13 @@ Storage :: struct (T : Type, items_per_page : s32)
 		version  : u32;
 	}
 
+	Slot_Info :: struct
+	{
+		version    : u32;
+		page_index : s32;
+		slot_index : s32;
+	}
+
 	Page :: struct
 	{
 		// @Note (stefan): I would like to use relative pointers
@@ -37,13 +44,6 @@ Storage :: struct (T : Type, items_per_page : s32)
 	free_pages : *Page;
 	full_pages : *Page;
 	allocator : Allocator;
-}
-
-Slot_Info :: struct
-{
-	version    : u32;
-	page_index : s64;
-	slot_index : s64;
 }
 
 init :: inline (storage : *Storage, allocator : Allocator)
@@ -84,7 +84,7 @@ clear_page :: inline (using storage : *Storage, page : *storage.Page)
 	page.occupied_slots = null;
 }
 
-find_free_slot :: (using storage : *Storage, $initialize := true) -> *storage.T #must, info : Slot_Info, is_new_page : bool
+find_free_slot :: (using storage : *Storage, $initialize := true) -> *storage.T #must, info : storage.Slot_Info, is_new_page : bool
 {
 	info : Slot_Info;
 	is_new_page := false;
@@ -122,7 +122,7 @@ find_free_slot :: (using storage : *Storage, $initialize := true) -> *storage.T 
 	return item, info, is_new_page;
 }
 
-release_slot :: (using storage : *Storage, info : Slot_Info)
+release_slot :: (using storage : *Storage, info : storage.Slot_Info)
 {
 	page := all_pages[info.page_index];
 	page_was_full := page.free_slots == null;
@@ -178,7 +178,7 @@ release_all :: (using storage : *Storage)
 	full_pages = null;
 }
 
-get_slot_info :: (using storage : *Storage, item : *storage.T) -> valid : bool, info : Slot_Info, occupied : bool
+get_slot_info :: (using storage : *Storage, item : *storage.T) -> valid : bool, info : storage.Slot_Info, occupied : bool
 {
 	info : Slot_Info;
 	for page : all_pages
@@ -203,7 +203,7 @@ for_expansion :: (storage : *Storage, body : Code, flags : For_Flags) #expand
 	REVERSE    :: (flags & .REVERSE) == .REVERSE;
 
 	#assert !REVERSE "Storage is an unordered data structure. Iterating in reverse does not make much sense.";
-	`it_index : Slot_Info;
+	`it_index : storage.Slot_Info;
 	for page, pi : storage.pages
 	{
 		for slot, _ : page.occupied_slots
