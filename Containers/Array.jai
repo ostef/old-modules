@@ -135,16 +135,17 @@ ordered_insert_at :: inline (arr : *[..]$T, at : s64, elem : T) -> *T
 {
 	ptr := ordered_insert_at (arr, at, initialize = false);
 	<<ptr = elem;
-
 	return ptr;
 }
 
 ordered_remove_at :: inline (arr : *[..]$T, at : s64) -> T
 {
 	assert (at >= 0 && at < arr.count, "Index % is out of range [0, %).", at, arr.count);
+	removed := arr.data[at];
 	for i : at..arr.count - 2
 		arr.data[i] = arr.data[i + 1];
 	arr.count -= 1;
+	return at;
 }
 
 top :: inline (arr : []$T) -> T #must
