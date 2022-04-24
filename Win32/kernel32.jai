@@ -222,12 +222,14 @@ CloseHandle :: (hObject : HANDLE) -> BOOL #foreign kernel32;
 //CopyContext	6.1 from Windows 7 SP1, and higher	documented
 //CopyExtendedContext	6.1 before Windows 7 SP1	documented
 //CopyFile2	6.2 and higher	documented
-//CopyFileA	3.51 and higher	documented
+CopyFileA :: (lpExistingFileName : *CHAR, lpNewFileName : *CHAR, bFailIfExists : BOOL) -> BOOL #foreign kernel32;
+CopyFileW :: (lpExistingFileName : *WCHAR, lpNewFileName : *WCHAR, bFailIfExists : BOOL) -> BOOL #foreign kernel32;
+#if UNICODE then CopyFile :: CopyFileW;
+else             CopyFile :: CopyFileA;
 //CopyFileExA	4.0 from Windows NT 4.0, and higher	documented
 //CopyFileExW	4.0 from Windows NT 4.0, and higher	documented
 //CopyFileTransactedA	6.0 and higher	documented
 //CopyFileTransactedW	6.0 and higher	documented
-//CopyFileW	3.51 and higher	documented
 //CopyLZFile	5.1 and higher	documented
 //CreateActCtxA	5.1 and higher	documented
 //CreateActCtxW	5.1 and higher	documented
