@@ -243,6 +243,29 @@ read_entire_file :: (file : File, allocator : Allocator) -> string #must, Error
 	return str.make (data, size), .OK;
 }
 
+write_to_file :: inline (filename : string, data : []u8) -> written : s64, Error
+{
+	written, err := write_to_file (filename, data.data, data.count);
+	return written, err;
+}
+
+write_to_file :: inline (filename : string, str : string) -> written : s64, Error
+{
+	written, err := write_to_file (filename, str.data, str.count);
+	return written, err;
+}
+
+write_to_file :: inline (filename : string, data : *void, size : s64) -> written : s64, Error
+{
+	file, err := open (filename, File_Open_Flags.ACCESS_READ | .OPEN_OR_CREATE);
+	if !file
+		return 0, err;
+	defer close (file);
+	written : s64;
+	written, err = write (file, data, size);
+
+	return written, err;
+}
 
 create_directory_tree :: (tree : string) -> Error
 {
@@ -276,11 +299,14 @@ delete_directory :: inline (dir : string) -> Error
 
 copy_directory :: (source : string, dest : string)
 {
+	create_directory_tree (dest);
 	for info : file_search (source)
 	{
+		relative_path := str.advance (info.full_name, source.count);
+		dest_path := path.join (mem.HEAP_ALLOC, dest, relative_path);
 		if flagged (info.attributes, .DIRECTORY)
-			create_directory_tree (info.full_name);
+			create_directory_tree (dest_path);
 		else
-			copy_file (info.full_name, info.full_name);
+			copy_file (info.full_name, dest_path);
 	}
 }
