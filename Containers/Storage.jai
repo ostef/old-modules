@@ -178,7 +178,7 @@ release_all :: (using storage : *Storage)
 	full_pages = null;
 }
 
-get_slot_info :: (using storage : *Storage, item : *storage.T) -> valid : bool, info : storage.Slot_Info, occupied : bool
+get_slot_info :: (using storage : Storage, item : *storage.T) -> valid : bool, info : storage.Slot_Info, occupied : bool
 {
 	info : Slot_Info;
 	for page : all_pages
@@ -195,6 +195,33 @@ get_slot_info :: (using storage : *Storage, item : *storage.T) -> valid : bool, 
 	}
 
 	return false, info, false;
+}
+
+is_valid :: inline (using storage : Storage, slot : storage.Slot_Info) -> bool
+{
+	if slot.slot_index < 0 || slot.slot_index >= items_per_page
+		return false;
+	if slot.page_index < 0 || slot.page_index >= all_pages.count
+		return false;
+	page := all_pages[slot.page_index];
+	if !page.slots[slot.slot_index].occupied || page.slots[slot.slot_index].version != slot.version
+		return false;
+	return false;
+}
+
+get_item :: inline (using storage : Storage, slot : storage.Slot_Info) -> *storage.T #must
+{
+	assert (slot.slot_index >= 0 && slot.slot_index < items_per_page, "Invalid slot index.");
+	assert (slot.page_index >= 0 && slot.page_index < all_pages.count, "Invalid page index.");
+	ptr := *all_pages[slot.page_index].slots[slot.slot_index];
+	assert (ptr.occupied, "Slot is not occupied.");
+	assert (ptr.version == slot.version, "Slot has different version (requested %, got %).", slot.version, ptr.version);
+	return *all_pages[slot.page_index].items[slot.slot_index];
+}
+
+operator [] :: inline (using storage : Storage, slot : storage.Slot_Info) -> *storage.T #must
+{
+	return get_item (storage, slot);
 }
 
 for_expansion :: (storage : *Storage, body : Code, flags : For_Flags) #expand
