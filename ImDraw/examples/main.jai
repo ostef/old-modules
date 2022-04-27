@@ -88,6 +88,16 @@ main :: ()
 		{
 			prev_texture := imdraw.set_texture (*uv_grid);
 			imdraw.draw_circle (vec2f (500, 200), 150 + math.sin (cast (f32) t) * 50, math.RGBA_WHITE);
+			
+			start_angle := math.wrap (cast (f32) t, 0, 2 * math.PI);
+			angle := math.cos (start_angle);
+			imdraw.draw_semi_circle_outline (
+				vec2f (800, 500),
+				100,
+				start_angle, angle,
+				math.RGBA_WHITE,
+				20 + 10 * math.sin (cast (f32) t)
+			);
 			imdraw.set_texture (prev_texture);
 
 			cos := vec2f (xx t, math.cos (cast (f32) t));
