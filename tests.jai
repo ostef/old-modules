@@ -28,18 +28,19 @@ build :: ()
 	array.init (*test_only, 20, mem.HEAP_ALLOC);
 	tests : [..]Test_Entry;
 	array.init (*tests, 20, mem.HEAP_ALLOC);
-	user := jaic.compiler_get_command_line_arguments ();
+	opt := jaic.get_build_options ();
+	args := opt.compile_time_command_line;
 	i := 0;
-	while i < user.count
+	while i < args.count
 	{
 		defer i += 1;
-		arg := user[i];
+		arg := args[i];
 		if arg ==
 		{
-		case "-module";
+		case "module";
 			i += 1;
-			if i < user.count
-				array.push (*test_only, user[i]);
+			if i < args.count
+				array.push (*test_only, args[i]);
 		}
 	}
 	// Don't log temporary storage page allocation messages
