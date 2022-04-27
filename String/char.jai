@@ -11,6 +11,13 @@ is_alpha :: inline (ascii : u8) -> bool #must
 		ascii >= #char "A" && ascii <= #char "Z";
 }
 
+is_alnum :: is_alpha_numeric;
+is_alpha_numeric :: inline (ascii : u8) -> bool #must
+#no_context
+{
+	return ascii == #char "_" || is_digit (ascii) || is_alpha (ascii);
+}
+
 is_upper :: inline (ascii : u8) -> bool #must
 #no_context
 {
@@ -45,4 +52,10 @@ to_lower :: inline (s : string) -> string
 		if is_upper (s[i])
 			s[i] = #char "a" + (s[i] - #char "A");
 	return s;
+}
+
+is_space :: inline (ascii : u8) -> bool #must
+#no_context
+{
+	return ascii == #char " " || ascii == #char "\t" || ascii == #char "\n" || ascii == #char "\r";
 }
