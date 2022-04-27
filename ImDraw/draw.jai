@@ -553,12 +553,12 @@ draw_line :: inline (
 
 Anchor :: enum_flags
 {
-	TOP :: 0x01;
+	TOP     :: 0x01;
 	VCENTER :: 0x02;
-	BOTTOM :: 0x04;
-	LEFT :: 0x08;
+	BOTTOM  :: 0x04;
+	LEFT    :: 0x08;
 	HCENTER :: 0x10;
-	RIGHT :: 0x20;
+	RIGHT   :: 0x20;
 
 	TOP_LEFT   :: TOP | LEFT;
 	TOP_CENTER :: TOP | HCENTER;
@@ -571,6 +571,15 @@ Anchor :: enum_flags
 	BOTTOM_RIGHT  :: BOTTOM | RIGHT;
 }
 
+Text_Effects :: enum_flags
+{
+	NONE :: 0x00;
+	ITALIC :: 0x01;
+	UNDERLINE :: 0x02;
+	STRIKETHROUGH :: 0x04;
+	STRIKEOUT :: STRIKETHROUGH;
+}
+
 draw_text :: inline (
 	fnt : *font.Font,
 	height : u32,
@@ -578,14 +587,15 @@ draw_text :: inline (
 	text : string,
 	color : RGBA,
 	weight : font.Weight,
-	effects := font.Effects.NONE,
+	effects := Text_Effects.NONE,
 	anchor := Anchor.TOP_LEFT
 ) -> text_rect : Rectf
 {
-	fnt = font.find_font (fnt, weight, effects);
-	if !fnt
-		return .{};
-	return draw_text (fnt, height, position, text, color, anchor);
+	if flagged (effects, .ITALIC)
+		fnt = font.find_font (fnt, weight, .ITALIC, fallback = fnt);
+	else
+		fnt = font.find_font (fnt, weight, fnt.effects, fallback = fnt);
+	return draw_text (fnt, height, position, text, color, effects, anchor);
 }
 
 draw_text :: (
@@ -594,6 +604,7 @@ draw_text :: (
 	position : Vec2f,
 	text : string,
 	color : RGBA,
+	effects := Text_Effects.NONE,
 	anchor := Anchor.TOP_LEFT
 ) -> text_rect : Rectf
 #no_abc
@@ -607,6 +618,8 @@ draw_text :: (
 	prev_shader := set_shader (*font.g_glyph_shader);
 	defer set_shader (prev_shader);
 
+	if flagged (effects, .ITALIC)
+		fnt = font.find_font (fnt, fnt.weight, .ITALIC, fallback = fnt);
 	page := font.load_page (fnt, height);
 	pen := vec2f (0, cast (f32) page.ascent);
 	offset : Vec2f;
@@ -624,6 +637,26 @@ draw_text :: (
 		if codepoint ==
 		{
 		case #char "\n";
+			if flagged (effects, .UNDERLINE)
+			{
+				set_texture (null);
+				draw_line (
+					round (position + offset) + vec2f (0, pen.y + 0.5),
+					round (position + offset) + vec2f (pen.x, pen.y + 0.5),
+					color,
+					1
+				);
+			}
+			if flagged (effects, .STRIKETHROUGH)
+			{
+				set_texture (null);
+				draw_line (
+					round (position + offset) + vec2f (0, pen.y - math.round (page.ascent * (2.0 / 5.0)) + 0.5),
+					round (position + offset) + vec2f (pen.x, pen.y - math.round (page.ascent * (2.0 / 5.0)) + 0.5),
+					color,
+					1
+				);
+			}
 			pen.x = 0;
 			pen.y += page.ascent - page.descent;
 		case #char "\t";
@@ -641,6 +674,26 @@ draw_text :: (
 			set_texture (glyph.atlas_texture);
 			draw_rect (glyph_rect, color, glyph.uv_rect);
 		}
+	}
+	if pen.x != 0 && flagged (effects, .UNDERLINE)
+	{
+		set_texture (null);
+		draw_line (
+			round (position + offset) + vec2f (0, pen.y + 0.5),
+			round (position + offset) + vec2f (pen.x, pen.y + 0.5),
+			color,
+			1
+		);
+	}
+	if pen.x != 0 && flagged (effects, .STRIKETHROUGH)
+	{
+		set_texture (null);
+		draw_line (
+			round (position + offset) + vec2f (0, pen.y - math.round (page.ascent * (2.0 / 5.0)) + 0.5),
+			round (position + offset) + vec2f (pen.x, pen.y - math.round (page.ascent * (2.0 / 5.0)) + 0.5),
+			color,
+			1
+		);
 	}
 
 	return math.xywhf (math.round (position.x + offset.x), math.round (position.y + offset.y), size.x, size.y);
