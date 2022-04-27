@@ -144,14 +144,14 @@ cleanup :: inline ()
 	ft.Done_FreeType (g_ft_lib);
 }
 
-find_font :: inline (family : *Font, weight : Weight, effects : Effects) -> *Font #must
+find_font :: inline (family : *Font, weight : Weight, effects : Effects, fallback : *Font = null) -> *Font #must
 {
 	for family
 	{
 		if it.weight == weight && it.effects == effects
 			return it;
 	}
-	return null;
+	return fallback;
 }
 
 get_weight_and_effects :: (suffix : string) -> Weight, Effects
