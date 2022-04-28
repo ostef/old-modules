@@ -1,3 +1,5 @@
+#module_parameters (LOG_PAGE_ALLOCATIONS := false);
+
 #scope_module
 
 #import "Runtime";
@@ -93,7 +95,8 @@ find_free_slot :: (using storage : *Storage, $initialize := true) -> *storage.T 
 	page := free_pages;
 	if !page
 	{
-		log.message ("Allocating new page for %.", type_of (<<storage));
+		#if LOG_PAGE_ALLOCATIONS
+			log.message ("Allocating new page for %.", type_of (<<storage));
 		is_new_page = true;
 		page = list.push_front (*free_pages, allocator);
 		array.push (*all_pages, page);
