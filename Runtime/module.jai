@@ -29,6 +29,20 @@ get_cmd_line_args :: inline () -> []string #must
 	return g_cmd_line_args;
 }
 
+offset_of :: ($T : Type, member : string) -> s64 #must #expand
+{
+	#insert -> string
+	{
+		builder :: #import "String/Builder";
+		
+		code : builder.Builder;
+		builder.init (*code, mem.HEAP_ALLOC);
+		builder.append_line (*code, "base : T = ---;");
+		builder.append_line (*code, "return cast (*u8) *base.% - cast (*u8) *base;", member);
+		return builder.build (code, mem.HEAP_ALLOC);
+	};
+}
+
 fill_default_context :: inline (ctx : *Context)
 #no_context
 {
