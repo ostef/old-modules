@@ -8,9 +8,25 @@ parse_bool :: inline (s : string) -> value : bool #must, bytes_read : s64, Error
 	return false, 0, .MALFORMED_INPUT;
 }
 
-parse_u64 :: inline (s : string) -> value : u64 #must, bytes_read : s64, Error
+parse_u64 :: inline (s : string, $base := DECIMAL_BASE, $case_sensitive := false) -> value : u64 #must, bytes_read : s64, Error
 #no_context
 {
+	get_digit :: (char : u8, $base : string, $case_sensitive : bool) -> s64 #must
+	#no_context
+	{
+		for i : 0..base.count - 1
+		{
+			if base[i] == char
+				return i;
+			#if !case_sensitive
+			{
+				if str.to_lower (base[i]) == str.to_lower (char)
+					return i;
+			}
+		}
+		return -1;
+	}
+
 	will_overflow :: inline (value : u64, digit : u64) -> bool #must
 	#no_context
 	{
@@ -21,52 +37,54 @@ parse_u64 :: inline (s : string) -> value : u64 #must, bytes_read : s64, Error
 		return false;
 	}
 	
-	if s.count <= 0 || !str.is_digit (s[0])
+	if s.count <= 0 || get_digit (s[0], base, case_sensitive) < 0
 		return 0, 0, .MALFORMED_INPUT;
 	err := Error.OK;
 	i := 0;
 	value : u64;
-	while i < s.count && str.is_digit (s[i])
+	while i < s.count
 	{
-		digit := cast (u64) s[i] - #char "0";
-		if err != .OVERFLOW && will_overflow (value, digit)
+		digit := get_digit (s[i], base, case_sensitive);
+		if digit < 0
+			break;
+		if err != .OVERFLOW && will_overflow (value, cast (u64) digit)
 			err = .OVERFLOW;
 		value *= 10;
-		value += digit;
+		value += cast (u64) digit;
 		i += 1;
 	}
 
 	return value, i, err;
 }
 
-parse_u32 :: inline (s : string) -> value : u32 #must, bytes_read : s64, Error
+parse_u32 :: inline (s : string, $base := DECIMAL_BASE, $case_sensitive := false) -> value : u32 #must, bytes_read : s64, Error
 #no_context
 {
-	val, read, err := parse_u64 (s);
+	val, read, err := parse_u64 (s, base, case_sensitive);
 	if val > math.U32_MAX
 		err = .OVERFLOW;
 	return cast, no_check (u32) val, read, err;
 }
 
-parse_u16 :: inline (s : string) -> value : u16 #must, bytes_read : s64, Error
+parse_u16 :: inline (s : string, $base := DECIMAL_BASE, $case_sensitive := false) -> value : u16 #must, bytes_read : s64, Error
 #no_context
 {
-	val, read, err := parse_u64 (s);
+	val, read, err := parse_u64 (s, base, case_sensitive);
 	if val > math.U16_MAX
 		err = .OVERFLOW;
 	return cast, no_check (u16) val, read, err;
 }
 
-parse_u8 :: inline (s : string) -> value : u8 #must, bytes_read : s64, Error
+parse_u8 :: inline (s : string, $base := DECIMAL_BASE, $case_sensitive := false) -> value : u8 #must, bytes_read : s64, Error
 #no_context
 {
-	val, read, err := parse_u64 (s);
+	val, read, err := parse_u64 (s, base, case_sensitive);
 	if val > math.U8_MAX
 		err = .OVERFLOW;
 	return cast, no_check (u8) val, read, err;
 }
 
-parse_s64 :: inline (s : string) -> value : s64 #must, bytes_read : s64, Error
+parse_s64 :: inline (s : string, $base := DECIMAL_BASE, $case_sensitive := false) -> value : s64 #must, bytes_read : s64, Error
 #no_context
 {
 	if s.count == 0 then return 0, 0, .MALFORMED_INPUT;
@@ -78,17 +96,17 @@ parse_s64 :: inline (s : string) -> value : s64 #must, bytes_read : s64, Error
 		sign = cast (s64) (s[0] == #char "+") * 2 - 1;
 		i += 1;
 	}
-	unsigned_value, bytes_read, err := parse_u64 (str.advance (s, i));
+	unsigned_value, bytes_read, err := parse_u64 (str.advance (s, i), base, case_sensitive);
 	if bytes_read == 0 then return 0, 0, err;
 	signed_value := sign * cast (s64) unsigned_value;
 
 	return signed_value, i + bytes_read, err;
 }
 
-parse_s32 :: inline (s : string) -> value : s32 #must, bytes_read : s64, Error
+parse_s32 :: inline (s : string, $base := DECIMAL_BASE, $case_sensitive := false) -> value : s32 #must, bytes_read : s64, Error
 #no_context
 {
-	val, read, err := parse_s64 (s);
+	val, read, err := parse_s64 (s, base, case_sensitive);
 	if val < math.S32_MIN
 		err = .UNDERFLOW;
 	else if val > math.S32_MAX
@@ -96,10 +114,10 @@ parse_s32 :: inline (s : string) -> value : s32 #must, bytes_read : s64, Error
 	return cast, no_check (s32) val, read, err;
 }
 
-parse_s16 :: inline (s : string) -> value : s16 #must, bytes_read : s64, Error
+parse_s16 :: inline (s : string, $base := DECIMAL_BASE, $case_sensitive := false) -> value : s16 #must, bytes_read : s64, Error
 #no_context
 {
-	val, read, err := parse_s64 (s);
+	val, read, err := parse_s64 (s, base, case_sensitive);
 	if val < math.S16_MIN
 		err = .UNDERFLOW;
 	else if val > math.S16_MAX
@@ -107,10 +125,10 @@ parse_s16 :: inline (s : string) -> value : s16 #must, bytes_read : s64, Error
 	return cast, no_check (s16) val, read, err;
 }
 
-parse_s8 :: inline (s : string) -> value : s8 #must, bytes_read : s64, Error
+parse_s8 :: inline (s : string, $base := DECIMAL_BASE, $case_sensitive := false) -> value : s8 #must, bytes_read : s64, Error
 #no_context
 {
-	val, read, err := parse_s64 (s);
+	val, read, err := parse_s64 (s, base, case_sensitive);
 	if val < math.S8_MIN
 		err = .UNDERFLOW;
 	else if val > math.S8_MAX
