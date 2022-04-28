@@ -36,12 +36,27 @@ is_ascii :: inline (ascii : u8) -> bool #must
 	return ascii >= 0 && ascii <= 127;
 }
 
+to_upper :: inline (ascii : u8) -> u8 #must
+#no_context
+{
+	if is_upper (ascii)
+		return #char "a" + (ascii - #char "A");
+	return ascii;
+}
+
+to_lower :: inline (ascii : u8) -> u8 #must
+#no_context
+{
+	if is_lower (ascii)
+		return #char "A" + (ascii - #char "a");
+	return ascii;
+}
+
 to_upper :: inline (s : string) -> string
 #no_context
 {
 	for i : 0..s.count - 1
-		if is_lower (s[i])
-			s[i] = #char "A" + (s[i] - #char "a");
+		s[i] = to_upper (s[i]);
 	return s;
 }
 
@@ -49,8 +64,7 @@ to_lower :: inline (s : string) -> string
 #no_context
 {
 	for i : 0..s.count - 1
-		if is_upper (s[i])
-			s[i] = #char "a" + (s[i] - #char "A");
+		s[i] = to_lower (s[i]);
 	return s;
 }
 
