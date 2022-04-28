@@ -1,3 +1,5 @@
+#module_parameters (LOG_PAGE_ALLOCATIONS := false);
+
 #scope_module
 
 #import "Runtime";
@@ -5,6 +7,8 @@ mem   :: #import "Memory";
 math  :: #import "Math";
 array :: #import "Containers/Array";
 log   :: #import "Log";
+list  :: #import "Containers/List";
+for_expansion :: list.for_expansion;
 
 #scope_export
 
@@ -31,7 +35,7 @@ Storage :: struct (T : Type, items_per_page : s32)
 		// to use less memory, but Pages are allocated on the heap.
 		prev  : *Page;
 		next  : *Page;
-		index : u32;
+		index : s32;
 		count : s32;
 		items : [items_per_page]T = ---;
 		slots : [items_per_page]Slot;
@@ -67,7 +71,7 @@ reset :: inline (using storage : *Storage)
 
 clear_page :: inline (using storage : *Storage, page : *storage.Page)
 {
-	for * slot, si : slots
+	for * slot, si : page.slots
 	{
 		slot.occupied = false;
 		if si != 0
@@ -80,7 +84,7 @@ clear_page :: inline (using storage : *Storage, page : *storage.Page)
 			slot.next = null;
 	}
 	page.count = 0;
-	page.free_slots = *pages.slots[0];
+	page.free_slots = *page.slots[0];
 	page.occupied_slots = null;
 }
 
@@ -91,33 +95,35 @@ find_free_slot :: (using storage : *Storage, $initialize := true) -> *storage.T 
 	page := free_pages;
 	if !page
 	{
-		log.message ("Allocating new page for %.", type_of (<<storage));
+		#if LOG_PAGE_ALLOCATIONS
+			log.message ("Allocating new page for %.", type_of (<<storage));
 		is_new_page = true;
 		page = list.push_front (*free_pages, allocator);
 		array.push (*all_pages, page);
-		page.index = cast (u32) (all_pages.count - 1);
+		page.index = cast (s32) (all_pages.count - 1);
 		clear_page (storage, page);
 	}
 	assert (page.count < items_per_page, "Page is full even though it is in the free pages list.");
 	assert (page.free_slots != null, "Could not find free slot even though the page is in the free pages list.");
 	slot := list.pop_front (*page.free_slots);
+	assert (!slot.occupied, "Expected slot to be free but it was occupied.");
 	list.push_front (*page.occupied_slots, slot);
 	// If there are no more free slots, add the page to the full pages list
 	if !page.free_slots
 	{
 		page = list.pop_front (*free_pages);
-		list.push_front (*full_pages);
+		list.push_front (*full_pages, page);
 	}
 	slot.occupied = true;
 	slot.version += 1;
-	item := *page.items[info.slot_index];
-	#if initialize
-		mem.init (item);
 	page.count += 1;
 	count += 1;
 	info.version = slot.version;
 	info.page_index = page.index;
-	info.slot_index = cast (s64) (slot - page.slots.data) / size_of (Slot);
+	info.slot_index = cast (s32) (slot - page.slots.data);
+	item := *page.items[info.slot_index];
+	#if initialize
+		mem.init (item);
 
 	return item, info, is_new_page;
 }
@@ -178,7 +184,7 @@ release_all :: (using storage : *Storage)
 	full_pages = null;
 }
 
-get_slot_info :: (using storage : *Storage, item : *storage.T) -> valid : bool, info : storage.Slot_Info, occupied : bool
+get_slot_info :: (using storage : Storage, item : *storage.T) -> valid : bool, info : storage.Slot_Info, occupied : bool
 {
 	info : Slot_Info;
 	for page : all_pages
@@ -197,6 +203,33 @@ get_slot_info :: (using storage : *Storage, item : *storage.T) -> valid : bool, 
 	return false, info, false;
 }
 
+is_valid :: inline (using storage : Storage, slot : storage.Slot_Info) -> bool
+{
+	if slot.slot_index < 0 || slot.slot_index >= items_per_page
+		return false;
+	if slot.page_index < 0 || slot.page_index >= all_pages.count
+		return false;
+	page := all_pages[slot.page_index];
+	if !page.slots[slot.slot_index].occupied || page.slots[slot.slot_index].version != slot.version
+		return false;
+	return false;
+}
+
+get_item :: inline (using storage : Storage, slot : storage.Slot_Info) -> *storage.T #must
+{
+	assert (slot.slot_index >= 0 && slot.slot_index < items_per_page, "Invalid slot index.");
+	assert (slot.page_index >= 0 && slot.page_index < all_pages.count, "Invalid page index.");
+	ptr := *all_pages[slot.page_index].slots[slot.slot_index];
+	assert (ptr.occupied, "Slot is not occupied.");
+	assert (ptr.version == slot.version, "Slot has different version (requested %, got %).", slot.version, ptr.version);
+	return *all_pages[slot.page_index].items[slot.slot_index];
+}
+
+operator [] :: inline (using storage : Storage, slot : storage.Slot_Info) -> *storage.T #must
+{
+	return get_item (storage, slot);
+}
+
 for_expansion :: (storage : *Storage, body : Code, flags : For_Flags) #expand
 {
 	BY_POINTER :: (flags & .POINTER) == .POINTER;
@@ -204,13 +237,13 @@ for_expansion :: (storage : *Storage, body : Code, flags : For_Flags) #expand
 
 	#assert !REVERSE "Storage is an unordered data structure. Iterating in reverse does not make much sense.";
 	`it_index : storage.Slot_Info;
-	for page, pi : storage.pages
+	for page, pi : storage.all_pages
 	{
 		for slot, _ : page.occupied_slots
 		{
 			it_index.version    = slot.version;
-			it_index.page_index = pi;
-			it_index.slot_index = cast (s64) (slot - *page.slots[0]) / size_of (storage.Slot);
+			it_index.page_index = cast (s32) pi;
+			it_index.slot_index = cast (s32) (slot - *page.slots[0]) / size_of (storage.Slot);
 			#if BY_POINTER
 				`it := *page.items[it_index.slot_index];
 			else

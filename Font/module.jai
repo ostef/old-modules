@@ -40,21 +40,21 @@ ft     :: #import "freetype255";
 
 #scope_export
 
-Weight :: enum
+Weight :: enum s8
 {
 	INVALID :: -1;
 	UNKNOWN :: 0;
-	THIN    :: 100;
-	LIGHT   :: 300;
-	REGULAR :: 400;
-	MEDIUM  :: 500;
-	BOLD    :: 700;
-	BLACK   :: 800;
+	THIN    :: 1;
+	LIGHT   :: 3;
+	REGULAR :: 4;
+	MEDIUM  :: 5;
+	BOLD    :: 7;
+	BLACK   :: 8;
 }
 
-Effects :: enum_flags
+Effects :: enum_flags u8
 {
-	NONE :: 0x00;
+	NONE   :: 0x00;
 	ITALIC :: 0x01;
 }
 
@@ -144,14 +144,14 @@ cleanup :: inline ()
 	ft.Done_FreeType (g_ft_lib);
 }
 
-find_font :: inline (family : *Font, weight : Weight, effects : Effects) -> *Font #must
+find_font :: inline (family : *Font, weight : Weight, effects : Effects, fallback : *Font = null) -> *Font #must
 {
 	for family
 	{
 		if it.weight == weight && it.effects == effects
 			return it;
 	}
-	return null;
+	return fallback;
 }
 
 get_weight_and_effects :: (suffix : string) -> Weight, Effects
