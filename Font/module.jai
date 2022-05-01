@@ -208,14 +208,17 @@ load_from_file :: inline (font : *Font, filename : string) -> bool
 	return true;
 }
 
-load_family :: inline (search_dir : string, name : string, allocator : Allocator) -> *Font #must
+load_family :: inline (search_dir : string, name : string, allocator : Allocator, recursive := true) -> *Font #must
 {
 	fs :: #import "File_System";
 	for_expansion :: fs.for_expansion;
 
+	flags := fs.File_Search.Flags.VISIT_FILES;
+	if recursive
+		flags |= .RECURSIVE;
 	result : *Font;
 	tmp_font : Font;
-	for info : fs.file_search (search_dir, .VISIT_FILES)
+	for info : fs.file_search (search_dir, flags)
 	{
 		basename := path.remove_extension (info.name);
 		if str.starts_with (basename, name)
@@ -430,12 +433,14 @@ render_glyph :: (using page : *Font_Page, codepoint : u32) -> *Font_Glyph
 
 calculate_text_extents :: inline (font : *Font, height : u32, text : string) -> Vec2f #must
 {
+	utf8 :: #import "Unicode/UTF8";
+	for_expansion :: utf8.for_expansion;
+
 	page := load_page (font, height);
 	width : f32;
 	pen := vec2f (0, cast (f32) page.ascent);
-	for i : 0..text.count - 1
+	for codepoint, i : utf8.make_str (text)
 	{
-		codepoint := cast (u32) text[i];
 		if codepoint ==
 		{
 		case #char "\n";
