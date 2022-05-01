@@ -40,7 +40,7 @@ init_texture :: inline (texture : *Texture, width : u32, height : u32, channels 
 	return true;
 }
 
-init_texture :: inline (texture : *Texture, image : *img.Image) -> bool
+init_texture :: inline (texture : *Texture, image : img.Image) -> bool
 {
 	return init_texture (texture, xx image.width, xx image.height, image.channels, image.data);
 }
