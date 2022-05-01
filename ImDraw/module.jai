@@ -214,8 +214,10 @@ push_clip_rect :: inline (clip_rect : Recti) -> previous : Recti
 
 scope_clip_rect :: (clip_rect : Recti) #expand
 {
-	previous := push_clip_rect (clip_rect);
-	`defer set_clip_rect (previous);
+	previous_clip := get_clipping ();
+	`defer set_clipping (previous_clip);
+	previous_rect := push_clip_rect (clip_rect);
+	`defer set_clip_rect (previous_rect);
 }
 
 get_clipping :: inline () -> bool #must
