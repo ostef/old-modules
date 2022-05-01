@@ -145,7 +145,7 @@ ordered_remove_at :: inline (arr : *[..]$T, at : s64) -> T
 	for i : at..arr.count - 2
 		arr.data[i] = arr.data[i + 1];
 	arr.count -= 1;
-	return at;
+	return removed;
 }
 
 top :: inline (arr : []$T) -> T #must
