@@ -12,6 +12,8 @@ for_expansion :: list.for_expansion;
 
 #scope_export
 
+// @Todo (stefan): Automatically calculate items_per_page based
+// on cache line size and size of .
 Storage :: struct (T : Type, items_per_page : s32)
 {
 	Slot :: struct
@@ -48,6 +50,16 @@ Storage :: struct (T : Type, items_per_page : s32)
 	free_pages : *Page;
 	full_pages : *Page;
 	allocator : Allocator;
+}
+
+equals :: inline (storage : Storage, a : storage.Slot_Info, b : storage.Slot_Info) -> bool #must
+{
+	return a.version == b.version && a.page_index == b.page_index && a.slot_index == b.slot_index;
+}
+
+operator == :: inline (storage : Storage, a : storage.Slot_Info, b : storage.Slot_Info) -> bool #must
+{
+	equals (storage, a, b);
 }
 
 init :: inline (storage : *Storage, allocator : Allocator)
