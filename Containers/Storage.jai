@@ -102,7 +102,6 @@ clear_page :: inline (using storage : *Storage, page : *storage.Page)
 
 find_free_slot :: (using storage : *Storage, $initialize := true) -> *storage.T #must, info : storage.Slot_Info, is_new_page : bool
 {
-	info : Slot_Info;
 	is_new_page := false;
 	page := free_pages;
 	if !page
@@ -130,6 +129,7 @@ find_free_slot :: (using storage : *Storage, $initialize := true) -> *storage.T 
 	slot.version += 1;
 	page.count += 1;
 	count += 1;
+	info : Slot_Info;
 	info.version = slot.version;
 	info.page_index = page.index;
 	info.slot_index = cast (s32) (slot - page.slots.data);
@@ -140,6 +140,13 @@ find_free_slot :: (using storage : *Storage, $initialize := true) -> *storage.T 
 	return item, info, is_new_page;
 }
 
+insert :: (using storage : *Storage, item : storage.T) -> info : storage.Slot_Info, *storage.T
+{
+	ptr, info := find_free_slot (storage, initialize = false);
+	<<ptr = item;
+	return info, ptr;
+}
+
 release_slot :: (using storage : *Storage, info : storage.Slot_Info)
 {
 	page := all_pages[info.page_index];
@@ -147,7 +154,7 @@ release_slot :: (using storage : *Storage, info : storage.Slot_Info)
 	assert (page.slots[info.slot_index].occupied, "Releasing unoccupied slot % in page %.", info.slot_index, info.page_index);
 	slot := *page.slots[info.slot_index];
 	slot.occupied = false;
-	list.pop (*page.occupied_slot, slot);
+	list.pop (*page.occupied_slots, slot);
 	list.push_front (*page.free_slots, slot);
 	page.count -= 1;
 	// Add the page to the free pages list if it was full previously
@@ -215,26 +222,26 @@ get_slot_info :: (using storage : Storage, item : *storage.T) -> valid : bool, i
 	return false, info, false;
 }
 
-is_valid :: inline (using storage : Storage, slot : storage.Slot_Info) -> bool
+is_valid :: inline (using storage : Storage, info : storage.Slot_Info) -> bool
 {
-	if slot.slot_index < 0 || slot.slot_index >= items_per_page
+	if info.slot_index < 0 && info.slot_index >= items_per_page
 		return false;
-	if slot.page_index < 0 || slot.page_index >= all_pages.count
+	if info.page_index < 0 || info.page_index >= all_pages.count
 		return false;
-	page := all_pages[slot.page_index];
-	if !page.slots[slot.slot_index].occupied || page.slots[slot.slot_index].version != slot.version
+	slot := *all_pages[info.page_index].slots[info.slot_index];
+	if !slot.occupied || slot.version != info.version
 		return false;
-	return false;
+	return true;
 }
 
-get_item :: inline (using storage : Storage, slot : storage.Slot_Info) -> *storage.T #must
+get_item :: inline (using storage : Storage, info : storage.Slot_Info) -> *storage.T #must
 {
-	assert (slot.slot_index >= 0 && slot.slot_index < items_per_page, "Invalid slot index.");
-	assert (slot.page_index >= 0 && slot.page_index < all_pages.count, "Invalid page index.");
-	ptr := *all_pages[slot.page_index].slots[slot.slot_index];
-	assert (ptr.occupied, "Slot is not occupied.");
-	assert (ptr.version == slot.version, "Slot has different version (requested %, got %).", slot.version, ptr.version);
-	return *all_pages[slot.page_index].items[slot.slot_index];
+	assert (info.slot_index >= 0 && info.slot_index < items_per_page, "Invalid slot index.");
+	assert (info.page_index >= 0 && info.page_index < all_pages.count, "Invalid page index.");
+	slot := *all_pages[info.page_index].slots[info.slot_index];
+	assert (slot.occupied, "Slot is not occupied.");
+	assert (slot.version == info.version, "Slot has different version (requested %, got %).", info.version, slot.version);
+	return *all_pages[info.page_index].items[info.slot_index];
 }
 
 operator [] :: inline (using storage : Storage, slot : storage.Slot_Info) -> *storage.T #must
