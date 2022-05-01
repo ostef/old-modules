@@ -1,5 +1,7 @@
 #module_parameters (MAX_VERTICES := 10000);
 
+// @Todo (stefan): Layers
+
 #scope_module
 
 #import "Runtime";

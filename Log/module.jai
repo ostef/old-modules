@@ -1,3 +1,6 @@
+// @Todo (stefan): Find a way to have module identifiers that
+// get inserted by a metaprogram for logging.
+
 #scope_module
 
 #import "Runtime";
