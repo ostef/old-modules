@@ -346,6 +346,16 @@ grow :: inline (rect : $R/Rect, x_amount : R.T, y_amount : R.T) -> R #must
 	return result;
 }
 
+scale :: inline (rect : $R/Rect, factor : $T) -> R #must
+{
+	return make_rect (
+		cast (R.T) (rect.x1 * factor),
+		cast (R.T) (rect.y1 * factor),
+		cast (R.T) (rect.x2 * factor),
+		cast (R.T) (rect.y2 * factor)
+	);
+}
+
 grow :: inline (rect : $R/Rect, amount : R.V) -> R #must
 #no_context
 {
