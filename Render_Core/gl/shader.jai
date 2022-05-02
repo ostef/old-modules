@@ -33,7 +33,7 @@ Shader :: struct
 		location : gl.GLint;
 	}
 
-	using binding : Binding;
+	#as using binding : Binding;
 	parameters : []Parameter;	// @Cleanup (stefan): Make this a Hash_Map
 }
 

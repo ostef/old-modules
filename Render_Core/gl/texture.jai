@@ -11,7 +11,24 @@ Texture :: struct
 		tex : gl.GLuint;
 	}
 
-	using binding : Binding;
+	Filtering :: enum
+	{
+		NEAREST;
+		LINEAR;
+	}
+
+	#as using binding : Binding;
+}
+
+to_gl :: inline (filtering : Texture.Filtering) -> s32 #must
+{
+	if #complete filtering ==
+	{
+	case .LINEAR;
+		return gl.LINEAR;
+	case .NEAREST;
+		return gl.NEAREST;
+	}
 }
 
 init_texture :: inline (texture : *Texture, width : u32, height : u32, channels : s32, data : *void) -> bool
@@ -59,6 +76,20 @@ destroy_texture :: inline (texture : *Texture)
 {
 	gl.DeleteTextures (1, *texture.tex);
 	texture.tex = 0;
+}
+
+set_texture_min_filtering :: inline (texture : *Texture, filtering : Texture.Filtering)
+{
+	prev := use_texture (texture);
+	defer use_texture (*prev);
+	gl.TexParameteri (gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, to_gl (filtering));
+}
+
+set_texture_mag_filtering :: inline (texture : *Texture, filtering : Texture.Filtering)
+{
+	prev := use_texture (texture);
+	defer use_texture (*prev);
+	gl.TexParameteri (gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, to_gl (filtering));
 }
 
 get_current_texture :: inline (index : u32 = 0) -> Texture.Binding #must

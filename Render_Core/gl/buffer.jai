@@ -75,7 +75,7 @@ Vertex_Buffer :: struct
 	VEC4I :: Elem.{ .S32, 4, false, false };
 	RGBA  :: Elem.{ .U8,  4, false,  true };
 
-	using binding : Binding;
+	#as using binding : Binding;
 }
 
 get_elem_size :: inline (elem : Vertex_Buffer.Elem) -> u32 #must
@@ -217,7 +217,7 @@ Index_Buffer :: struct
 		ibo : gl.GLuint;
 	}
 
-	using binding : Binding;
+	#as using binding : Binding;
 }
 
 init_index_buffer :: inline (buffer : *Index_Buffer)

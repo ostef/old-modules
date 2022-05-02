@@ -5,7 +5,7 @@ Framebuffer :: struct
 		fbo : gl.GLuint;
 	}
 
-	using binding : Binding;
+	#as using binding : Binding;
 }
 
 init_framebuffer :: inline (framebuffer : *Framebuffer, color_texture : *Texture) -> bool
