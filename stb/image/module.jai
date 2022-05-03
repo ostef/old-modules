@@ -1,6 +1,6 @@
 #module_parameters (STATIC_LINKING := true);
 
-VERSION :: 1;
+// stb_image
 
 io_callbacks :: struct
 {
@@ -185,10 +185,111 @@ zlib_decode_noheader_buffer :: (
 	ilen : s32
 ) -> *u8 #must #foreign stb_image "stbi_zlib_decode_noheader_buffer";
 
+// stb_image_write
+
+write_png :: (
+	filename : *u8,
+	w : s32,
+	h : s32,
+	comp : s32,
+	data : *void,
+	stride_in_bytes : s32
+) -> s32 #foreign stb_image_write "stbi_write_png";
+
+write_bmp :: (
+	filename : *u8,
+	w : s32,
+	h : s32,
+	comp : s32,
+	data : *void
+) -> s32 #foreign stb_image_write "stbi_write_bmp";
+
+write_tga :: (
+	filename : *u8,
+	w : s32,
+	h : s32,
+	comp : s32,
+	data : *void
+) -> s32 #foreign stb_image_write "stbi_write_tga";
+
+write_hdr :: (
+	filename : *u8,
+	w : s32,
+	h : s32,
+	comp : s32,
+	data : *float
+) -> s32 #foreign stb_image_write "stbi_write_hdr";
+
+write_jpg :: (
+	filename : *u8,
+	w : s32,
+	h : s32,
+	comp : s32,
+	data : *void,
+	quality : s32
+) -> s32 #foreign stb_image_write "stbi_write_bmp";
+
+write_func :: #type (*void, *void, s32) #c_call;
+
+write_png_to_func :: (
+	func : write_func,
+	ctx : *void,
+	w : s32,
+	h : s32,
+	comp : s32,
+	data : *void,
+	stride_in_bytes : s32
+) -> s32 #foreign stb_image_write "stbi_write_png_to_func";
+
+write_bmp_to_func :: (
+	func : write_func,
+	ctx : *void,
+	w : s32,
+	h : s32,
+	comp : s32,
+	data : *void
+) -> s32 #foreign stb_image_write "stbi_write_bmp_to_func";
+
+write_tga_to_func :: (
+	func : write_func,
+	ctx : *void,
+	w : s32,
+	h : s32,
+	comp : s32,
+	data : *void
+) -> s32 #foreign stb_image_write "stbi_write_tga_to_func";
+
+write_hdr_to_func :: (
+	func : write_func,
+	ctx : *void,
+	w : s32,
+	h : s32,
+	comp : s32,
+	data : *float
+) -> s32 #foreign stb_image_write "stbi_write_hdr_to_func";
+
+write_jpg_to_func :: (
+	func : write_func,
+	ctx : *void,
+	w : s32,
+	h : s32,
+	comp : s32,
+	data : *void,
+	quality : s32
+) -> s32 #foreign stb_image_write "stbi_write_jpg_to_func";
+
+flip_vertically_on_write :: (flip_boolean : s32) #foreign stb_image_write "stbi_flip_vertically_on_write";
+
 #if OS == .WINDOWS
 {
-#if STATIC_LINKING
-	stb_image :: #foreign_library, no_dll "win/lib/stb_image";
-else
-	stb_image :: #foreign_library "win/dll/stb_image";
+	#if STATIC_LINKING
+	{
+		stb_image :: #foreign_library, no_dll "win/lib/stb_image";
+		stb_image_write :: #foreign_library, no_dll "win/lib/stb_image_write";
+	}
+	else
+	{
+		stb_image :: #foreign_library "win/dll/stb_image";
+		stb_image_write :: #foreign_library "win/dll/stb_image_write";
+	}
 }

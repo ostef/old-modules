@@ -392,7 +392,7 @@ extern "C" {
 #ifdef STB_IMAGE_STATIC
 #define STBIDEF static
 #else
-#define STBIDEF extern __declspec(dllexport)
+#define STBIDEF extern
 #endif
 #endif
 
