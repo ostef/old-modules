@@ -95,7 +95,9 @@ is_numeric :: inline (codepoint : u32) -> bool #must
 	return false;
 }
 
-is_alpha_num :: inline (codepoint : u32) -> bool #must
+is_alnum :: is_alpha_numeric;
+is_alppha_num :: is_alpha_numeric;
+is_alpha_numeric :: inline (codepoint : u32) -> bool #must
 #no_context
 {
 	return is_alpha (codepoint) || is_numeric (codepoint) || codepoint == #char "_";
