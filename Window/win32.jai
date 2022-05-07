@@ -454,11 +454,14 @@ win32_wnd_proc :: (window : win32.HWND, msg : u32, wparam : win32.WPARAM, lparam
 					codepoint |= (low_surrogate - UTF16_HI_SURROGATE);
 					codepoint += 0x10000;
 				}
-
-				window_msg.kind      = .TEXT_INPUT;
-				window_msg.mods      = input.get_mod_state ();
-				window_msg.codepoint = codepoint;
-				push_message (data, window_msg);
+				unicode :: #import "Unicode";
+				if unicode.is_printable (codepoint)
+				{
+					window_msg.kind      = .TEXT_INPUT;
+					window_msg.mods      = input.get_mod_state ();
+					window_msg.codepoint = codepoint;
+					push_message (data, window_msg);
+				}
 			}
 
 		case win32.WM_SYSKEYDOWN; #through;
