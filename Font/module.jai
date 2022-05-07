@@ -88,13 +88,13 @@ Page :: struct
 {
 	font    : *Font;
 	height  : u32;
-	atlases : [..]Font_Atlas;
+	atlases : [..]Atlas;
 	glyphs  : map.Hash_Map (u32, Glyph);
 	ascent, descent : s32;	// ascent is positive and goes upwards, descent is negative and goes downward. This might be confusing.
 	space_advance : u32;
 }
 
-Font_Atlas :: struct
+Atlas :: struct
 {
 	texture     : render.Texture;
 	framebuffer : render.Framebuffer;
@@ -289,7 +289,7 @@ load_page :: inline (using font : *Font, height : u32) -> *Page
 	return page;
 }
 
-add_atlas_to_page :: inline (using page : *Page, atlas_width := DEFAULT_FONT_ATLAS_WIDTH, atlas_height := DEFAULT_FONT_ATLAS_HEIGHT) -> *Font_Atlas
+add_atlas_to_page :: inline (using page : *Page, atlas_width := DEFAULT_FONT_ATLAS_WIDTH, atlas_height := DEFAULT_FONT_ATLAS_HEIGHT) -> *Atlas
 {
 	result := array.push (*atlases);
 	result.width  = atlas_width;
@@ -358,7 +358,7 @@ render_glyph :: (using page : *Page, codepoint : u32) -> *Glyph
 	glyph.bitmap_bearing_x = xx slot.bitmap_left;
 	glyph.bitmap_bearing_y = xx slot.bitmap_top;
 
-	atlas : *Font_Atlas;
+	atlas : *Atlas;
 	for * atlases
 	{
 		if it.width - it.pen_y > glyph.bitmap_width && it.height - it.pen_y > glyph.bitmap_height
