@@ -571,7 +571,7 @@ Anchor :: enum_flags
 	BOTTOM_RIGHT  :: BOTTOM | RIGHT;
 }
 
-Text_Effects :: enum_flags
+Text_Effects :: enum_flags u8
 {
 	NONE :: 0x00;
 	ITALIC :: 0x01;
