@@ -64,12 +64,12 @@ Font :: struct
 	weight  : Weight;
 	effects : Effects;
 	ft_face : ft.Face;
-	pages : map.Hash_Map (u32, Font_Page);
+	pages : map.Hash_Map (u32, Page);
 	prev : *Font;	// In a Font_Family
 	next : *Font;	// In a Font_Family
 }
 
-Font_Glyph :: struct
+Glyph :: struct
 {
 	codepoint : u32;
 
@@ -84,12 +84,12 @@ Font_Glyph :: struct
 	atlas_texture : *render.Texture;
 }
 
-Font_Page :: struct
+Page :: struct
 {
 	font    : *Font;
 	height  : u32;
 	atlases : [..]Font_Atlas;
-	glyphs  : map.Hash_Map (u32, Font_Glyph);
+	glyphs  : map.Hash_Map (u32, Glyph);
 	ascent, descent : s32;	// ascent is positive and goes upwards, descent is negative and goes downward. This might be confusing.
 	space_advance : u32;
 }
@@ -273,7 +273,7 @@ destroy :: (using font : *Font)
 	map.reset (*pages);
 }
 
-load_page :: inline (using font : *Font, height : u32) -> *Font_Page
+load_page :: inline (using font : *Font, height : u32) -> *Page
 {
 	page, was_present := map.insert (*pages, height);
 	if was_present then return page;
@@ -289,7 +289,7 @@ load_page :: inline (using font : *Font, height : u32) -> *Font_Page
 	return page;
 }
 
-add_atlas_to_page :: inline (using page : *Font_Page, atlas_width := DEFAULT_FONT_ATLAS_WIDTH, atlas_height := DEFAULT_FONT_ATLAS_HEIGHT) -> *Font_Atlas
+add_atlas_to_page :: inline (using page : *Page, atlas_width := DEFAULT_FONT_ATLAS_WIDTH, atlas_height := DEFAULT_FONT_ATLAS_HEIGHT) -> *Font_Atlas
 {
 	result := array.push (*atlases);
 	result.width  = atlas_width;
@@ -301,17 +301,17 @@ add_atlas_to_page :: inline (using page : *Font_Page, atlas_width := DEFAULT_FON
 	return result;
 }
 
-load_glyph :: inline (font : *Font, codepoint : u32, height : u32) -> *Font_Glyph
+load_glyph :: inline (font : *Font, codepoint : u32, height : u32) -> *Glyph
 {
 	return load_glyph (load_page (font, height), codepoint);
 }
 
-render_glyph :: inline (font : *Font, codepoint : u32, height : u32) -> *Font_Glyph
+render_glyph :: inline (font : *Font, codepoint : u32, height : u32) -> *Glyph
 {
 	return render_glyph (load_page (font, height), codepoint);
 }
 
-load_glyph :: (using page : *Font_Page, codepoint : u32) -> *Font_Glyph
+load_glyph :: (using page : *Page, codepoint : u32) -> *Glyph
 {
 	glyph, was_present := map.insert (*glyphs, codepoint);
 	if was_present
@@ -336,7 +336,7 @@ load_glyph :: (using page : *Font_Page, codepoint : u32) -> *Font_Glyph
 	return glyph;
 }
 
-render_glyph :: (using page : *Font_Page, codepoint : u32) -> *Font_Glyph
+render_glyph :: (using page : *Page, codepoint : u32) -> *Glyph
 {
 	glyph, was_present := map.insert (*glyphs, codepoint);
 	if was_present && glyph.rendered
