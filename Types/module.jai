@@ -75,7 +75,7 @@ is_enum :: inline (val : $T)  -> bool #must { return is_enum (type_info (T)); }
 is_enum :: inline (val : Any) -> bool #must { return is_enum (val.type); }
 is_enum :: inline (info : *Type_Info) -> bool #must
 {
-	return info != null && info.type == .ENUM;
+	return info != null && info.type == .ENUM && !flagged ((cast (*Type_Info_Enum) info).enum_type_flags, .FLAGS);
 }
 
 is_enum_flags :: inline (type : Type) -> bool #must { return is_enum_flags (cast (*Type_Info) type); }
@@ -83,9 +83,7 @@ is_enum_flags :: inline (val : $T)  -> bool #must { return is_enum_flags (type_i
 is_enum_flags :: inline (val : Any) -> bool #must { return is_enum_flags (val.type); }
 is_enum_flags :: inline (info : *Type_Info) -> bool #must
 {
-	if !is_enum (info)
-		return false;
-	return flagged ((cast (*Type_Info_Enum) info).enum_type_flags, .FLAGS);
+	return info != null && info.type == .ENUM && flagged ((cast (*Type_Info_Enum) info).enum_type_flags, .FLAGS);
 }
 
 has_member :: inline (type : Type, name : string) -> bool #must { return has_member (cast (*Type_Info) type, name); }
