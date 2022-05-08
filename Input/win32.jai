@@ -63,9 +63,9 @@ get_mod_state :: inline () -> Mods #must
 	result : Mods;
 	if is_key_down (.CTRL)
 		result |= .CTRL;
-	else if is_key_down (.SHIFT)
+	if is_key_down (.SHIFT)
 		result |= .SHIFT;
-	else if is_key_down (.ALT)
+	if is_key_down (.ALT)
 		result |= .ALT;
 
 	return result;
