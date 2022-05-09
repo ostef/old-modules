@@ -262,7 +262,7 @@ for_expansion :: (storage : *Storage, body : Code, flags : For_Flags) #expand
 		{
 			it_index.version    = slot.version;
 			it_index.page_index = cast (s32) pi;
-			it_index.slot_index = cast (s32) (slot - *page.slots[0]) / size_of (storage.Slot);
+			it_index.slot_index = cast (s32) (slot - page.slots.data);
 			#if BY_POINTER
 				`it := *page.items[it_index.slot_index];
 			else
