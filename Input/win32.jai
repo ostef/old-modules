@@ -97,11 +97,11 @@ handle_window_message :: (msg : window.Message)
 	if msg.kind ==
 	{
 	case .RAW_MOUSE_MOVED;
-		g_mouse_delta_x = msg.g_mouse_delta_x;
-		g_mouse_delta_y = msg.g_mouse_delta_y;
+		g_mouse_delta_x = msg.mouse_delta_x;
+		g_mouse_delta_y = msg.mouse_delta_y;
 	case .MOUSE_WHEEL;
-		g_mouse_wheel_x = msg.g_mouse_wheel_x;
-		g_mouse_wheel_y = msg.g_mouse_wheel_y;
+		g_mouse_wheel_x = msg.mouse_wheel_x;
+		g_mouse_wheel_y = msg.mouse_wheel_y;
 	}
 }
 
