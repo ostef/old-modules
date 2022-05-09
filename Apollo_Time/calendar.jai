@@ -41,7 +41,7 @@ ENGLISH_NAMES :: Calendar_Names.{
 
 FRENCH_NAMES :: Calendar_Names.{
 	days = .[ "Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi" ],
-	short_days = .[ "Dimanche", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam" ],
+	short_days = .[ "Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam" ],
 	months = .[ "Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre" ],
 	short_months = .[ "Jan", "Fév", "Mar", "Avr", "Mai", "Jun", "Jul", "Aoû", "Sep", "Oct", "Nov", "Déc" ]
 };
