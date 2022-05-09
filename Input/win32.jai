@@ -2,12 +2,12 @@
 
 win32 :: #import "Win32";
 
-prev_keyboard_state : [Key_Code.COUNT]bool;
-keyboard_state : [Key_Code.COUNT]bool;
-prev_mouse_button_states : [Mouse_Button.COUNT]bool;
-mouse_button_states : [Mouse_Button.COUNT]bool;
-mouse_delta_x, mouse_delta_y : s32;
-mouse_wheel_x, mouse_wheel_y : f32;
+g_prev_keyboard_state : [Key_Code.COUNT]bool;
+g_keyboard_state : [Key_Code.COUNT]bool;
+g_prev_mouse_button_states : [Mouse_Button.COUNT]bool;
+g_mouse_button_states : [Mouse_Button.COUNT]bool;
+g_mouse_delta_x, g_mouse_delta_y : s32;
+g_mouse_wheel_x, g_mouse_wheel_y : f32;
 
 #scope_export
 
@@ -20,13 +20,13 @@ is_key_down :: inline (key_code : Key_Code) -> bool #must
 is_key_pressed :: inline (key_code : Key_Code) -> bool #must
 #no_context
 {
-	return !prev_keyboard_state[cast (int) key_code] && is_key_down (key_code);
+	return !g_prev_keyboard_state[cast (int) key_code] && is_key_down (key_code);
 }
 
 is_key_released :: inline (key_code : Key_Code) -> bool #must
 #no_context
 {
-	return prev_keyboard_state[cast (int) key_code] && !is_key_down (key_code);
+	return g_prev_keyboard_state[cast (int) key_code] && !is_key_down (key_code);
 }
 
 is_mouse_button_down :: inline (button : Mouse_Button) -> bool #must
@@ -38,23 +38,23 @@ is_mouse_button_down :: inline (button : Mouse_Button) -> bool #must
 is_mouse_button_pressed :: inline (button : Mouse_Button) -> bool #must
 #no_context
 {
-	return !prev_mouse_button_states[cast (int) button] && is_mouse_button_down (button);
+	return !g_prev_mouse_button_states[cast (int) button] && is_mouse_button_down (button);
 }
 
 is_mouse_button_released :: inline (button : Mouse_Button) -> bool #must
 #no_context
 {
-	return prev_mouse_button_states[cast (int) button] && !is_mouse_button_down (button);
+	return g_prev_mouse_button_states[cast (int) button] && !is_mouse_button_down (button);
 }
 
 get_mouse_delta :: inline () -> x : s32, y : s32
 {
-	return mouse_delta_x, mouse_delta_y;
+	return g_mouse_delta_x, g_mouse_delta_y;
 }
 
 get_mouse_wheel :: inline () -> x : f32, y : f32
 {
-	return mouse_wheel_x, mouse_wheel_y;
+	return g_mouse_wheel_x, g_mouse_wheel_y;
 }
 
 get_mod_state :: inline () -> Mods #must
@@ -84,12 +84,12 @@ init :: inline () -> bool
 
 update :: inline ()
 {
-	mem.copy (prev_keyboard_state.data, keyboard_state.data, size_of (bool) * prev_keyboard_state.count);
-	for i : 0..keyboard_state.count - 1
-		keyboard_state[i] = is_key_down (cast, no_check (Key_Code) i);
-	mem.copy (prev_mouse_button_states.data, mouse_button_states.data, size_of (bool) * prev_mouse_button_states.count);
-	for i : 0..mouse_button_states.count - 1
-		mouse_button_states[i] = is_mouse_button_down (cast, no_check (Mouse_Button) i);
+	mem.copy (g_prev_keyboard_state.data, g_keyboard_state.data, size_of (bool) * g_prev_keyboard_state.count);
+	for i : 0..g_keyboard_state.count - 1
+		g_keyboard_state[i] = is_key_down (cast, no_check (Key_Code) i);
+	mem.copy (g_prev_mouse_button_states.data, g_mouse_button_states.data, size_of (bool) * g_prev_mouse_button_states.count);
+	for i : 0..g_mouse_button_states.count - 1
+		g_mouse_button_states[i] = is_mouse_button_down (cast, no_check (Mouse_Button) i);
 }
 
 handle_window_message :: (msg : window.Message)
@@ -97,11 +97,11 @@ handle_window_message :: (msg : window.Message)
 	if msg.kind ==
 	{
 	case .RAW_MOUSE_MOVED;
-		mouse_delta_x = msg.mouse_delta_x;
-		mouse_delta_y = msg.mouse_delta_y;
+		g_mouse_delta_x = msg.g_mouse_delta_x;
+		g_mouse_delta_y = msg.g_mouse_delta_y;
 	case .MOUSE_WHEEL;
-		mouse_wheel_x = msg.mouse_wheel_x;
-		mouse_wheel_y = msg.mouse_wheel_y;
+		g_mouse_wheel_x = msg.g_mouse_wheel_x;
+		g_mouse_wheel_y = msg.g_mouse_wheel_y;
 	}
 }
 
