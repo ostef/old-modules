@@ -267,7 +267,10 @@ for_expansion :: (storage : *Storage, body : Code, flags : For_Flags) #expand
 				`it := *page.items[it_index.slot_index];
 			else
 				`it := page.items[it_index.slot_index];
-			#insert (break = break page) body;
+			#insert (
+				break = break page,
+				remove = release_slot (storage, it_index)
+			) body;
 		}
 	}
 }
