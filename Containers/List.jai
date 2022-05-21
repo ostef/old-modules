@@ -99,7 +99,7 @@ unlink :: inline (node : *$T)
 	node.next = null;
 }
 
-find_last :: inline (list : *$T) -> *T #must
+get_last :: inline (list : *$T) -> *T #must
 #modify { return is_list (T); }
 {
 	while list && list.next
