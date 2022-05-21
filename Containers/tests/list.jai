@@ -7,7 +7,7 @@ for_expansion :: list.for_expansion;
 
 Node :: struct
 {
-	val : string;
+	val  : string;
 	prev : *Node;
 	next : *Node;
 }
@@ -27,4 +27,11 @@ main :: ()
 	p3 = list.pop_front (*container);
 	assert (container.val == "Sailor");
 	assert (container.next.val == "Hello");
+	for container
+	{
+		if it.val == "Sailor"
+			list.pop (*container, it);
+	}
+	for container
+		assert (it.val == "Hello" || it.val == "!", "val was %", it.val);
 }
