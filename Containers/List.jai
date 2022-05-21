@@ -99,6 +99,14 @@ unlink :: inline (node : *$T)
 	node.next = null;
 }
 
+find_last :: inline (list : *$T) -> *T #must
+#modify { return is_list (T); }
+{
+	while list && list.next
+		list = list.next;
+	return list;
+}
+
 is_list :: inline (type : Type) -> bool #must
 {
 	return is_list (cast (*Type_Info) type);
@@ -113,19 +121,22 @@ is_list :: inline (info : *Type_Info) -> bool #must
 		&& types.is_pointer_to (types.get_member_type (info, "next"), info);
 }
 
-// This for_expansion does not allow for element removal, because
-// for this you would need a pointer to the list. See mutable_iter for that.
 for_expansion :: (list : *$T, body : Code, flags : For_Flags) #expand
 #modify { return is_list (T); }
 {
+	REVERSE :: (flags & .REVERSE) == .REVERSE;
+
 	`it := list;
 	`it_index := 0;
 	while it
 	{
-		next := it.next;
+		#if REVERSE
+			next := it.prev;
+		else
+			next := it.next;
 		defer { it = next; it_index += 1; }
 		#insert (
-			remove = #assert false "Cannot remove an element because we only have a pointer to the first node, node the list itself. You can still use the pop routine to remove an element while iterating."
+			remove = #assert false "Cannot remove an element because we only have a pointer to the first node, not the list itself. You can still use the pop routine to remove an element while iterating."
 		) body;
 	}
 }
