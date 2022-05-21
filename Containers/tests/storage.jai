@@ -7,7 +7,8 @@ for_expansion :: storage.for_expansion;
 
 main :: ()
 {
-	container : storage.Storage (string, 10);
+	// We want a small page size so we can test adding and removing pages
+	container : storage.Storage (string, 2);
 	storage.init (*container, mem.HEAP_ALLOC);
 	val1, info1 := storage.find_free_slot (*container);
 	fmt.println ("info1: {:!}", info1);
@@ -25,4 +26,12 @@ main :: ()
 	assert (container.count == 3);
 	for container
 		assert (it == "Hello" || it == "Sailor" || it == "!");
+	for container
+	{
+		if it == "Sailor"
+			remove it;
+	}
+	assert (container.count == 2);
+	for container
+		assert (it == "Hello" || it == "!");
 }
