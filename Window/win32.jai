@@ -4,7 +4,23 @@ win32 :: #import "Win32";
 
 g_wndclass : win32.WNDCLASSEXW;
 g_custom_caption_wndclass : win32.WNDCLASSEXW;
-g_initialized_window_classes : bool;
+g_cursors : struct
+{
+	all : [Cursor.COUNT]win32.HCURSOR;
+	#place all;
+	arrow : win32.HCURSOR;
+	arrow_busy : win32.HCURSOR;
+	busy : win32.HCURSOR;
+	cross : win32.HCURSOR;
+	hand : win32.HCURSOR;
+	ibeam : win32.HCURSOR;
+	size : win32.HCURSOR;
+	size_nwse : win32.HCURSOR;
+	size_nesw : win32.HCURSOR;
+	size_horizontal : win32.HCURSOR;
+	size_vertical : win32.HCURSOR;
+};
+g_initialized : bool;
 
 #scope_export
 
@@ -47,7 +63,20 @@ win32_init_window_context :: inline () -> bool
 			return false;
 		}
 	}
-	g_initialized_window_classes = true;
+	{
+		g_cursors.arrow = win32.LoadCursorW (null, cast (*u16) win32.IDC_ARROW);
+		g_cursors.arrow_busy = win32.LoadCursorW (null, cast (*u16) win32.IDC_APPSTARTING);
+		g_cursors.busy = win32.LoadCursorW (null, cast (*u16) win32.IDC_WAIT);
+		g_cursors.cross = win32.LoadCursorW (null, cast (*u16) win32.IDC_CROSS);
+		g_cursors.hand = win32.LoadCursorW (null, cast (*u16) win32.IDC_HAND);
+		g_cursors.ibeam = win32.LoadCursorW (null, cast (*u16) win32.IDC_IBEAM);
+		g_cursors.size = win32.LoadCursorW (null, cast (*u16) win32.IDC_SIZEALL);
+		g_cursors.size_nwse = win32.LoadCursorW (null, cast (*u16) win32.IDC_SIZENWSE);
+		g_cursors.size_nesw = win32.LoadCursorW (null, cast (*u16) win32.IDC_SIZENESW);
+		g_cursors.size_horizontal = win32.LoadCursorW (null, cast (*u16) win32.IDC_SIZEWE);
+		g_cursors.size_vertical = win32.LoadCursorW (null, cast (*u16) win32.IDC_SIZENS);
+	}
+	g_initialized = true;
 
 	return true;
 }
@@ -79,7 +108,7 @@ create :: inline (
 	parent : Window = null
 ) -> Window #must
 {
-	if !g_initialized_window_classes
+	if !g_initialized
 		win32_init_window_context ();
 	if x == DEFAULT then x = win32.CW_USEDEFAULT;
 	if y == DEFAULT then y = win32.CW_USEDEFAULT;
@@ -342,6 +371,12 @@ hide_cursor :: inline ()
 #no_context
 {
 	set_cursor_visibility (false);
+}
+
+set_cursor :: inline (cursor : Cursor)
+#no_context
+{
+	win32.SetCursor (g_cursors.all[cast (s64) cursor]);
 }
 
 #scope_file

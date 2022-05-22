@@ -44,6 +44,13 @@ handle_window_message :: (msg : window.Message)
 	{
 	case .WINDOW_CLOSED;
 		g_is_running = false;
+	case .MOUSE_MOVED;
+		if is_button_hovered (.CLOSE)
+		|| is_button_hovered (.MAXIMIZE)
+		|| is_button_hovered (.MINIMIZE)
+			window.set_cursor (.HAND);
+		else
+			window.set_cursor (.ARROW);
 	case .MOUSE_BUTTON_RELEASED;
 		if msg.mouse_button == .LEFT
 		{

@@ -14,6 +14,22 @@ math  :: #import "Math";
 
 DEFAULT :: -1;
 
+Cursor :: enum
+{
+	ARROW;
+	ARROW_BUSY;
+	BUSY;
+	CROSS;
+	HAND;
+	IBEAM;
+	SIZE;
+	SIZE_NWSE;
+	SIZE_NESW;
+	SIZE_HORIZONTAL;
+	SIZE_VERTICAL;
+	COUNT;
+}
+
 Creation_Flags :: enum_flags
 {
 	NONE :: 0x00;
