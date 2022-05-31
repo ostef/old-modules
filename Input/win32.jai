@@ -84,6 +84,10 @@ init :: inline () -> bool
 
 update :: inline ()
 {
+	g_mouse_delta_x = 0;
+	g_mouse_delta_y = 0;
+	g_mouse_wheel_x = 0;
+	g_mouse_wheel_y = 0;
 	mem.copy (g_prev_keyboard_state.data, g_keyboard_state.data, size_of (bool) * g_prev_keyboard_state.count);
 	for i : 0..g_keyboard_state.count - 1
 		g_keyboard_state[i] = is_key_down (cast, no_check (Key_Code) i);
