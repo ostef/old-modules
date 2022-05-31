@@ -75,7 +75,7 @@ reset :: inline (using storage : *Storage)
 {
 	for page : all_pages
 		mem.free (page, allocator);
-	array.reset (*all_pages, allocator);
+	array.reset (*all_pages);
 	count = 0;
 	free_pages = null;
 	full_pages = null;
