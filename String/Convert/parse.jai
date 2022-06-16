@@ -27,12 +27,12 @@ parse_u64 :: inline (s : string, $base := DECIMAL_BASE, $case_sensitive := false
 		return -1;
 	}
 
-	will_overflow :: inline (value : u64, digit : u64) -> bool #must
+	will_overflow :: inline (value : u64, digit : u64, $base : string) -> bool #must
 	#no_context
 	{
-		if value > math.U64_MAX / 10
+		if value > math.U64_MAX / base.count
 			return true;
-		if value == math.U64_MAX / 10 && digit > math.U64_MAX % cast (u64) 10
+		if value == math.U64_MAX / base.count && digit > math.U64_MAX % cast (u64) base.count
 			return true;
 		return false;
 	}
@@ -47,9 +47,9 @@ parse_u64 :: inline (s : string, $base := DECIMAL_BASE, $case_sensitive := false
 		digit := get_digit (s[i], base, case_sensitive);
 		if digit < 0
 			break;
-		if err != .OVERFLOW && will_overflow (value, cast (u64) digit)
+		if err != .OVERFLOW && will_overflow (value, cast (u64) digit, base)
 			err = .OVERFLOW;
-		value *= 10;
+		value *= base.count;
 		value += cast (u64) digit;
 		i += 1;
 	}
@@ -99,6 +99,8 @@ parse_s64 :: inline (s : string, $base := DECIMAL_BASE, $case_sensitive := false
 	unsigned_value, bytes_read, err := parse_u64 (str.advance (s, i), base, case_sensitive);
 	if bytes_read == 0 then return 0, 0, err;
 	signed_value := sign * cast (s64) unsigned_value;
+	if err == .OVERFLOW && sign < 0
+		err = .UNDERFLOW;
 
 	return signed_value, i + bytes_read, err;
 }
