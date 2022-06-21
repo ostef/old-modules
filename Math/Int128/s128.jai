@@ -9,6 +9,9 @@ s128 :: struct
 	as_u128 : u128;
 }
 
+S128_MIN :: s128.{ 0x8000_0000_0000_0000, 0x0000_0000_0000_0000 };
+S128_MAX :: s128.{ 0x7fff_ffff_ffff_ffff, 0xffff_ffff_ffff_ffff };
+
 make_s128 :: inline (x : s64) -> s128 #must
 #no_context
 {

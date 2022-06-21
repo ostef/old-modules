@@ -4,6 +4,8 @@ u128 :: struct
 	low  : u64;
 }
 
+U128_MAX :: u128.{ 0xffff_ffff_ffff_ffff, 0xffff_ffff_ffff_ffff };
+
 make_u128 :: inline (low : u64) -> u128 #must
 #no_context
 {
