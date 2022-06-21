@@ -17,7 +17,7 @@ math :: #import "Math";
 // 10**-15 seconds resolution
 Apollo_Time :: s128;
 
-INVALID_TIME :: Apollo_Time.{ 0x8000_0000_0000_0000, 0 };
+INVALID_TIME :: S128_MIN;
 FEMTOSECONDS :: 1_000_000_000_000_000;
 
 from_seconds :: inline (sec : s64) -> Apollo_Time #must
