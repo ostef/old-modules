@@ -143,6 +143,12 @@ terminate_process :: inline (process : Process, exit_code : s32) -> exit_code : 
 }
 
 sleep :: inline (ms : u32)
+#deprecated "Use sleep_milliseconds."
+{
+	win32.Sleep (ms);
+}
+
+sleep_milliseconds :: inline (ms : u32)
 {
 	win32.Sleep (ms);
 }
