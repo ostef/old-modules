@@ -142,3 +142,13 @@ write_location :: inline (loc : Source_Code_Location)
 }
 
 #scope_export
+
+unreachable :: (location := #caller_location) #expand
+{
+	panic ("Reached unreachable code.", location = location);
+}
+
+contextless_unreachable :: (location := #caller_location) #expand
+{
+	contextless_panic ("Reached unreachable code.", location = location);
+}
