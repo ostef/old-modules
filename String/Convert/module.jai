@@ -4,7 +4,7 @@
 str  :: #import "String";
 mem  :: #import "Memory";
 math :: #import "Math";
-ryu  :: #import "Ryu" (IMPORT_FLOAT_TO_SHORTEST = false);
+ryu  :: #import "Ryu";
 
 #scope_export
 
