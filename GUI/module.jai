@@ -30,15 +30,15 @@ UI_Context :: struct
 	mouse_wheel    : linalg.Vec2f;
 	viewport_size  : linalg.Vec2i;
 
-	
 	controls : storage.Storage (Control, 20);
 	controls_by_id : map.Hash_Map (Id, *Control);
-
-	mouse_hovered_occluder : *Occluder;
+	clipping_stack : [..]math.Rectf;
 
 	occlusion_layers : [..]Occlusion_Layer;
 	#place occlusion_layers;
 	occlusion_layers_bottommost_to_topmost : [..]Occlusion_Layer;
+
+	mouse_hovered_occluder : *Occluder;
 
 	current_occlusion_layer : s64;
 	current_occluder : *Occluder;
@@ -52,8 +52,12 @@ Id :: u32;
 
 Control :: struct
 {
+
 	id : Id;
+
 	rect : math.Rectf;
+	clipped_rect : math.Rectf;
+
 	state : State;
 	last_frame_index : u64;
 }
@@ -63,7 +67,6 @@ Occlusion_Layer :: struct
 	name : string;
 	occluders : storage.Storage (Occluder, 20);
 	occluders_by_id : map.Hash_Map (Id, *Occluder);
-	// This array is persistent across frames
 	occluders_bottommost_to_topmost : [..]*Occluder;
 }
 
@@ -97,6 +100,7 @@ init :: ()
 	ui := context.ui_context;
 	storage.init (*ui.controls, mem.HEAP_ALLOC);
 	map.init (*ui.controls_by_id, 300, mem.HEAP_ALLOC);
+	array.init (*ui.clipping_stack, 50, mem.HEAP_ALLOC);
 	array.init (*ui.occlusion_layers, 50, mem.HEAP_ALLOC);
 
 	push_occlusion_layer ("Popups");
@@ -119,6 +123,7 @@ terminate :: ()
 
 	storage.reset (*ui.controls);
 	map.reset (*ui.controls_by_id);
+	array.reset (*ui.clipping_stack);
 
 	mem.free (ui, mem.HEAP_ALLOC);
 	context.ui_context = null;
@@ -197,9 +202,9 @@ draw_control :: (ctrl : Control)
 	if ctrl.state == .HOVERED
 		imdraw.draw_rect_outline (ctrl.rect, math.RGBA_WHITE, 2);
 	else if ctrl.state == .DOWN
-		imdraw.draw_rect_outline (ctrl.rect, .{ 100, 100, 100, 255 }, 2);
+		imdraw.draw_rect_outline (ctrl.rect, .{100, 100, 100, 255}, 2);
 	else if ctrl.state == .RELEASED
-		imdraw.draw_rect_outline (ctrl.rect, .{ 255, 0, 0, 255 }, 2);
+		imdraw.draw_rect_outline (ctrl.rect, .{255, 0, 0, 255}, 2);
 }
 
 // @Temporary
@@ -213,9 +218,6 @@ draw_occluder :: (occl : Occluder)
 	imdraw.draw_rect (occl.rect, color, corner_radius = 10);
 	if ui.mouse_hovered_occluder && ui.mouse_hovered_occluder.id == occl.id
 		imdraw.draw_rect_outline (occl.rect, .{255,0,0,255}, 2, corner_radius = 10);
-
-	for occl.controls_to_draw
-		draw_control (it);
 }
 
 begin :: ()
@@ -228,6 +230,8 @@ begin :: ()
 end :: ()
 {
 	check_init ();
+
+	assert (ui.clipping_stack.count == 0, "Called end but the clipping stack is not empty. % clipping rects were not popped.", ui.clipping_stack.count);
 
 	// Remove controls that were not declared this frame
 	for ui.controls
@@ -274,7 +278,11 @@ end :: ()
 	for layer : ui.occlusion_layers_bottommost_to_topmost
 	{
 		for layer.occluders_bottommost_to_topmost
+		{
 			draw_occluder (it);
+			for ctrl : it.controls_to_draw
+				draw_control (ctrl);
+		}
 	}
 }
 
@@ -324,10 +332,14 @@ declare_control :: (rect : math.Rectf, location : Source_Code_Location) -> State
 		ctrl.rect = math.move (rect, math.rect_position (ui.current_occluder.rect));
 	else
 		ctrl.rect = rect;
+	if ui.clipping_stack.count > 0
+		ctrl.clipped_rect = math.clip (ctrl.rect, array.top (ui.clipping_stack));
+	else
+		ctrl.clipped_rect = ctrl.rect;
 	ctrl.last_frame_index = ui.frame_index;
 
 	ctrl.state = State.INACTIVE;
-	if math.contains (ctrl.rect, ui.mouse_position)
+	if math.contains (ctrl.clipped_rect, ui.mouse_position)
 	&& (!ui.mouse_hovered_occluder || ui.mouse_hovered_occluder == ui.current_occluder)
 	{
 		if input.is_mouse_button_down (.LEFT)
@@ -344,6 +356,18 @@ declare_control :: (rect : math.Rectf, location : Source_Code_Location) -> State
 		draw_control (ctrl);
 
 	return ctrl.state;
+}
+
+push_clipping_rect :: inline (rect : math.Rectf)
+{
+	check_init ();
+	array.push (*ui.clipping_stack, rect);
+}
+
+pop_clipping_rect :: inline ()
+{
+	check_init ();
+	array.pop (*ui.clipping_stack);
 }
 
 #scope_file
@@ -386,6 +410,7 @@ begin_occlusion :: (rect : math.Rectf, location : Source_Code_Location)
 	occluder.rect = rect;
 	occluder.last_frame_index = ui.frame_index;
 	array.clear (*occluder.controls_to_draw);
+	push_clipping_rect (rect);
 
 	ui.current_occluder = occluder;
 }
@@ -396,6 +421,7 @@ end_occlusion :: ()
 
 	assert (ui.current_occluder != null, "Called end_occlusion but begin_occlusion was not called. Did you call end_occlusion twice?");
 	ui.current_occluder = null;
+	pop_clipping_rect ();
 }
 
 raise_occluder :: ()
@@ -405,6 +431,15 @@ raise_occluder :: ()
 	assert (ui.current_occluder != null, "Cannot call raise_occluder outside begin_occlusion and end_occlusion calls.");
 
 	layer := *ui.occlusion_layers[ui.current_occlusion_layer];
+
+	// Don't do anything if we are already the topmost occluder
+	if ui.current_occluder.index == layer.occluders_bottommost_to_topmost.count - 1
+		return;
+
+	// Update the index of the occluders that are above
+	for i : ui.current_occluder.index + 1..layer.occluders_bottommost_to_topmost.count - 1
+		layer.occluders_bottommost_to_topmost[i].index -= 1;
+
 	array.push (*layer.occluders_bottommost_to_topmost, ui.current_occluder);
 	array.ordered_remove_at (*layer.occluders_bottommost_to_topmost, ui.current_occluder.index);
 	ui.current_occluder.index = layer.occluders_bottommost_to_topmost.count - 1;
