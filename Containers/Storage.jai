@@ -213,7 +213,7 @@ get_slot_info :: (using storage : Storage, item : *storage.T) -> valid : bool, i
 		{
 			info.version = page.slots[slot_index].version;
 			info.page_index = page.index;
-			info.slot_index = slot_index;
+			info.slot_index = cast (s32) slot_index;
 
 			return true, info, page.slots[slot_index].occupied;
 		}
