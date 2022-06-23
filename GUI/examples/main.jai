@@ -93,7 +93,11 @@ main :: ()
 
 			if show_second_control
 				gui.declare_control (math.xywhf (20, 20, 50, 50), #location ());
-	
+
+			gui.begin_occlusion (math.xywhf (30, 30, 30, 30), #location ());
+			gui.end_occlusion ();
+
+			prev := gui.set_occlusion_layer ("Windows");
 			gui.begin_occlusion (window_rect, #location ());
 			{
 				caption_rect := math.xywhf (0, 0, math.rect_width (window_rect), 25);
@@ -111,6 +115,7 @@ main :: ()
 				}
 			}
 			gui.end_occlusion ();
+			gui.set_occlusion_layer (prev);
 		}
 		gui.end ();
 		
