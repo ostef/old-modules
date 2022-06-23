@@ -91,9 +91,6 @@ main :: ()
 			if gui.declare_control (math.xywhf (10, 10, 50, 50), #location ()) == .RELEASED
 				show_second_control = !show_second_control;
 
-			if show_second_control
-				gui.declare_control (math.xywhf (20, 20, 50, 50), #location ());
-
 			gui.begin_occlusion (math.xywhf (30, 30, 30, 30), #location ());
 			gui.end_occlusion ();
 
@@ -105,6 +102,7 @@ main :: ()
 				{
 					mx, my := window.get_mouse_position (g_window);
 					window_rect = math.set_position (window_rect, xx mx - math.rect_width (window_rect) * 0.5, xx my - math.rect_height (caption_rect) * 0.5);
+					gui.raise_occluder ();
 				}
 				
 				resize_button_rect := math.xywhf (math.rect_width (window_rect) - 25, math.rect_height (window_rect) - 25, 25, 25);
@@ -112,10 +110,21 @@ main :: ()
 				{
 					mx, my := window.get_mouse_position (g_window);
 					window_rect = math.set_size (window_rect, mx + 12.5 - window_rect.x1, my + 12.5 - window_rect.y1);
+					gui.raise_occluder ();
 				}
 			}
 			gui.end_occlusion ();
+
+			gui.begin_occlusion (math.xywhf (100, 10, 50, 75), #location ());
+			if gui.declare_control (math.xywhf (10, 0, 50, 20), #location ()) == .DOWN
+				gui.raise_occluder ();
+			gui.end_occlusion ();
+
 			gui.set_occlusion_layer (prev);
+
+			if show_second_control
+				gui.declare_control (math.xywhf (20, 20, 50, 50), #location ());
+
 		}
 		gui.end ();
 		
