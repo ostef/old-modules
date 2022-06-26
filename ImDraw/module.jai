@@ -13,6 +13,7 @@ window :: #import "Window";
 gl     :: #import "GL";
 render :: #import "Render_Core";
 font   :: #import "Font";
+array  :: #import "Containers/Array";
 
 Recti :: math.Recti;
 Rectf :: math.Rectf;
@@ -21,6 +22,7 @@ RGBA  :: math.RGBA;
 #scope_export
 
 #load "draw.jai";
+#load "command_renderer.jai";
 
 Vertex :: struct
 {
@@ -172,44 +174,51 @@ flush :: inline ()
 }
 
 reserve :: inline (count : s64) -> *Vertex #must
+#deprecated "Use push_vertices instead."
+{
+	return push_vertices (count);
+}
+
+push_vertices :: inline (count : s64) -> *Vertex #must { check_init (); return push_vertices (imdraw, count); }
+push_vertices :: inline (ctx : *Draw_Context, count : s64) -> *Vertex #must
 {
 	assert (count <= MAX_VERTICES, "Reserving too many vertices (requested %, maximum is %).", count, MAX_VERTICES);
-	check_init ();
-	if imdraw.vertex_count + count > MAX_VERTICES
+	if ctx.vertex_count + count > MAX_VERTICES
 		flush ();
-	result := *imdraw.vertices[imdraw.vertex_count];
-	imdraw.vertex_count += count;
+	result := *ctx.vertices[ctx.vertex_count];
+	ctx.vertex_count += count;
 
 	return result;
 }
 
-get_clip_rect :: inline () -> Recti #must
+get_clip_rect :: inline () -> Recti #must { check_init (); return get_clip_rect (imdraw); }
+get_clip_rect :: inline (ctx : *Draw_Context) -> Recti #must
 {
-	check_init ();
-	return imdraw.clip_rect;
+	return ctx.clip_rect;
 }
 
-set_clip_rect :: inline (clip_rect : Recti) -> previous : Recti
-{
-	check_init ();
-	previous := imdraw.clip_rect;
+set_clip_rect :: inline (clip_rect : Recti) -> previous : Recti { check_init (); return set_clip_rect (imdraw, clip_rect); }
+set_clip_rect :: inline (ctx : *Draw_Context, clip_rect : Recti) -> previous : Recti
+{;
+	previous := ctx.clip_rect;
 	// We can't use operator == for rects because it is in math
-	if !mem.equals (previous, clip_rect) || !imdraw.clipping_enabled then flush ();
-	imdraw.clipping_enabled = true;
-	imdraw.clip_rect = clip_rect;
-	using imdraw.clip_rect;
+	if !mem.equals (previous, clip_rect) || !ctx.clipping_enabled then flush ();
+	ctx.clipping_enabled = true;
+	ctx.clip_rect = clip_rect;
+	using ctx.clip_rect;
 	if x1 > x2 then x1 = x2;
 	if y1 > y2 then y1 = y2;
 
 	return previous;
 }
 
-push_clip_rect :: inline (clip_rect : Recti) -> previous : Recti
+push_clip_rect :: inline (clip_rect : Recti) -> previous : Recti { check_init (); return push_clip_rect (imdraw, clip_rect); }
+push_clip_rect :: inline (renderer : *$T, clip_rect : Recti) -> previous : Recti
 {
 	check_init ();
-	if imdraw.clipping_enabled
-		return set_clip_rect (math.clip (clip_rect, imdraw.clip_rect));
-	return set_clip_rect (clip_rect);
+	if get_clipping (renderer)
+		return set_clip_rect (renderer, math.clip (clip_rect, get_clip_rect (renderer)));
+	return set_clip_rect (renderer, clip_rect);
 }
 
 scope_clip_rect :: (clip_rect : Recti) #expand
@@ -220,18 +229,56 @@ scope_clip_rect :: (clip_rect : Recti) #expand
 	`defer set_clip_rect (previous_rect);
 }
 
-get_clipping :: inline () -> bool #must
+scope_clip_rect :: (renderer : *$T, clip_rect : Recti) #expand
 {
-	check_init ();
-	return imdraw.clipping_enabled;
+	previous_clip := get_clipping (renderer);
+	`defer set_clipping (renderer, previous_clip);
+	previous_rect := push_clip_rect (renderer, clip_rect);
+	`defer set_clip_rect (renderer, previous_rect);
 }
 
-set_clipping :: inline (enable : bool) -> previous : bool
+get_clipping :: inline () -> bool #must { check_init (); return get_clipping (imdraw); }
+get_clipping :: inline (ctx : *Draw_Context) -> bool #must
 {
-	check_init ();
-	previous := imdraw.clipping_enabled;
+	return ctx.clipping_enabled;
+}
+
+set_clipping :: inline (enable : bool) -> previous : bool { check_init (); return set_clipping (imdraw, enable); }
+set_clipping :: inline (ctx : *Draw_Context, enable : bool) -> previous : bool
+{
+	previous := ctx.clipping_enabled;
 	if previous != enable then flush ();
-	imdraw.clipping_enabled = enable;
+	ctx.clipping_enabled = enable;
+	return previous;
+}
+
+get_texture :: inline () -> *render.Texture #must { check_init (); return get_texture (imdraw); }
+get_texture :: inline (ctx : *Draw_Context) -> *render.Texture #must
+{
+	return ctx.texture;
+}
+
+set_texture :: inline (texture : *render.Texture) -> previous : *render.Texture { check_init (); return set_texture (imdraw, texture); }
+set_texture :: inline (ctx : *Draw_Context, texture : *render.Texture) -> previous : *render.Texture
+{
+	previous := ctx.texture;
+	if previous != texture then flush ();
+	ctx.texture = texture;
+	return previous;
+}
+
+get_shader :: inline () -> *render.Shader #must { check_init (); return get_shader (imdraw); }
+get_shader :: inline (ctx : *Draw_Context) -> *render.Shader #must
+{
+	return ctx.shader;
+}
+
+set_shader :: inline (shader : *render.Shader) -> *render.Shader { check_init (); return set_shader (imdraw, shader); }
+set_shader :: inline (ctx : *Draw_Context, shader : *render.Shader) -> *render.Shader
+{
+	previous := ctx.shader;
+	if previous != shader then flush ();
+	ctx.shader = shader;
 	return previous;
 }
 
@@ -250,21 +297,6 @@ set_viewport :: inline (viewport : Recti) -> Recti
 	return previous;
 }
 
-get_texture :: inline () -> *render.Texture #must
-{
-	check_init ();
-	return imdraw.texture;
-}
-
-set_texture :: inline (texture : *render.Texture) -> previous : *render.Texture
-{
-	check_init ();
-	previous := imdraw.texture;
-	if previous != texture then flush ();
-	imdraw.texture = texture;
-	return previous;
-}
-
 get_framebuffer :: inline () -> *render.Framebuffer #must
 {
 	check_init ();
@@ -277,21 +309,6 @@ set_framebuffer :: inline (framebuffer : *render.Framebuffer) -> *render.Framebu
 	previous := imdraw.framebuffer;
 	if previous != framebuffer then flush ();
 	imdraw.framebuffer = framebuffer;
-	return previous;
-}
-
-get_shader :: inline () -> *render.Shader #must
-{
-	check_init ();
-	return imdraw.shader;
-}
-
-set_shader :: inline (shader : *render.Shader) -> *render.Shader
-{
-	check_init ();
-	previous := imdraw.shader;
-	if previous != shader then flush ();
-	imdraw.shader = shader;
 	return previous;
 }
 
