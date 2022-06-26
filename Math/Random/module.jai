@@ -72,8 +72,8 @@ get_f64 :: inline (rng : *MCG) -> f64 #must
 range :: inline (low : f32, high : f32) -> f32 #must { return range (*context.rng, low, high); }
 range :: inline (rng : *MCG, low : f32, high : f32) -> f32 #must
 {
-	rand := get (rng) & MASK;
-	t := (rand / cast (f32) RAND_RANGE) * (high - low);
+	rand := get (rng) & F32_MASK;
+	t := (rand / cast (f32) F32_RAND_RANGE) * (high - low);
 
 	return low + t;
 }
@@ -88,5 +88,5 @@ rangei :: inline (rng : *MCG, low : s64, high : s64) -> s64 #must
 chance :: inline (x : f32) -> bool #must { return chance (*context.rng, x); }
 chance :: inline (rng : *MCG, x : f32) -> bool #must
 {
-	return range (0, 1, rng) <= x;
+	return range (rng, 0, 1) <= x;
 }
