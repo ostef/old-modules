@@ -125,13 +125,13 @@ button :: (rect : math.Rectf, location := #caller_location) -> gui.State
 	color : math.RGBA;
 	color.value = ctrl.id;
 	color.a = 255;
-	gui.draw_rect (gui.get_draw_data (), ctrl.rect, color, corner_radius = 10);
+	imdraw.draw_rect (gui.get_renderer (), ctrl.rect, color, corner_radius = 10);
 	if ctrl.state == .HOVERED
-		gui.draw_rect_outline (gui.get_draw_data (), ctrl.rect, math.RGBA_WHITE, 2);
+		imdraw.draw_rect_outline (gui.get_renderer (), ctrl.rect, math.RGBA_WHITE, 2);
 	else if ctrl.state == .DOWN
-		gui.draw_rect_outline (gui.get_draw_data (), ctrl.rect, .{100, 100, 100, 255}, 2);
+		imdraw.draw_rect_outline (gui.get_renderer (), ctrl.rect, .{100, 100, 100, 255}, 2);
 	else if ctrl.state == .RELEASED
-		gui.draw_rect_outline (gui.get_draw_data (), ctrl.rect, .{255, 0, 0, 255}, 2);
+		imdraw.draw_rect_outline (gui.get_renderer (), ctrl.rect, .{255, 0, 0, 255}, 2);
 
 	return ctrl.state;
 }
@@ -143,15 +143,15 @@ begin_window :: (rect : math.Rectf, location := #caller_location)
 	color : math.RGBA;
 	color.value = occl.id;
 	color.a = 128;
-	gui.draw_rect (gui.get_draw_data (), occl.rect, color, corner_radius = 10);
+	imdraw.draw_rect (gui.get_renderer (), occl.rect, color, corner_radius = 10);
 	if context.ui_context.mouse_hovered_occluder && context.ui_context.mouse_hovered_occluder == occl
-		gui.draw_rect_outline (gui.get_draw_data (), occl.rect, .{255,0,0,255}, 2, corner_radius = 10);
+		imdraw.draw_rect_outline (gui.get_renderer (), occl.rect, .{255,0,0,255}, 2, corner_radius = 10);
 }
 
 end_window :: ()
 {
 	ui_window := context.ui_context.current_occluder;
-	gui.draw_text (gui.get_draw_data (), g_font, 12, vec2f (ui_window.rect.x1 + 4, ui_window.rect.y1 + 4), "Window", math.RGBA_WHITE);
+	imdraw.draw_text (gui.get_renderer (), g_font, 12, vec2f (ui_window.rect.x1 + 4, ui_window.rect.y1 + 4), "Window", math.RGBA_WHITE);
 	gui.end_occlusion ();
 }
 

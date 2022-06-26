@@ -23,8 +23,6 @@ input  :: #import "Input";
 
 #scope_export
 
-#load "draw.jai";
-
 UI_Context :: struct
 {
 	mouse_position : linalg.Vec2f;
@@ -46,7 +44,7 @@ UI_Context :: struct
 
 	frame_index : u64;
 
-	draw_data : Draw_Data;
+	renderer : imdraw.Command_Renderer;
 }
 
 #add_context ui_context : *UI_Context;
@@ -78,7 +76,7 @@ Occluder :: struct
 	index : s64;
 	rect : math.Rectf;
 	last_frame_index : u64;
-	draw_data : Draw_Data;
+	renderer : imdraw.Command_Renderer;
 }
 
 State :: enum
@@ -104,7 +102,7 @@ init :: ()
 	map.init (*ui.controls_by_id, 300, mem.HEAP_ALLOC);
 	array.init (*ui.clipping_stack, 50, mem.HEAP_ALLOC);
 	array.init (*ui.occlusion_layers, 50, mem.HEAP_ALLOC);
-	init (*ui.draw_data, 5000, 1000, mem.HEAP_ALLOC);
+	imdraw.init (*ui.renderer, 5000, 1000, mem.HEAP_ALLOC);
 
 	push_occlusion_layer ("Popups");
 	push_occlusion_layer ("Windows");
@@ -127,6 +125,7 @@ terminate :: ()
 	storage.reset (*ui.controls);
 	map.reset (*ui.controls_by_id);
 	array.reset (*ui.clipping_stack);
+	imdraw.reset (*ui.renderer);
 
 	mem.free (ui, mem.HEAP_ALLOC);
 	context.ui_context = null;
@@ -135,14 +134,14 @@ terminate :: ()
 // For expansion
 draw_data :: (ctx : *UI_Context, body : Code, flags : For_Flags) #expand
 {
-	`it := *ctx.draw_data;
+	`it := *ctx.renderer;
 	`it_index := 0;
 	#insert body;
 	for layer, layer_index : ctx.occlusion_layers_bottommost_to_topmost
 	{
 		for occl, occl_index : layer.occluders_bottommost_to_topmost
 		{
-			it = *occl.draw_data;
+			it = *occl.renderer;
 			it_index += 1;
 			#insert body;
 		}
@@ -213,12 +212,12 @@ set_occlusion_layer :: inline (index : s64) -> previous : s64
 	return previous;
 }
 
-get_draw_data :: inline () -> *Draw_Data #must
+get_renderer :: inline () -> *imdraw.Command_Renderer #must
 {
 	check_init ();
 	if ui.current_occluder
-		return *ui.current_occluder.draw_data;
-	return *ui.draw_data;
+		return *ui.current_occluder.renderer;
+	return *ui.renderer;
 }
 
 begin :: ()
@@ -226,7 +225,7 @@ begin :: ()
 	check_init ();
 
 	ui.frame_index += 1;
-	clear (*ui.draw_data);
+	imdraw.clear (*ui.renderer);
 }
 
 end :: ()
@@ -285,24 +284,7 @@ end :: ()
 	}
 
 	for :draw_data data : ui
-	{
-		for cmd : data.commands
-		{
-			imdraw.set_texture (cmd.texture);
-			imdraw.set_shader (cmd.shader);
-			imdraw.set_clip_rect (cmd.clip_rect);
-			imdraw.set_clipping (cmd.clipping_enabled);
-			i := 0;
-			while i < cmd.vertex_count
-			{
-				defer i += 3;
-				vert := imdraw.reserve (3);
-				vert[0] = data.vertices[cmd.first_vertex + i + 0];
-				vert[1] = data.vertices[cmd.first_vertex + i + 1];
-				vert[2] = data.vertices[cmd.first_vertex + i + 2];
-			}
-		}
-	}
+		imdraw.draw_to_framebuffer (data);
 }
 
 get_id :: (location : Source_Code_Location) -> Id #must
@@ -388,12 +370,12 @@ pop_clipping_rect :: inline ()
 
 init :: (occluder : *Occluder)
 {
-	init (*occluder.draw_data, 1000, 100, mem.HEAP_ALLOC);
+	imdraw.init (*occluder.renderer, 1000, 100, mem.HEAP_ALLOC);
 }
 
 cleanup :: (occluder : *Occluder)
 {
-	reset (*occluder.draw_data);
+	imdraw.reset (*occluder.renderer);
 }
 
 #scope_export
@@ -429,7 +411,7 @@ begin_occlusion :: (rect : math.Rectf, location : Source_Code_Location) -> *Occl
 	occluder := find_or_create_occluder (id);
 	occluder.rect = rect;
 	occluder.last_frame_index = ui.frame_index;
-	clear (*occluder.draw_data);
+	imdraw.clear (*occluder.renderer);
 	push_clipping_rect (rect);
 
 	ui.current_occluder = occluder;
