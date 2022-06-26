@@ -70,6 +70,21 @@ push :: inline (arr : *[..]$T, $initialize := true) -> *T #must
 	return ptr;
 }
 
+push_multiple :: inline (arr : *[..]$T, count : s64, $initialize := true) -> *T #must
+{
+	if arr.count + count >= arr.allocated
+		grow (arr, arr.allocated + 8 + count);
+	ptr := *arr.data[arr.count];
+	#if initialize
+	{
+		for i : 0..count - 1
+			mem.init (ptr + i);
+	}
+	arr.count += count;
+
+	return ptr;
+}
+
 push :: inline (arr : *[..]$T, elem : T) -> *T
 {
 	ptr := push (arr, initialize = false);
