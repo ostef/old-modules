@@ -1,3 +1,5 @@
+#module_parameters (MAX_VERTICES_PER_BATCH := 1024);
+
 #scope_module
 
 #import "Runtime";
@@ -14,15 +16,14 @@ for_expansion :: storage.for_expansion;
 map :: #import "Containers/Hash_Map";
 for_expansion :: map.for_expansion;
 
-input  :: #import "Input";
+render :: #import "Render_Core";
 imdraw :: #import "ImDraw";
+font   :: #import "Font";
+input  :: #import "Input";
 
 #scope_export
 
-// Currently occluders store an array of the controls that were declared while the occluder was current,
-// but ideally we want to store draw data (i.e. vertices, clip rects etc), because we might want to draw
-// things that don't interact like text and images, without having the create a control.
-// For now we use ImDraw to draw stuff, so we don't have all the draw commands stuff.
+#load "draw.jai";
 
 UI_Context :: struct
 {
@@ -44,6 +45,8 @@ UI_Context :: struct
 	current_occluder : *Occluder;
 
 	frame_index : u64;
+
+	draw_data : Draw_Data;
 }
 
 #add_context ui_context : *UI_Context;
@@ -52,7 +55,6 @@ Id :: u32;
 
 Control :: struct
 {
-
 	id : Id;
 
 	rect : math.Rectf;
@@ -76,7 +78,7 @@ Occluder :: struct
 	index : s64;
 	rect : math.Rectf;
 	last_frame_index : u64;
-	controls_to_draw : [..]*Control;
+	draw_data : Draw_Data;
 }
 
 State :: enum
@@ -102,6 +104,7 @@ init :: ()
 	map.init (*ui.controls_by_id, 300, mem.HEAP_ALLOC);
 	array.init (*ui.clipping_stack, 50, mem.HEAP_ALLOC);
 	array.init (*ui.occlusion_layers, 50, mem.HEAP_ALLOC);
+	init (*ui.draw_data, 5000, 1000, mem.HEAP_ALLOC);
 
 	push_occlusion_layer ("Popups");
 	push_occlusion_layer ("Windows");
@@ -114,7 +117,7 @@ terminate :: ()
 	for * layer : ui.occlusion_layers
 	{
 		for * layer.occluders
-			array.reset (*it.controls_to_draw);
+			cleanup (it);
 
 		array.reset (*layer.occluders_bottommost_to_topmost);
 		map.reset (*layer.occluders_by_id);
@@ -127,6 +130,23 @@ terminate :: ()
 
 	mem.free (ui, mem.HEAP_ALLOC);
 	context.ui_context = null;
+}
+
+// For expansion
+draw_data :: (ctx : *UI_Context, body : Code, flags : For_Flags) #expand
+{
+	`it := *ctx.draw_data;
+	`it_index := 0;
+	#insert body;
+	for layer, layer_index : ctx.occlusion_layers_bottommost_to_topmost
+	{
+		for occl, occl_index : layer.occluders_bottommost_to_topmost
+		{
+			it = *occl.draw_data;
+			it_index += 1;
+			#insert body;
+		}
+	}
 }
 
 #scope_file
@@ -154,6 +174,7 @@ insert_occlusion_layer :: inline (name : string)
 	check_init ();
 
 	layer := array.insert_at (*ui.occlusion_layers_bottommost_to_topmost, ui.current_occlusion_layer);
+	ui.current_occlusion_layer += 1;
 	init (layer, name);
 }
 
@@ -192,32 +213,12 @@ set_occlusion_layer :: inline (index : s64) -> previous : s64
 	return previous;
 }
 
-// @Temporary
-draw_control :: (ctrl : Control)
-{
-	color : math.RGBA;
-	color.value = ctrl.id;
-	color.a = 255;
-	imdraw.draw_rect (ctrl.rect, color, corner_radius = 10);
-	if ctrl.state == .HOVERED
-		imdraw.draw_rect_outline (ctrl.rect, math.RGBA_WHITE, 2);
-	else if ctrl.state == .DOWN
-		imdraw.draw_rect_outline (ctrl.rect, .{100, 100, 100, 255}, 2);
-	else if ctrl.state == .RELEASED
-		imdraw.draw_rect_outline (ctrl.rect, .{255, 0, 0, 255}, 2);
-}
-
-// @Temporary
-draw_occluder :: (occl : Occluder)
+get_draw_data :: inline () -> *Draw_Data #must
 {
 	check_init ();
-
-	color : math.RGBA;
-	color.value = occl.id;
-	color.a = 255;
-	imdraw.draw_rect (occl.rect, color, corner_radius = 10);
-	if ui.mouse_hovered_occluder && ui.mouse_hovered_occluder.id == occl.id
-		imdraw.draw_rect_outline (occl.rect, .{255,0,0,255}, 2, corner_radius = 10);
+	if ui.current_occluder
+		return *ui.current_occluder.draw_data;
+	return *ui.draw_data;
 }
 
 begin :: ()
@@ -225,6 +226,7 @@ begin :: ()
 	check_init ();
 
 	ui.frame_index += 1;
+	clear (*ui.draw_data);
 }
 
 end :: ()
@@ -246,17 +248,25 @@ end :: ()
 	// Remove occluders that were not declared this frame
 	for * layer : ui.occlusion_layers
 	{
+		removed_an_occluder := false;
 		for layer.occluders_bottommost_to_topmost
 		{
 			if it.last_frame_index != ui.frame_index
 			{
-				array.reset (*it.controls_to_draw);
+				cleanup (it);
 
 				map.remove_at (*layer.occluders_by_id, it.id);
 				storage.release_slot (*layer.occluders, it);
 				// We can't do `remove it` because it does not keep the order
 				array.remove_at (*layer.occluders_bottommost_to_topmost, it_index);
+				removed_an_occluder = true;
 			}
+		}
+		// Update occluders indices if we removed one
+		if removed_an_occluder
+		{
+			for layer.occluders_bottommost_to_topmost
+				it.index = it_index;
 		}
 	}
 
@@ -274,14 +284,23 @@ end :: ()
 		}
 	}
 
-	// Draw occluders
-	for layer : ui.occlusion_layers_bottommost_to_topmost
+	for :draw_data data : ui
 	{
-		for layer.occluders_bottommost_to_topmost
+		for cmd : data.commands
 		{
-			draw_occluder (it);
-			for ctrl : it.controls_to_draw
-				draw_control (ctrl);
+			imdraw.set_texture (cmd.texture);
+			imdraw.set_shader (cmd.shader);
+			imdraw.set_clip_rect (cmd.clip_rect);
+			imdraw.set_clipping (cmd.clipping_enabled);
+			i := 0;
+			while i < cmd.vertex_count
+			{
+				defer i += 3;
+				vert := imdraw.reserve (3);
+				vert[0] = data.vertices[cmd.first_vertex + i + 0];
+				vert[1] = data.vertices[cmd.first_vertex + i + 1];
+				vert[2] = data.vertices[cmd.first_vertex + i + 2];
+			}
 		}
 	}
 }
@@ -322,7 +341,7 @@ find_or_create_control :: (id : Id) -> *Control #must
 	return ctrl;
 }
 
-declare_control :: (rect : math.Rectf, location : Source_Code_Location) -> State
+declare_control :: (rect : math.Rectf, location : Source_Code_Location) -> *Control
 {
 	check_init ();
 
@@ -350,12 +369,7 @@ declare_control :: (rect : math.Rectf, location : Source_Code_Location) -> State
 			ctrl.state = .HOVERED;
 	}
 
-	if ui.current_occluder
-		array.push (*ui.current_occluder.controls_to_draw, ctrl);
-	else
-		draw_control (ctrl);
-
-	return ctrl.state;
+	return ctrl;
 }
 
 push_clipping_rect :: inline (rect : math.Rectf)
@@ -374,7 +388,12 @@ pop_clipping_rect :: inline ()
 
 init :: (occluder : *Occluder)
 {
-	array.init (*occluder.controls_to_draw, 50, mem.HEAP_ALLOC);
+	init (*occluder.draw_data, 1000, 100, mem.HEAP_ALLOC);
+}
+
+cleanup :: (occluder : *Occluder)
+{
+	reset (*occluder.draw_data);
 }
 
 #scope_export
@@ -383,6 +402,7 @@ find_or_create_occluder :: (id : Id) -> *Occluder #must
 {
 	check_init ();
 
+	assert (ui.occlusion_layers.count > 0, "No occlusion layer. Use push_occlusion_layer to create a new layer.");
 	layer := *ui.occlusion_layers[ui.current_occlusion_layer];
 	occl := map.get (*layer.occluders_by_id, id);
 	if !occl
@@ -399,7 +419,7 @@ find_or_create_occluder :: (id : Id) -> *Occluder #must
 	return occl;
 }
 
-begin_occlusion :: (rect : math.Rectf, location : Source_Code_Location)
+begin_occlusion :: (rect : math.Rectf, location : Source_Code_Location) -> *Occluder
 {
 	check_init ();
 
@@ -409,10 +429,12 @@ begin_occlusion :: (rect : math.Rectf, location : Source_Code_Location)
 	occluder := find_or_create_occluder (id);
 	occluder.rect = rect;
 	occluder.last_frame_index = ui.frame_index;
-	array.clear (*occluder.controls_to_draw);
+	clear (*occluder.draw_data);
 	push_clipping_rect (rect);
 
 	ui.current_occluder = occluder;
+
+	return occluder;
 }
 
 end_occlusion :: ()

@@ -16,6 +16,7 @@ for_expansion :: storage.for_expansion;
 gl     :: #import "GL";
 window :: #import "Window";
 input  :: #import "Input";
+render :: #import "Render_Core";
 imdraw :: #import "ImDraw";
 font   :: #import "Font";
 
@@ -65,8 +66,6 @@ main :: ()
 	gui.init ();
 	defer gui.terminate ();
 
-	window_rect := math.xywhf (50, 30, 100, 200);
-	show_second_control := true;
 	gl.ClearColor (0.1, 0.1, 0.1, 1);
 	g_is_running = true;
 	delta_time := 0.01667;
@@ -87,47 +86,9 @@ main :: ()
 
 		new_frame (delta_time);
 		gui.begin ();
-		{
-			if gui.declare_control (math.xywhf (10, 10, 50, 50), #location ()) == .RELEASED
-				show_second_control = !show_second_control;
-
-			gui.begin_occlusion (math.xywhf (30, 30, 30, 30), #location ());
-			gui.end_occlusion ();
-
-			prev := gui.set_occlusion_layer ("Windows");
-			gui.begin_occlusion (window_rect, #location ());
-			{
-				caption_rect := math.xywhf (0, 0, math.rect_width (window_rect), 25);
-				if gui.declare_control (caption_rect, #location ()) == .DOWN
-				{
-					mx, my := window.get_mouse_position (g_window);
-					window_rect = math.set_position (window_rect, xx mx - math.rect_width (window_rect) * 0.5, xx my - math.rect_height (caption_rect) * 0.5);
-					gui.raise_occluder ();
-				}
-				
-				resize_button_rect := math.xywhf (math.rect_width (window_rect) - 25, math.rect_height (window_rect) - 25, 25, 25);
-				if gui.declare_control (resize_button_rect, #location ()) == .DOWN
-				{
-					mx, my := window.get_mouse_position (g_window);
-					window_rect = math.set_size (window_rect, mx + 12.5 - window_rect.x1, my + 12.5 - window_rect.y1);
-					gui.raise_occluder ();
-				}
-			}
-			gui.end_occlusion ();
-
-			gui.begin_occlusion (math.xywhf (100, 10, 50, 75), #location ());
-			if gui.declare_control (math.xywhf (10, 0, 50, 20), #location ()) == .DOWN
-				gui.raise_occluder ();
-			gui.end_occlusion ();
-
-			gui.set_occlusion_layer (prev);
-
-			if show_second_control
-				gui.declare_control (math.xywhf (20, 20, 50, 50), #location ());
-
-		}
+			update_ui ();
 		gui.end ();
-		
+
 		imdraw.end ();
 		window.swap_buffers (g_window);
 		
@@ -152,4 +113,87 @@ new_frame :: (delta_time : f32)
 	wx, wy := input.get_mouse_wheel ();
 	ui.mouse_wheel.x = wx * 5.0;
 	ui.mouse_wheel.y = wy * 5.0;
+}
+
+g_window_rect := math.Rectf.{50, 30, 150, 230};
+g_show_second_control := true;
+
+button :: (rect : math.Rectf, location := #caller_location) -> gui.State
+{
+	ctrl := gui.declare_control (rect, location);
+
+	color : math.RGBA;
+	color.value = ctrl.id;
+	color.a = 255;
+	gui.draw_rect (gui.get_draw_data (), ctrl.rect, color, corner_radius = 10);
+	if ctrl.state == .HOVERED
+		gui.draw_rect_outline (gui.get_draw_data (), ctrl.rect, math.RGBA_WHITE, 2);
+	else if ctrl.state == .DOWN
+		gui.draw_rect_outline (gui.get_draw_data (), ctrl.rect, .{100, 100, 100, 255}, 2);
+	else if ctrl.state == .RELEASED
+		gui.draw_rect_outline (gui.get_draw_data (), ctrl.rect, .{255, 0, 0, 255}, 2);
+
+	return ctrl.state;
+}
+
+begin_window :: (rect : math.Rectf, location := #caller_location)
+{
+	occl := gui.begin_occlusion (rect, location);
+
+	color : math.RGBA;
+	color.value = occl.id;
+	color.a = 128;
+	gui.draw_rect (gui.get_draw_data (), occl.rect, color, corner_radius = 10);
+	if context.ui_context.mouse_hovered_occluder && context.ui_context.mouse_hovered_occluder == occl
+		gui.draw_rect_outline (gui.get_draw_data (), occl.rect, .{255,0,0,255}, 2, corner_radius = 10);
+}
+
+end_window :: ()
+{
+	ui_window := context.ui_context.current_occluder;
+	gui.draw_text (gui.get_draw_data (), g_font, 12, vec2f (ui_window.rect.x1 + 4, ui_window.rect.y1 + 4), "Window", math.RGBA_WHITE);
+	gui.end_occlusion ();
+}
+
+update_ui :: ()
+{
+	if button (math.xywhf (10, 10, 50, 50)) == .RELEASED
+		g_show_second_control = !g_show_second_control;
+
+	begin_window (math.xywhf (30, 30, 30, 30));
+	end_window ();
+
+	prev := gui.set_occlusion_layer ("Windows");
+	
+	begin_window (g_window_rect);
+	{
+		caption_rect := math.xywhf (0, 0, math.rect_width (g_window_rect), 25);
+		if button (caption_rect) == .DOWN
+		{
+			mx, my := window.get_mouse_position (g_window);
+			g_window_rect = math.set_position (g_window_rect, xx mx - math.rect_width (g_window_rect) * 0.5, xx my - math.rect_height (caption_rect) * 0.5);
+			gui.raise_occluder ();
+		}
+		
+		resize_button_rect := math.xywhf (math.rect_width (g_window_rect) - 25, math.rect_height (g_window_rect) - 25, 25, 25);
+		if button (resize_button_rect) == .DOWN
+		{
+			mx, my := window.get_mouse_position (g_window);
+			g_window_rect = math.set_size (g_window_rect, mx + 12.5 - g_window_rect.x1, my + 12.5 - g_window_rect.y1);
+			gui.raise_occluder ();
+		}
+	}
+	end_window ();
+
+	begin_window (math.xywhf (100, 10, 50, 75));
+	{
+		if button (math.xywhf (10, 0, 50, 20)) == .DOWN
+			gui.raise_occluder ();
+	}
+	end_window ();
+
+	gui.set_occlusion_layer (prev);
+
+	if g_show_second_control
+		button (math.xywhf (20, 20, 50, 50));
 }
