@@ -173,7 +173,7 @@ flush :: inline ()
 
 reserve :: inline (count : s64) -> *Vertex #must
 {
-	assert (count < MAX_VERTICES, "Reserving too many vertices (requested %, maximum is %).", count, MAX_VERTICES);
+	assert (count <= MAX_VERTICES, "Reserving too many vertices (requested %, maximum is %).", count, MAX_VERTICES);
 	check_init ();
 	if imdraw.vertex_count + count > MAX_VERTICES
 		flush ();
