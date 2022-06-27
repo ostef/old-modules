@@ -125,16 +125,16 @@ update_ui :: ()
 	if gui.button (math.xywhf (10, 10, 50, 50))
 		g_show_second_control = !g_show_second_control;
 
-	gui.begin_window (math.xywhf (30, 30, 30, 30));
-	gui.end_window ();
+	window_info := gui.begin_window (math.xywhf (30, 30, 30, 30));
+	gui.end_window (window_info);
 
 	prev := gui.set_occlusion_layer ("Windows");
 	
-	gui.begin_window (g_window_rect);
-	gui.end_window ();
+	window_info = gui.begin_window (g_window_rect);
+	gui.end_window (window_info);
 
-	gui.begin_window (math.xywhf (100, 10, 50, 75));
-	gui.end_window ();
+	window_info = gui.begin_window (math.xywhf (100, 10, 50, 75));
+	gui.end_window (window_info);
 
 	gui.set_occlusion_layer (prev);
 

@@ -5,11 +5,11 @@ draw_button :: (ctrl : *Control)
 	color.a = 255;
 	imdraw.draw_rect (get_renderer (), ctrl.rect, color, corner_radius = 10);
 	if flagged (ctrl.focus_state, .RELEASED)
-		imdraw.draw_rect_outline (get_renderer (), ctrl.rect, .{255, 0, 0, 255}, 2);
+		imdraw.draw_rect_outline (get_renderer (), ctrl.rect, .{255, 0, 0, 255}, 2, corner_radius = 10);
 	else if flagged (ctrl.focus_state, .DOWN)
-		imdraw.draw_rect_outline (get_renderer (), ctrl.rect, .{100, 100, 100, 255}, 2);
+		imdraw.draw_rect_outline (get_renderer (), ctrl.rect, .{100, 100, 100, 255}, 2, corner_radius = 10);
 	else if flagged (ctrl.focus_state, .FOCUSED)
-		imdraw.draw_rect_outline (get_renderer (), ctrl.rect, math.RGBA_WHITE, 2);
+		imdraw.draw_rect_outline (get_renderer (), ctrl.rect, math.RGBA_WHITE, 2, corner_radius = 10);
 }
 
 button :: (
