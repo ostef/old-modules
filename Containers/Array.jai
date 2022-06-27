@@ -191,8 +191,9 @@ find_last :: inline (arr : []$T, val : T) -> s64 #must
 get_index :: inline (arr : []$T, ptr : *T) -> s64 #must
 #no_context
 {
-	contextless_assert (ptr > arr.data && ptr < arr.data + arr.count, "ptr does not point to an element in the array.");
-	return ptr - arr.data;
+	if ptr > arr.data && ptr < arr.data + arr.count
+		return ptr - arr.data;
+	return -1;
 }
 
 equals :: inline (a : []$T, b : []T) -> bool #must
