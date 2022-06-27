@@ -17,7 +17,7 @@ begin_window :: (rect : math.Rectf, set_rect_once := true, location := #caller_l
 	caption_ctrl := declare_control (
 		caption_rect,
 		location,
-		flags = Control.Flags.FOCUSABLE | .PRESSABLE | .INTERACT_ON_HELD | .CONTINUE_INTERACTION_WHEN_UNFOCUSED,
+		flags = Control.Flags.FOCUSABLE | .INTERACT_ON_HELD | .CONTINUE_INTERACTION_WHEN_UNFOCUSED,
 		id_offset = 1
 	);
 	draw_button (caption_ctrl);
@@ -34,7 +34,7 @@ begin_window :: (rect : math.Rectf, set_rect_once := true, location := #caller_l
 	resize_button_ctrl := declare_control (
 		resize_button_rect,
 		location,
-		flags = Control.Flags.FOCUSABLE | .PRESSABLE | .INTERACT_ON_HELD | .CONTINUE_INTERACTION_WHEN_UNFOCUSED,
+		flags = Control.Flags.FOCUSABLE | .INTERACT_ON_HELD | .CONTINUE_INTERACTION_WHEN_UNFOCUSED,
 		id_offset = 2
 	);
 	draw_button (resize_button_ctrl);

@@ -19,7 +19,7 @@ button :: (
 	location := #caller_location
 ) -> bool
 {
-	ctrl := declare_control (rect, location, Control.Flags.FOCUSABLE | .PRESSABLE | interaction_flags, id_offset = id_offset);
+	ctrl := declare_control (rect, location, Control.Flags.FOCUSABLE | interaction_flags, id_offset = id_offset);
 
 	draw_button (ctrl);
 

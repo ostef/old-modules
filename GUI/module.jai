@@ -68,24 +68,19 @@ Focus_State :: enum_flags u8
 
 Control :: struct
 {
-	State_Flags :: enum_flags u16
+	State_Flags :: enum_flags u8
 	{
 		NONE     :: 0x00;
-		ACTIVE   :: 0x01;
-		FOCUSED  :: 0x02;
-		HOT      :: 0x04;
-		INTERACTING :: 0x08;
-		DISABLED :: 0x10;
+		FOCUSED  :: 0x01;
+		HOT      :: 0x02;
+		INTERACTING :: 0x04;
+		DISABLED :: 0x08;
 	}
 
 	Flags :: enum_flags u16
 	{
 		NONE       :: 0x00;
-		FOCUSABLE  :: 0x01;	// If not set the PRESSABLE, TOGGLEABLE and SELECTABLE flags are ignored
-		// Only one of the three below can be set
-		PRESSABLE  :: 0x02;	// Active is set the frame of interaction (i.e. a button)
-		TOGGLEABLE :: 0x04;	// Active is toggled on interaction (i.e. a checkbox)
-		SELECTABLE :: 0x08;	// Active on interaction, can be set to inactive by the caller (i.e. a radio button)
+		FOCUSABLE  :: 0x01;	// If not set then interaction is ignored
 
 		// An interaction is the action of changing the active status
 		INTERACT_ON_PRESSED  :: 0x1000;
@@ -440,18 +435,10 @@ find_or_create_control :: (id : Id) -> *Control #must, created_this_frame : bool
 	return ctrl, false;
 }
 
-Active_Change :: enum
-{
-	NONE        :: 0;
-	TO_ACTIVE   :: 1;
-	TO_INACTIVE :: 2;
-}
-
 declare_control :: (
 	rect : math.Rectf,
 	location : Source_Code_Location,
 	flags : Control.Flags,
-	active_change := Active_Change.NONE,
 	id_offset : u32 = 0
 ) -> *Control, created_this_frame : bool
 {
@@ -474,12 +461,6 @@ declare_control :: (
 	ctrl.state_flags &= ~.HOT;
 	ctrl.state_flags &= ~.INTERACTING;
 	ctrl.state_flags &= ~.FOCUSED;
-	// Change the active flag if the caller requested it
-	if active_change ==
-	{
-	case .TO_INACTIVE; ctrl.state_flags &= ~.ACTIVE;
-	case .TO_ACTIVE;   ctrl.state_flags |=  .ACTIVE;
-	}
 
 	is_disabled := false;	// @Todo
 	// Update focus state
@@ -488,10 +469,6 @@ declare_control :: (
 		ctrl.focus_state = .NONE;
 		ctrl.state_flags |= .DISABLED;
 		ctrl.state_flags &= ~.INTERACTING;
-		// If pressing on the control disables it, we have
-		// to manually set the control to inactive.
-		if flagged (ctrl.flags, .PRESSABLE)
-			ctrl.state_flags &= ~.ACTIVE;
 	}
 	else if flagged (ctrl.flags, .FOCUSABLE)
 	{
@@ -531,25 +508,6 @@ declare_control :: (
 			// Update the relative mouse position if we started interacting
 			if !flagged (ctrl.prev_state_flags, .INTERACTING)
 				ctrl.relative_mouse_position_when_started_interacting = ui.mouse_position - math.rect_position (ctrl.rect);
-		}
-
-		// Set the active flag
-		if flagged (ctrl.flags, .PRESSABLE)
-		{
-			if flagged (ctrl.state_flags, .INTERACTING)
-				ctrl.state_flags |=  .ACTIVE;
-			else
-				ctrl.state_flags &= ~.ACTIVE;
-		}
-		else if flagged (ctrl.flags, .TOGGLEABLE)
-		{
-			if flagged (ctrl.state_flags, .INTERACTING)
-				ctrl.state_flags ^= .ACTIVE;
-		}
-		else if flagged (ctrl.flags, .SELECTABLE)
-		{
-			if flagged (ctrl.state_flags, .INTERACTING)
-				ctrl.state_flags |= .ACTIVE;
 		}
 	}
 
