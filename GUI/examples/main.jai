@@ -131,30 +131,9 @@ update_ui :: ()
 	prev := gui.set_occlusion_layer ("Windows");
 	
 	gui.begin_window (g_window_rect);
-	{
-		caption_rect := math.xywhf (0, 0, math.rect_width (g_window_rect), 25);
-		if gui.button (caption_rect, interaction_flags = gui.Control.Flags.INTERACT_ON_HELD | .CONTINUE_INTERACTION_WHEN_UNFOCUSED)
-		{
-			mx, my := window.get_mouse_position (g_window);
-			g_window_rect = math.set_position (g_window_rect, xx mx - math.rect_width (g_window_rect) * 0.5, xx my - math.rect_height (caption_rect) * 0.5);
-			gui.raise_occluder ();
-		}
-		
-		resize_button_rect := math.xywhf (math.rect_width (g_window_rect) - 25, math.rect_height (g_window_rect) - 25, 25, 25);
-		if gui.button (resize_button_rect, interaction_flags = gui.Control.Flags.INTERACT_ON_HELD | .CONTINUE_INTERACTION_WHEN_UNFOCUSED)
-		{
-			mx, my := window.get_mouse_position (g_window);
-			g_window_rect = math.set_size (g_window_rect, mx + 12.5 - g_window_rect.x1, my + 12.5 - g_window_rect.y1);
-			gui.raise_occluder ();
-		}
-	}
 	gui.end_window ();
 
 	gui.begin_window (math.xywhf (100, 10, 50, 75));
-	{
-		if gui.button (math.xywhf (10, 0, 50, 20))
-			gui.raise_occluder ();
-	}
 	gui.end_window ();
 
 	gui.set_occlusion_layer (prev);

@@ -423,7 +423,7 @@ get_focus_state :: (using ctrl : *Control) -> Focus_State #must
 	return result;
 }
 
-find_or_create_control :: (id : Id) -> *Control #must
+find_or_create_control :: (id : Id) -> *Control #must, created_this_frame : bool
 {
 	check_init ();
 
@@ -433,9 +433,11 @@ find_or_create_control :: (id : Id) -> *Control #must
 		ctrl = storage.find_free_slot (*ui.controls);
 		ctrl.id = id;
 		map.insert (*ui.controls_by_id, id, ctrl);
+
+		return ctrl, true;
 	}
 
-	return ctrl;
+	return ctrl, false;
 }
 
 Active_Change :: enum
@@ -451,11 +453,11 @@ declare_control :: (
 	flags : Control.Flags,
 	active_change := Active_Change.NONE,
 	id_offset : u32 = 0
-) -> *Control
+) -> *Control, created_this_frame : bool
 {
 	check_init ();
 
-	ctrl := find_or_create_control (get_id (location) + id_offset);
+	ctrl, created_this_frame := find_or_create_control (get_id (location) + id_offset);
 
 	if ui.current_occluder
 		ctrl.rect = math.move (rect, math.rect_position (ui.current_occluder.rect));
@@ -559,7 +561,7 @@ declare_control :: (
 	else
 		ctrl.state_time += ui.delta_time;
 
-	return ctrl;
+	return ctrl, created_this_frame;
 }
 
 push_clipping_rect :: inline (rect : math.Rectf)
@@ -588,7 +590,7 @@ cleanup :: (occluder : *Occluder)
 
 #scope_export
 
-find_or_create_occluder :: (id : Id) -> *Occluder #must
+find_or_create_occluder :: (id : Id) -> *Occluder #must, created_this_frame : bool
 {
 	check_init ();
 
@@ -604,26 +606,29 @@ find_or_create_occluder :: (id : Id) -> *Occluder #must
 		map.insert (*layer.occluders_by_id, id, occl);
 		array.push (*layer.occluders_bottommost_to_topmost, occl);
 		occl.index = layer.occluders_bottommost_to_topmost.count - 1;
+
+		return occl, true;
 	}
 
-	return occl;
+	return occl, false;
 }
 
-begin_occlusion :: (rect : math.Rectf, location : Source_Code_Location) -> *Occluder
+begin_occlusion :: (rect : math.Rectf, location : Source_Code_Location, set_rect_once : bool) -> *Occluder, created_this_frame : bool
 {
 	check_init ();
 
 	assert (ui.current_occluder == null, "Cannot call begin_occlusion in between begin_occlusion and end_occlusion calls. Did you forget to call end_occlusion?");
 
-	occluder := find_or_create_occluder (get_id (location));
-	occluder.rect = rect;
+	occluder, created_this_frame := find_or_create_occluder (get_id (location));
+	if !set_rect_once || (set_rect_once && created_this_frame)
+		occluder.rect = rect;
 	occluder.last_frame_index = ui.frame_index;
 	imdraw.clear (*occluder.renderer);
-	push_clipping_rect (rect);
+	push_clipping_rect (occluder.rect);
 
 	ui.current_occluder = occluder;
 
-	return occluder;
+	return occluder, created_this_frame;
 }
 
 end_occlusion :: ()
