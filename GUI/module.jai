@@ -42,7 +42,7 @@ UI_Context :: struct
 	#place occlusion_layers;
 	occlusion_layers_bottommost_to_topmost : [..]Occlusion_Layer;
 
-	mouse_hovered_occluder : *Occluder;
+	mouse_focused_occluder : *Occluder;
 
 	current_occlusion_layer : s64;
 	current_occluder : *Occluder;
@@ -329,15 +329,15 @@ end :: ()
 	{
 		ui.mouse_interacting_control = null;
 
-		// Find occluder hovered by the mouse, but only if a control isn't already interacting
-		ui.mouse_hovered_occluder = null;
+		// Find occluder focused by the mouse, but only if a control isn't already interacting
+		ui.mouse_focused_occluder = null;
 		for < layer : ui.occlusion_layers_bottommost_to_topmost
 		{
 			for < layer.occluders_bottommost_to_topmost
 			{
 				if math.contains (it.rect, ui.mouse_position)
 				{
-					ui.mouse_hovered_occluder = it;
+					ui.mouse_focused_occluder = it;
 					break layer;
 				}
 			}
@@ -382,7 +382,7 @@ get_focus_state :: (using ctrl : *Control) -> Focus_State #must
 
 	if ui.mouse_focused_control_this_frame
 		return .NONE;
-	if ui.mouse_hovered_occluder && ui.mouse_hovered_occluder != ui.current_occluder
+	if ui.mouse_focused_occluder && ui.mouse_focused_occluder != ui.current_occluder
 		return .NONE;
 	if ui.mouse_interacting_control && ui.mouse_interacting_control != ctrl
 		return .NONE;
