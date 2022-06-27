@@ -1,5 +1,3 @@
-#module_parameters (MAX_VERTICES_PER_BATCH := 1024);
-
 #scope_module
 
 #import "Runtime";
@@ -23,11 +21,18 @@ input  :: #import "Input";
 
 #scope_export
 
+#load "widgets/widgets.jai";
+
 UI_Context :: struct
 {
 	mouse_position : linalg.Vec2f;
 	mouse_wheel    : linalg.Vec2f;
 	viewport_size  : linalg.Vec2i;
+	delta_time     : f32;
+
+	interacted_this_frame : bool;
+	mouse_interacting_control : *Control;
+	mouse_focused_control_this_frame : *Control;
 
 	controls : storage.Storage (Control, 20);
 	controls_by_id : map.Hash_Map (Id, *Control);
@@ -51,15 +56,63 @@ UI_Context :: struct
 
 Id :: u32;
 
+Focus_State :: enum_flags u8
+{
+	NONE     :: 0x00;
+	FOCUSED  :: 0x01;
+	PRESSED  :: 0x02;
+	DOUBLE_PRESSED :: 0x04;
+	DOWN     :: 0x08;
+	RELEASED :: 0x10;
+}
+
 Control :: struct
 {
+	State_Flags :: enum_flags u16
+	{
+		NONE     :: 0x00;
+		ACTIVE   :: 0x01;
+		FOCUSED  :: 0x02;
+		HOT      :: 0x04;
+		INTERACTING :: 0x08;
+		DISABLED :: 0x10;
+	}
+
+	Flags :: enum_flags u16
+	{
+		NONE       :: 0x00;
+		FOCUSABLE  :: 0x01;	// If not set the PRESSABLE, TOGGLEABLE and SELECTABLE flags are ignored
+		// Only one of the three below can be set
+		PRESSABLE  :: 0x02;	// Active is set the frame of interaction (i.e. a button)
+		TOGGLEABLE :: 0x04;	// Active is toggled on interaction (i.e. a checkbox)
+		SELECTABLE :: 0x08;	// Active on interaction, can be set to inactive by the caller (i.e. a radio button)
+
+		// An interaction is the action of changing the active status
+		INTERACT_ON_PRESSED  :: 0x1000;
+		INTERACT_ON_HELD     :: 0x2000;
+		INTERACT_ON_RELEASED :: 0x4000;
+		// Useful for scrollbars and sliders
+		CONTINUE_INTERACTION_WHEN_UNFOCUSED :: 0x8000;
+		DEFAULT_INTERACTION :: INTERACT_ON_RELEASED;
+		INTERACTION_FLAGS   ::
+			INTERACT_ON_PRESSED
+			| INTERACT_ON_HELD
+			| INTERACT_ON_RELEASED
+			| CONTINUE_INTERACTION_WHEN_UNFOCUSED;
+	}
+
 	id : Id;
+
+	last_frame_index : u64;
+	flags : Flags;
+	focus_state : Focus_State;
+	prev_state_flags : State_Flags;
+	state_flags : State_Flags;
+	state_time : f32;
+	relative_mouse_position_when_started_interacting : linalg.Vec2f;
 
 	rect : math.Rectf;
 	clipped_rect : math.Rectf;
-
-	state : State;
-	last_frame_index : u64;
 }
 
 Occlusion_Layer :: struct
@@ -225,6 +278,8 @@ begin :: ()
 	check_init ();
 
 	ui.frame_index += 1;
+	ui.interacted_this_frame = false;
+	ui.mouse_focused_control_this_frame = null;
 	imdraw.clear (*ui.renderer);
 }
 
@@ -269,22 +324,35 @@ end :: ()
 		}
 	}
 
-	// Find occluder hovered by the mouse
-	ui.mouse_hovered_occluder = null;
-	for < layer : ui.occlusion_layers_bottommost_to_topmost
+	// Reset mouse interaction
+	if !ui.interacted_this_frame
 	{
-		for < layer.occluders_bottommost_to_topmost
+		ui.mouse_interacting_control = null;
+
+		// Find occluder hovered by the mouse, but only if a control isn't already interacting
+		ui.mouse_hovered_occluder = null;
+		for < layer : ui.occlusion_layers_bottommost_to_topmost
 		{
-			if math.contains (it.rect, ui.mouse_position)
+			for < layer.occluders_bottommost_to_topmost
 			{
-				ui.mouse_hovered_occluder = it;
-				break layer;
+				if math.contains (it.rect, ui.mouse_position)
+				{
+					ui.mouse_hovered_occluder = it;
+					break layer;
+				}
 			}
 		}
 	}
 
 	for :draw_data data : ui
 		imdraw.draw_to_framebuffer (data);
+}
+
+set_mouse_interacting_control :: inline (ctrl : *Control)
+{
+	check_init ();
+	ui.mouse_interacting_control = ctrl;
+	ui.interacted_this_frame = true;
 }
 
 get_id :: (location : Source_Code_Location) -> Id #must
@@ -308,6 +376,53 @@ get_id :: (location : Source_Code_Location) -> Id #must
 	return h;
 }
 
+get_focus_state :: (using ctrl : *Control) -> Focus_State #must
+{
+	check_init ();
+
+	if ui.mouse_focused_control_this_frame
+		return .NONE;
+	if ui.mouse_hovered_occluder && ui.mouse_hovered_occluder != ui.current_occluder
+		return .NONE;
+	if ui.mouse_interacting_control && ui.mouse_interacting_control != ctrl
+		return .NONE;
+	if !flagged (flags, .FOCUSABLE)
+		return .NONE;
+
+	focused := math.contains (clipped_rect, ui.mouse_position);
+
+	mouse_left_pressed  := input.is_mouse_button_pressed (.LEFT);
+	mouse_left_down     := input.is_mouse_button_down (.LEFT);
+	mouse_left_released := input.is_mouse_button_released (.LEFT);
+
+	// If we were focused previously, and we don't want to stop the interaction
+	// when we are unfocused, then continue focusing if interacting.
+	if flagged (focus_state, .FOCUSED)
+	&& flagged (flags, .CONTINUE_INTERACTION_WHEN_UNFOCUSED)
+	{
+		if flagged (flags, .INTERACT_ON_PRESSED) && mouse_left_pressed
+			focused = true;
+		if flagged (flags, .INTERACT_ON_HELD) && mouse_left_down
+			focused = true;
+		if flagged (flags, .INTERACT_ON_RELEASED) && mouse_left_released
+			focused = true;
+	}
+
+	result : Focus_State;
+	if focused
+	{
+		result |= .FOCUSED;
+		if mouse_left_pressed
+			result |= .PRESSED;
+		if mouse_left_down
+			result |= .DOWN;
+		if mouse_left_released
+			result |= .RELEASED;
+	}
+
+	return result;
+}
+
 find_or_create_control :: (id : Id) -> *Control #must
 {
 	check_init ();
@@ -323,33 +438,126 @@ find_or_create_control :: (id : Id) -> *Control #must
 	return ctrl;
 }
 
-declare_control :: (rect : math.Rectf, location : Source_Code_Location) -> *Control
+Active_Change :: enum
+{
+	NONE        :: 0;
+	TO_ACTIVE   :: 1;
+	TO_INACTIVE :: 2;
+}
+
+declare_control :: (
+	rect : math.Rectf,
+	location : Source_Code_Location,
+	flags : Control.Flags,
+	active_change := Active_Change.NONE,
+	id_offset : u32 = 0
+) -> *Control
 {
 	check_init ();
 
-	id := get_id (location);
-	ctrl := find_or_create_control (id);
+	ctrl := find_or_create_control (get_id (location) + id_offset);
+
 	if ui.current_occluder
 		ctrl.rect = math.move (rect, math.rect_position (ui.current_occluder.rect));
 	else
 		ctrl.rect = rect;
+
 	if ui.clipping_stack.count > 0
 		ctrl.clipped_rect = math.clip (ctrl.rect, array.top (ui.clipping_stack));
 	else
 		ctrl.clipped_rect = ctrl.rect;
-	ctrl.last_frame_index = ui.frame_index;
 
-	ctrl.state = State.INACTIVE;
-	if math.contains (ctrl.clipped_rect, ui.mouse_position)
-	&& (!ui.mouse_hovered_occluder || ui.mouse_hovered_occluder == ui.current_occluder)
+	ctrl.last_frame_index = ui.frame_index;
+	ctrl.flags = flags;
+	ctrl.state_flags &= ~.HOT;
+	ctrl.state_flags &= ~.INTERACTING;
+	ctrl.state_flags &= ~.FOCUSED;
+	// Change the active flag if the caller requested it
+	if active_change ==
 	{
-		if input.is_mouse_button_down (.LEFT)
-			ctrl.state = .DOWN;
-		else if input.is_mouse_button_released (.LEFT)
-			ctrl.state = .RELEASED;
-		else
-			ctrl.state = .HOVERED;
+	case .TO_INACTIVE; ctrl.state_flags &= ~.ACTIVE;
+	case .TO_ACTIVE;   ctrl.state_flags |=  .ACTIVE;
 	}
+
+	is_disabled := false;	// @Todo
+	// Update focus state
+	if is_disabled
+	{
+		ctrl.focus_state = .NONE;
+		ctrl.state_flags |= .DISABLED;
+		ctrl.state_flags &= ~.INTERACTING;
+		// If pressing on the control disables it, we have
+		// to manually set the control to inactive.
+		if flagged (ctrl.flags, .PRESSABLE)
+			ctrl.state_flags &= ~.ACTIVE;
+	}
+	else if flagged (ctrl.flags, .FOCUSABLE)
+	{
+		ctrl.focus_state = get_focus_state (ctrl);
+		if flagged (ctrl.focus_state, .FOCUSED)
+			ui.mouse_focused_control_this_frame = ctrl;
+
+		if flagged (ctrl.flags, .INTERACT_ON_HELD)
+		&& flagged (ctrl.focus_state, .PRESSED)
+			ctrl.state_flags |= .HOT;
+		if flagged (ctrl.flags, .INTERACT_ON_RELEASED)
+		&& flagged (ctrl.focus_state, .DOWN)
+			ctrl.state_flags |= .HOT;
+
+		// We only want to interact if we were hot beforehand, or
+		// if we were already interacting, for controls with which
+		// we interact more than one frame.
+		// The reason for that is because for controls that interact
+		// on held, we don't want interaction to happen if the mouse
+		// enters the control's rect while the left mouse button is down.
+		if flagged (ctrl.prev_state_flags, .HOT) || flagged (ctrl.prev_state_flags, .INTERACTING)
+		{
+			if flagged (ctrl.flags, .INTERACT_ON_PRESSED)
+			&& flagged (ctrl.focus_state, .PRESSED)
+				ctrl.state_flags |= .INTERACTING;
+			if flagged (ctrl.flags, .INTERACT_ON_HELD)
+			&& flagged (ctrl.focus_state, .DOWN)
+				ctrl.state_flags |= .INTERACTING;
+			if flagged (ctrl.flags, .INTERACT_ON_RELEASED)
+			&& flagged (ctrl.focus_state, .RELEASED)
+				ctrl.state_flags |= .INTERACTING;
+		}
+
+		if flagged (ctrl.state_flags, .INTERACTING)
+		{
+			set_mouse_interacting_control (ctrl);
+			// Update the relative mouse position if we started interacting
+			if !flagged (ctrl.prev_state_flags, .INTERACTING)
+				ctrl.relative_mouse_position_when_started_interacting = ui.mouse_position - math.rect_position (ctrl.rect);
+		}
+
+		// Set the active flag
+		if flagged (ctrl.flags, .PRESSABLE)
+		{
+			if flagged (ctrl.state_flags, .INTERACTING)
+				ctrl.state_flags |=  .ACTIVE;
+			else
+				ctrl.state_flags &= ~.ACTIVE;
+		}
+		else if flagged (ctrl.flags, .TOGGLEABLE)
+		{
+			if flagged (ctrl.state_flags, .INTERACTING)
+				ctrl.state_flags ^= .ACTIVE;
+		}
+		else if flagged (ctrl.flags, .SELECTABLE)
+		{
+			if flagged (ctrl.state_flags, .INTERACTING)
+				ctrl.state_flags |= .ACTIVE;
+		}
+	}
+
+	if ctrl.state_flags != ctrl.prev_state_flags
+	{
+		ctrl.prev_state_flags = ctrl.state_flags;
+		ctrl.state_time = 0;
+	}
+	else
+		ctrl.state_time += ui.delta_time;
 
 	return ctrl;
 }
@@ -407,8 +615,7 @@ begin_occlusion :: (rect : math.Rectf, location : Source_Code_Location) -> *Occl
 
 	assert (ui.current_occluder == null, "Cannot call begin_occlusion in between begin_occlusion and end_occlusion calls. Did you forget to call end_occlusion?");
 
-	id := get_id (location);
-	occluder := find_or_create_occluder (id);
+	occluder := find_or_create_occluder (get_id (location));
 	occluder.rect = rect;
 	occluder.last_frame_index = ui.frame_index;
 	imdraw.clear (*occluder.renderer);
