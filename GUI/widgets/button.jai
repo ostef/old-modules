@@ -1,19 +1,27 @@
-draw_button :: (ctrl : *Control)
+Button_Style :: struct
 {
-	color : math.RGBA;
-	color.value = ctrl.id;
-	color.a = 255;
-	imdraw.draw_rect (get_renderer (), ctrl.rect, color, corner_radius = 10);
-	if flagged (ctrl.focus_state, .RELEASED)
-		imdraw.draw_rect_outline (get_renderer (), ctrl.rect, .{255, 0, 0, 255}, 2, corner_radius = 10);
-	else if flagged (ctrl.focus_state, .DOWN)
-		imdraw.draw_rect_outline (get_renderer (), ctrl.rect, .{100, 100, 100, 255}, 2, corner_radius = 10);
-	else if flagged (ctrl.focus_state, .FOCUSED)
-		imdraw.draw_rect_outline (get_renderer (), ctrl.rect, math.RGBA_WHITE, 2, corner_radius = 10);
+	State_Style :: struct
+	{
+		using common : Common_Style;
+		image_color := math.RGBA_WHITE;
+		text_weight : font.Weight;
+		text_effects : imdraw.Text_Effects;
+		text_color : math.RGBA;
+		text_and_image_offset : linalg.Vec2f;
+	}
+
+	text_font : *font.Font;
+	text_font_height : u32;
+
+	normal  : State_Style;
+	focused : State_Style;
+	hot     : State_Style;
 }
 
+/*
 button :: (
 	rect : math.Rectf,
+	style : *Button_Style = null,
 	interaction_flags := Control.Flags.DEFAULT_INTERACTION,
 	id_offset : u32 = 0,
 	location := #caller_location
@@ -21,7 +29,83 @@ button :: (
 {
 	ctrl := declare_control (rect, location, Control.Flags.FOCUSABLE | interaction_flags, id_offset = id_offset);
 
-	draw_button (ctrl);
+	draw_button (ctrl, "", null, style);
 
 	return flagged (ctrl.state_flags, .INTERACTING);
+}
+*/
+
+text_button :: (
+	rect : math.Rectf,
+	text : string,
+	style : *Button_Style = null,
+	id_offset : u32 = 0,
+	location := #caller_location
+) -> bool
+{
+	ctrl := declare_control (rect, location, Control.Flags.FOCUSABLE | .INTERACT_ON_RELEASED, id_offset = id_offset);
+	draw_button (ctrl, text, style = style);
+
+	return flagged (ctrl.state_flags, .INTERACTING);
+}
+
+image_button :: (
+	rect : math.Rectf,
+	image : *render.Texture,
+	image_uv := math.Rectf.{0,0,1,1},
+	style : *Button_Style = null,
+	id_offset : u32 = 0,
+	location := #caller_location
+) -> bool
+{
+	ctrl := declare_control (rect, location, Control.Flags.FOCUSABLE | .INTERACT_ON_RELEASED, id_offset = id_offset);
+	draw_button (ctrl, image = image, image_uv = image_uv, style = style);
+
+	return flagged (ctrl.state_flags, .INTERACTING);
+}
+
+draw_button :: (ctrl : *Control, text := "", image : *render.Texture = null, image_uv := math.Rectf.{0,0,1,1}, style : *Button_Style = null)
+{
+	state_style : Button_Style.State_Style;
+	if flagged (ctrl.state_flags, .HOT)
+		state_style = style.hot;
+	else if flagged (ctrl.state_flags, .FOCUSED)
+		state_style = style.focused;
+	else
+		state_style = style.normal;
+
+	imdraw.scope_clip_rect (get_renderer (), math.recti (ctrl.rect));
+	
+	imdraw.draw_rect (get_renderer (), ctrl.rect, state_style.background_color, corner_radius = state_style.corner_radiuses.top_left);
+	if state_style.border_thickness > 0
+		imdraw.draw_rect_outline (
+			get_renderer (),
+			math.truncate_all_sides (ctrl.rect, state_style.border_inset),
+			state_style.border_color,
+			state_style.border_thickness,
+			corner_radius = state_style.corner_radiuses.top_left
+		);
+
+	image_rect : math.Rectf;
+	if image
+	{
+		image_padding := (math.rect_height (ctrl.rect) - xx image.height) * 0.5;
+		image_rect = math.xywhf (image_padding + state_style.text_and_image_offset.x, image_padding + state_style.text_and_image_offset.y, xx image.width, xx image.height);
+		imdraw.set_texture (get_renderer (), image);
+		imdraw.draw_rect (get_renderer (), math.move (image_rect, math.rect_position (ctrl.rect)), state_style.image_color, uv_rect = image_uv);
+		imdraw.set_texture (get_renderer (), null);
+	}
+
+	if text
+		imdraw.draw_text (
+			get_renderer (),
+			style.text_font,
+			style.text_font_height,
+			linalg.vec2f ((ctrl.rect.x1 + ctrl.rect.x2) * 0.5, (ctrl.rect.y1 + ctrl.rect.y2) * 0.5) + state_style.text_and_image_offset + linalg.vec2f (image_rect.x2, 0),
+			text,
+			state_style.text_color,
+			state_style.text_weight,
+			state_style.text_effects,
+			.CENTER
+		);
 }

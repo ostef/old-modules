@@ -26,6 +26,10 @@ g_window : window.Window;
 g_font   : *font.Font;
 g_is_running : bool;
 g_show_second_window := false;
+g_icons : struct
+{
+	exclamation : render.Texture;
+};
 
 handle_window_message :: (msg : window.Message)
 {
@@ -62,7 +66,10 @@ main :: ()
 	if !g_font
 		error ("Could not load font.");
 	defer font.destroy_family (*g_font, mem.HEAP_ALLOC);
-	
+
+	if !render.load_texture_from_file (*g_icons.exclamation, "data/icons/exclamation_16.png")
+		error ("Could not load icon.");
+
 	gui.init ();
 	defer gui.terminate ();
 
@@ -117,27 +124,74 @@ new_frame :: (delta_time : f32)
 	ui.delta_time = delta_time;
 }
 
-g_window_rect := math.Rectf.{50, 30, 150, 230};
 g_show_second_control := true;
 
 update_ui :: ()
 {
-	if gui.button (math.xywhf (10, 10, 50, 50))
+	button_style : gui.Button_Style;
+	button_style.text_font = g_font;
+	button_style.text_font_height = 13;
+	button_style.normal.background_color = .{80,80,80,255};
+	button_style.normal.text_color = .{255,255,255,255};
+	button_style.normal.border_color = .{10,10,10,255};
+	button_style.normal.border_thickness = 1;
+	button_style.normal.border_inset = button_style.normal.border_thickness * 0.5;
+	button_style.normal.corner_radiuses.top_left = 5;
+	button_style.focused = button_style.normal;
+	button_style.focused.background_color = .{100,100,100,255};
+	button_style.hot = button_style.normal;
+	button_style.hot.background_color = .{60,60,60,255};
+	button_style.hot.text_and_image_offset.y = 1;
+
+	image_button_style : gui.Button_Style;
+	image_button_style.text_font = g_font;
+	image_button_style.text_font_height = 13;
+	image_button_style.normal.background_color = math.RGBA_TRANSPARENT;
+	image_button_style.normal.image_color = .{255,255,255,200};
+	image_button_style.normal.corner_radiuses.top_left = 5;
+	image_button_style.focused = image_button_style.normal;
+	image_button_style.focused.background_color = .{100,100,100,255};
+	image_button_style.focused.image_color = .{255,255,255,255};
+	image_button_style.hot = image_button_style.normal;
+	image_button_style.hot.background_color = .{60,60,60,255};
+	image_button_style.hot.image_color = .{255,255,255,255};
+	image_button_style.hot.text_and_image_offset.y = 1;
+
+	window_style : gui.Window_Style;
+	window_style.move_caption_height = 30;
+	window_style.resize_border_thickness = 6;
+	window_style.title_font = g_font;
+	window_style.title_font_height = 13;
+	window_style.title_color = .{255,255,255,255};
+	window_style.background_color = .{20,20,20,255};
+	window_style.border_color = .{80,80,80,255};
+	window_style.border_thickness = 1;
+	window_style.border_inset = button_style.normal.border_thickness * 0.5 + 2;
+	window_style.corner_radiuses.top_left = 6;
+
+	if gui.text_button (math.xywhf (10, 10, 150, 25), "Show Second Button", *button_style)
 		g_show_second_control = !g_show_second_control;
 
-	window_info := gui.begin_window (math.xywhf (30, 30, 30, 30));
+	if g_show_second_control
+		gui.text_button (math.xywhf (10, 40, 80, 25), "Press Me", *button_style);
+
+	gui.image_button (math.xywhf (10, 70, 25, 25), *g_icons.exclamation, style = *image_button_style);
+
+	window_info := gui.begin_window (math.xywhf (30, 345, 200, 145), "Window 1", style = *window_style);
+		if gui.text_button (math.xywhf (10, window_style.move_caption_height + 10, 150, 25), "Show Second Button", *button_style)
+			g_show_second_control = !g_show_second_control;
+
+		if g_show_second_control
+			gui.text_button (math.xywhf (10, window_style.move_caption_height + 40, 80, 25), "Press Me", *button_style);
 	gui.end_window (window_info);
 
 	prev := gui.set_occlusion_layer ("Windows");
 	
-	window_info = gui.begin_window (g_window_rect);
+	window_info = gui.begin_window (math.xywhf (50, 30, 100, 200), "Window 2", style = *window_style);
 	gui.end_window (window_info);
 
-	window_info = gui.begin_window (math.xywhf (100, 10, 50, 75));
+	window_info = gui.begin_window (math.xywhf (100, 10, 80, 75), "Window 3", style = *window_style);
 	gui.end_window (window_info);
 
 	gui.set_occlusion_layer (prev);
-
-	if g_show_second_control
-		gui.button (math.xywhf (20, 20, 50, 50), gui.Control.Flags.INTERACT_ON_HELD | .CONTINUE_INTERACTION_WHEN_UNFOCUSED);
 }

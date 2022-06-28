@@ -457,6 +457,13 @@ declare_control :: (
 	else
 		ctrl.clipped_rect = ctrl.rect;
 
+TEXT :: #string END
+Two controls have the same id.
+This might be due to a call to begin_control in a loop, or a collision in the hashing function.
+Use the `id_offset' parameter to begin_control to apply an offset to the id, in the case of creating controls in a loop.
+END
+	assert (ctrl.last_frame_index != ui.frame_index, TEXT);
+
 	ctrl.last_frame_index = ui.frame_index;
 	ctrl.flags = flags;
 	ctrl.state_flags &= ~.HOT;
@@ -475,7 +482,10 @@ declare_control :: (
 	{
 		ctrl.focus_state = get_focus_state (ctrl);
 		if flagged (ctrl.focus_state, .FOCUSED)
+		{
+			ctrl.state_flags |= .FOCUSED;
 			ui.mouse_focused_control_this_frame = ctrl;
+		}
 
 		if flagged (ctrl.flags, .INTERACT_ON_HELD)
 		&& flagged (ctrl.focus_state, .PRESSED)
