@@ -1,5 +1,8 @@
 #import "Linalg";
 
+// @Note (stefan): I kinda regret making Rect have x1, y1, x2 and y2 instead of the position and the size...
+// See if we can change it without too much hassle
+
 Rect :: struct (T : Type)
 {
 	V :: Vec2 (T);
@@ -333,7 +336,7 @@ set_size :: inline (rect : $R/Rect, new_w : R.T, new_h : R.T) -> R #must
 set_size :: inline (rect : $R/Rect, new_size : R.V) -> R #must
 #no_context
 {
-	return set_size (rect, new_size.w, new_size.h);
+	return set_size (rect, new_size.x, new_size.y);
 }
 
 grow :: inline (rect : $R/Rect, x_amount : R.T, y_amount : R.T) -> R #must
