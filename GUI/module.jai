@@ -129,14 +129,6 @@ Occluder :: struct
 	renderer : imdraw.Command_Renderer;
 }
 
-State :: enum
-{
-	INACTIVE :: 0;
-	HOVERED  :: 1;
-	DOWN     :: 2;
-	RELEASED :: 3;
-}
-
 check_init :: () #expand
 {
 	`ui := context.ui_context;
