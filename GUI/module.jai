@@ -14,6 +14,7 @@ for_expansion :: storage.for_expansion;
 map :: #import "Containers/Hash_Map";
 for_expansion :: map.for_expansion;
 
+window :: #import "Window";
 render :: #import "Render_Core";
 imdraw :: #import "ImDraw";
 font   :: #import "Font";

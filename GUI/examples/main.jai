@@ -159,7 +159,7 @@ update_ui :: ()
 
 	window_style : gui.Window_Style;
 	window_style.move_caption_height = 30;
-	window_style.resize_border_thickness = 6;
+	window_style.resize_border_thickness = 8;
 	window_style.title_font = g_font;
 	window_style.title_font_height = 13;
 	window_style.title_color = .{255,255,255,255};
