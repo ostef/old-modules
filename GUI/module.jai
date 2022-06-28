@@ -3,10 +3,12 @@
 #import "Runtime";
 mem  :: #import "Memory";
 fmt  :: #import "Fmt";
+str  :: #import "String";
 math :: #import "Math";
 using linalg :: #import "Linalg";
 algo :: #import "Algorithm";
 hash :: #import "Hash";
+utf8 :: #import "Unicode/UTF8";
 
 array :: #import "Containers/Array";
 storage :: #import "Containers/Storage";
@@ -39,6 +41,9 @@ UI_Context :: struct
 	controls : storage.Storage (Control, 20);
 	controls_by_id : map.Hash_Map (Id, *Control);
 	clipping_stack : [..]math.Rectf;
+
+	edited_text_buffer : *[..]u8;
+	text_input : [..]u32;
 
 	occlusion_layers : [..]Occlusion_Layer;
 	#place occlusion_layers;
@@ -129,6 +134,8 @@ Occluder :: struct
 	renderer : imdraw.Command_Renderer;
 }
 
+// [General]
+
 check_init :: () #expand
 {
 	`ui := context.ui_context;
@@ -142,6 +149,7 @@ init :: ()
 	ui := context.ui_context;
 	storage.init (*ui.controls, mem.HEAP_ALLOC);
 	map.init (*ui.controls_by_id, 300, mem.HEAP_ALLOC);
+	array.init (*ui.text_input, 300, mem.HEAP_ALLOC);
 	array.init (*ui.clipping_stack, 50, mem.HEAP_ALLOC);
 	array.init (*ui.occlusion_layers, 50, mem.HEAP_ALLOC);
 	imdraw.init (*ui.renderer, 5000, 1000, mem.HEAP_ALLOC);
@@ -188,70 +196,6 @@ draw_data :: (ctx : *UI_Context, body : Code, flags : For_Flags) #expand
 			#insert body;
 		}
 	}
-}
-
-#scope_file
-
-init :: (layer : *Occlusion_Layer, name : string)
-{
-	layer.name = name;
-	storage.init (*layer.occluders, mem.HEAP_ALLOC);
-	map.init (*layer.occluders_by_id, 100, mem.HEAP_ALLOC);
-	array.init (*layer.occluders_bottommost_to_topmost, 100, mem.HEAP_ALLOC);
-}
-
-#scope_export
-
-push_occlusion_layer :: inline (name : string)
-{
-	check_init ();
-
-	layer := array.push (*ui.occlusion_layers_bottommost_to_topmost);
-	init (layer, name);
-}
-
-insert_occlusion_layer :: inline (name : string)
-{
-	check_init ();
-
-	layer := array.insert_at (*ui.occlusion_layers_bottommost_to_topmost, ui.current_occlusion_layer);
-	ui.current_occlusion_layer += 1;
-	init (layer, name);
-}
-
-get_occlusion_layer :: (name : string) -> s64 #must
-{
-	check_init ();
-
-	for ui.occlusion_layers_bottommost_to_topmost
-	{
-		if it.name == name
-			return it_index;
-	}
-
-	return -1;
-}
-
-set_occlusion_layer :: inline (name : string) -> previous : s64
-{
-	check_init ();
-
-	index := get_occlusion_layer (name);
-	assert (index >= 0, "Occlusion layer '%' does not exist.", name);
-
-	return set_occlusion_layer (index);
-}
-
-set_occlusion_layer :: inline (index : s64) -> previous : s64
-{
-	check_init ();
-
-	assert (index >= 0 && index < ui.occlusion_layers.count, "Invalid occlusion layer index.");
-	assert (ui.current_occluder == null, "Cannot change the occlusion layer in between begin_occlusion and end_occlusion calls.");
-	previous := ui.current_occlusion_layer;
-	ui.current_occlusion_layer = index;
-
-	return previous;
 }
 
 get_renderer :: inline () -> *imdraw.Command_Renderer #must
@@ -335,13 +279,8 @@ end :: ()
 
 	for :draw_data data : ui
 		imdraw.draw_to_framebuffer (data);
-}
 
-set_mouse_interacting_control :: inline (ctrl : *Control)
-{
-	check_init ();
-	ui.mouse_interacting_control = ctrl;
-	ui.interacted_this_frame = true;
+	array.clear (*ui.text_input);
 }
 
 get_id :: (location : Source_Code_Location) -> Id #must
@@ -363,6 +302,27 @@ get_id :: (location : Source_Code_Location) -> Id #must
 		h = 69105;
 
 	return h;
+}
+
+push_clipping_rect :: inline (rect : math.Rectf)
+{
+	check_init ();
+	array.push (*ui.clipping_stack, rect);
+}
+
+pop_clipping_rect :: inline ()
+{
+	check_init ();
+	array.pop (*ui.clipping_stack);
+}
+
+// [Control]
+
+set_mouse_interacting_control :: inline (ctrl : *Control)
+{
+	check_init ();
+	ui.mouse_interacting_control = ctrl;
+	ui.interacted_this_frame = true;
 }
 
 get_focus_state :: (using ctrl : *Control) -> Focus_State #must
@@ -526,16 +486,70 @@ END
 	return ctrl, created_this_frame;
 }
 
-push_clipping_rect :: inline (rect : math.Rectf)
+// [Occlusion]
+
+#scope_file
+
+init :: (layer : *Occlusion_Layer, name : string)
 {
-	check_init ();
-	array.push (*ui.clipping_stack, rect);
+	layer.name = name;
+	storage.init (*layer.occluders, mem.HEAP_ALLOC);
+	map.init (*layer.occluders_by_id, 100, mem.HEAP_ALLOC);
+	array.init (*layer.occluders_bottommost_to_topmost, 100, mem.HEAP_ALLOC);
 }
 
-pop_clipping_rect :: inline ()
+#scope_export
+
+push_occlusion_layer :: inline (name : string)
 {
 	check_init ();
-	array.pop (*ui.clipping_stack);
+
+	layer := array.push (*ui.occlusion_layers_bottommost_to_topmost);
+	init (layer, name);
+}
+
+insert_occlusion_layer :: inline (name : string)
+{
+	check_init ();
+
+	layer := array.insert_at (*ui.occlusion_layers_bottommost_to_topmost, ui.current_occlusion_layer);
+	ui.current_occlusion_layer += 1;
+	init (layer, name);
+}
+
+get_occlusion_layer :: (name : string) -> s64 #must
+{
+	check_init ();
+
+	for ui.occlusion_layers_bottommost_to_topmost
+	{
+		if it.name == name
+			return it_index;
+	}
+
+	return -1;
+}
+
+set_occlusion_layer :: inline (name : string) -> previous : s64
+{
+	check_init ();
+
+	index := get_occlusion_layer (name);
+	assert (index >= 0, "Occlusion layer '%' does not exist.", name);
+
+	return set_occlusion_layer (index);
+}
+
+set_occlusion_layer :: inline (index : s64) -> previous : s64
+{
+	check_init ();
+
+	assert (index >= 0 && index < ui.occlusion_layers.count, "Invalid occlusion layer index.");
+	assert (ui.current_occluder == null, "Cannot change the occlusion layer in between begin_occlusion and end_occlusion calls.");
+	previous := ui.current_occlusion_layer;
+	ui.current_occlusion_layer = index;
+
+	return previous;
 }
 
 #scope_file
@@ -621,4 +635,46 @@ raise_occluder :: ()
 	array.push (*layer.occluders_bottommost_to_topmost, ui.current_occluder);
 	array.ordered_remove_at (*layer.occluders_bottommost_to_topmost, ui.current_occluder.index);
 	ui.current_occluder.index = layer.occluders_bottommost_to_topmost.count - 1;
+}
+
+// [Text input]
+
+input_text :: inline (codepoint : u32)
+{
+	check_init ();
+
+	array.push (*ui.text_input, codepoint);
+}
+
+is_editing_text :: inline (buffer : *[..]u8) -> bool #must
+{
+	check_init ();
+	
+	return ui.edited_text_buffer == buffer;
+}
+
+grab_text_input :: (buffer : *[..]u8) -> bool
+{
+	check_init ();
+
+	ui.edited_text_buffer = buffer;
+	while ui.text_input.count > 0
+	{
+		codepoint := array.pop (*ui.text_input);
+		len := utf8.encoding_length (codepoint);
+		ptr := array.push_multiple (buffer, len);
+		utf8.encode (mem.make_array (ptr, len), codepoint);
+	}
+	if input.is_key_pressed_or_repeated (.BACKSPACE) && buffer.count > 0
+		array.pop (buffer);
+
+	return false;
+}
+
+stop_grabbing_text_input :: inline (buffer : *[..]u8)
+{
+	check_init ();
+
+	if ui.edited_text_buffer == buffer
+		ui.edited_text_buffer = null;
 }

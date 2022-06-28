@@ -33,11 +33,16 @@ g_icons : struct
 
 handle_window_message :: (msg : window.Message)
 {
+	gui.check_init ();
+
 	input.handle_window_message (msg);
 	if msg.kind ==
 	{
 	case .WINDOW_CLOSED;
 		g_is_running = false;
+
+	case .TEXT_INPUT;
+		gui.input_text (msg.codepoint);
 	}
 }
 
@@ -124,10 +129,15 @@ new_frame :: (delta_time : f32)
 	ui.delta_time = delta_time;
 }
 
+g_text_buffer  : [..]u8;
+g_text_buffer2 : [..]u8;
 g_show_second_control := true;
 
 update_ui :: ()
 {
+	g_text_buffer.allocator = mem.HEAP_ALLOC;
+	g_text_buffer2.allocator = mem.HEAP_ALLOC;
+
 	button_style : gui.Button_Style;
 	button_style.text_font = g_font;
 	button_style.text_font_height = 13;
@@ -157,6 +167,24 @@ update_ui :: ()
 	image_button_style.hot.image_color = .{255,255,255,255};
 	image_button_style.hot.text_and_image_offset.y = 1;
 
+	text_input_style : gui.Text_Input_Style;
+	text_input_style.text_font = g_font;
+	text_input_style.text_font_height = 13;
+	text_input_style.cursor_color = .{255,255,255,255};
+	text_input_style.normal.background_color = .{80,80,80,255};
+	text_input_style.normal.text_color = .{255,255,255,255};
+	text_input_style.normal.text_offset.x = 3;
+	text_input_style.normal.corner_radiuses.top_left = 5;
+	text_input_style.focused = text_input_style.normal;
+	text_input_style.focused.background_color = .{100,100,100,255};
+	text_input_style.hot = text_input_style.normal;
+	text_input_style.hot.background_color = .{60,60,60,255};
+	text_input_style.hot.text_offset.y = 1;
+	text_input_style.active = text_input_style.normal;
+	text_input_style.active.border_color = .{50,75,190,200};
+	text_input_style.active.border_thickness = 2;
+	text_input_style.active.border_inset = text_input_style.active.border_thickness * 0.5;
+
 	window_style : gui.Window_Style;
 	window_style.move_caption_height = 30;
 	window_style.resize_border_thickness = 8;
@@ -175,8 +203,6 @@ update_ui :: ()
 	if g_show_second_control
 		gui.text_button (math.xywhf (10, 40, 80, 25), "Press Me", *button_style);
 
-	gui.image_button (math.xywhf (10, 70, 25, 25), *g_icons.exclamation, style = *image_button_style);
-
 	window_info := gui.begin_window (math.xywhf (30, 345, 200, 145), "Window 1", style = *window_style);
 		if gui.text_button (math.xywhf (10, window_style.move_caption_height + 10, 150, 25), "Show Second Button", *button_style)
 			g_show_second_control = !g_show_second_control;
@@ -187,7 +213,12 @@ update_ui :: ()
 
 	prev := gui.set_occlusion_layer ("Windows");
 	
-	window_info = gui.begin_window (math.xywhf (50, 30, 100, 200), "Window 2", style = *window_style);
+	window_info = gui.begin_window (math.xywhf (50, 30, 300, 200), "Window 2", style = *window_style);
+		gui.text_input (math.xywhf (10, window_style.move_caption_height + 10, 150, 25), *g_text_buffer, *text_input_style);
+		
+		gui.image_button (math.xywhf (10 + 150 + 2, window_style.move_caption_height + 10, 25, 25), *g_icons.exclamation, style = *image_button_style);
+		
+		gui.text_input (math.xywhf (10, window_style.move_caption_height + 40, 150, 25), *g_text_buffer2, *text_input_style);
 	gui.end_window (window_info);
 
 	window_info = gui.begin_window (math.xywhf (100, 10, 80, 75), "Window 3", style = *window_style);
