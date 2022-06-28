@@ -4,8 +4,12 @@ win32 :: #import "Win32";
 
 g_prev_keyboard_state : [Key_Code.COUNT]bool;
 g_keyboard_state : [Key_Code.COUNT]bool;
+
+g_repeated_keys : [Key_Code.COUNT]bool;
+
 g_prev_mouse_button_states : [Mouse_Button.COUNT]bool;
 g_mouse_button_states : [Mouse_Button.COUNT]bool;
+
 g_mouse_delta_x, g_mouse_delta_y : s32;
 g_mouse_wheel_x, g_mouse_wheel_y : f32;
 
@@ -21,6 +25,18 @@ is_key_pressed :: inline (key_code : Key_Code) -> bool #must
 #no_context
 {
 	return !g_prev_keyboard_state[cast (int) key_code] && is_key_down (key_code);
+}
+
+is_key_repeated :: inline (key_code : Key_Code) -> bool #must
+#no_context
+{
+	return g_repeated_keys[cast (int) key_code];
+}
+
+is_key_pressed_or_repeated :: inline (key_code : Key_Code) -> bool #must
+#no_context
+{
+	return is_key_pressed (key_code) || g_repeated_keys[cast (int) key_code];
 }
 
 is_key_released :: inline (key_code : Key_Code) -> bool #must
@@ -88,9 +104,13 @@ update :: inline ()
 	g_mouse_delta_y = 0;
 	g_mouse_wheel_x = 0;
 	g_mouse_wheel_y = 0;
+
 	mem.copy (g_prev_keyboard_state.data, g_keyboard_state.data, size_of (bool) * g_prev_keyboard_state.count);
 	for i : 0..g_keyboard_state.count - 1
 		g_keyboard_state[i] = is_key_down (cast, no_check (Key_Code) i);
+
+	mem.set (g_repeated_keys.data, 0, size_of (bool) * g_repeated_keys.count);
+
 	mem.copy (g_prev_mouse_button_states.data, g_mouse_button_states.data, size_of (bool) * g_prev_mouse_button_states.count);
 	for i : 0..g_mouse_button_states.count - 1
 		g_mouse_button_states[i] = is_mouse_button_down (cast, no_check (Mouse_Button) i);
@@ -100,9 +120,13 @@ handle_window_message :: (msg : window.Message)
 {
 	if msg.kind ==
 	{
+	case .KEY_REPEATED;
+		g_repeated_keys[cast (int) msg.key_code] = true;
+
 	case .RAW_MOUSE_MOVED;
 		g_mouse_delta_x = msg.mouse_delta_x;
 		g_mouse_delta_y = msg.mouse_delta_y;
+
 	case .MOUSE_WHEEL;
 		g_mouse_wheel_x = msg.mouse_wheel_x;
 		g_mouse_wheel_y = msg.mouse_wheel_y;
