@@ -18,6 +18,9 @@ Texture :: struct
 	}
 
 	#as using binding : Binding;
+	data : *void;
+	width, height : u32;
+	channels : s32;
 }
 
 to_gl :: inline (filtering : Texture.Filtering) -> s32 #must
@@ -36,6 +39,7 @@ init_texture :: inline (texture : *Texture, width : u32, height : u32, channels 
 	gl.GenTextures (1, *texture.tex);
 	gl.BindTexture (gl.TEXTURE_2D, texture.tex);
 	defer gl.BindTexture (gl.TEXTURE_2D, 0);
+	
 	source_format : gl.GLenum;
 	if channels ==
 	{
@@ -46,9 +50,16 @@ init_texture :: inline (texture : *Texture, width : u32, height : u32, channels 
 	case;
 		return log.error ("Invalid channel count for texture, expected 1, 2, 3 or 4, got %.", channels);
 	}
+
+	texture.data = data;
+	texture.width = width;
+	texture.height = height;
+	texture.channels = channels;
+
 	if channels == 1 then gl.PixelStorei (gl.UNPACK_ALIGNMENT, 1);
 	gl.TexImage2D (gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, source_format, gl.UNSIGNED_BYTE, data);
 	if channels == 1 then gl.PixelStorei (gl.UNPACK_ALIGNMENT, 4);
+	
 	gl.TexParameteri (gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
 	gl.TexParameteri (gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 	gl.TexParameteri (gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_BORDER);
