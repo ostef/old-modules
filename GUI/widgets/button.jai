@@ -13,6 +13,9 @@ Button_Style :: struct
 	text_font : *font.Font;
 	text_font_height : u32;
 
+	clip := true;
+	padding : f32;
+
 	normal  : State_Style;
 	focused : State_Style;
 	hot     : State_Style;
@@ -44,7 +47,7 @@ text_button :: (
 ) -> bool
 {
 	ctrl := declare_control (rect, location, Control.Flags.FOCUSABLE | .INTERACT_ON_RELEASED, id_offset = id_offset);
-	draw_button (ctrl, text, style = style);
+	draw_button (ctrl, text, null, .{}, style);
 
 	return flagged (ctrl.state_flags, .INTERACTING);
 }
@@ -59,12 +62,12 @@ image_button :: (
 ) -> bool
 {
 	ctrl := declare_control (rect, location, Control.Flags.FOCUSABLE | .INTERACT_ON_RELEASED, id_offset = id_offset);
-	draw_button (ctrl, image = image, image_uv = image_uv, style = style);
+	draw_button (ctrl, "", image, image_uv, style);
 
 	return flagged (ctrl.state_flags, .INTERACTING);
 }
 
-draw_button :: (ctrl : *Control, text := "", image : *render.Texture = null, image_uv := math.Rectf.{0,0,1,1}, style : *Button_Style = null)
+draw_button :: (ctrl : *Control, text : string, image : *render.Texture, image_uv : math.Rectf, style : *Button_Style)
 {
 	state_style : Button_Style.State_Style;
 	if flagged (ctrl.state_flags, .HOT)
@@ -74,8 +77,6 @@ draw_button :: (ctrl : *Control, text := "", image : *render.Texture = null, ima
 	else
 		state_style = style.normal;
 
-	imdraw.scope_clip_rect (get_renderer (), math.recti (ctrl.rect));
-	
 	imdraw.draw_rect (get_renderer (), ctrl.rect, state_style.background_color, corner_radius = state_style.corner_radiuses.top_left);
 	if state_style.border_thickness > 0
 		imdraw.draw_rect_outline (
@@ -85,6 +86,19 @@ draw_button :: (ctrl : *Control, text := "", image : *render.Texture = null, ima
 			state_style.border_thickness,
 			corner_radius = state_style.corner_radiuses.top_left
 		);
+
+	prev_clip : bool;
+	prev_clip_rect : math.Recti;
+	if style.clip
+	{
+		prev_clip = imdraw.get_clipping (get_renderer ());
+		prev_clip_rect = imdraw.push_clip_rect (get_renderer (), math.recti (math.truncate_all_sides (ctrl.rect, style.padding)));
+	}
+	defer if style.clip
+	{
+		imdraw.set_clip_rect (get_renderer (), prev_clip_rect);
+		imdraw.set_clipping (get_renderer (), prev_clip);
+	}
 
 	image_rect : math.Rectf;
 	if image

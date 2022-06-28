@@ -78,7 +78,7 @@ main :: ()
 	gui.init ();
 	defer gui.terminate ();
 
-	gl.ClearColor (0.1, 0.1, 0.1, 1);
+	gl.ClearColor (0.1, 0.3, 0.2, 1);
 	g_is_running = true;
 	delta_time := 0.01667;
 	while g_is_running
@@ -141,6 +141,7 @@ update_ui :: ()
 	button_style : gui.Button_Style;
 	button_style.text_font = g_font;
 	button_style.text_font_height = 13;
+	button_style.padding = 2;
 	button_style.normal.background_color = .{80,80,80,255};
 	button_style.normal.text_color = .{255,255,255,255};
 	button_style.normal.border_color = .{10,10,10,255};
@@ -156,6 +157,7 @@ update_ui :: ()
 	image_button_style : gui.Button_Style;
 	image_button_style.text_font = g_font;
 	image_button_style.text_font_height = 13;
+	image_button_style.padding = 2;
 	image_button_style.normal.background_color = math.RGBA_TRANSPARENT;
 	image_button_style.normal.image_color = .{255,255,255,200};
 	image_button_style.normal.corner_radiuses.top_left = 5;
@@ -171,9 +173,9 @@ update_ui :: ()
 	text_input_style.text_font = g_font;
 	text_input_style.text_font_height = 13;
 	text_input_style.cursor_color = .{255,255,255,255};
+	text_input_style.padding = 2;
 	text_input_style.normal.background_color = .{80,80,80,255};
 	text_input_style.normal.text_color = .{255,255,255,255};
-	text_input_style.normal.text_offset.x = 3;
 	text_input_style.normal.corner_radiuses.top_left = 5;
 	text_input_style.focused = text_input_style.normal;
 	text_input_style.focused.background_color = .{100,100,100,255};
@@ -183,15 +185,15 @@ update_ui :: ()
 	text_input_style.active = text_input_style.normal;
 	text_input_style.active.border_color = .{50,75,190,200};
 	text_input_style.active.border_thickness = 2;
-	text_input_style.active.border_inset = text_input_style.active.border_thickness * 0.5;
 
 	window_style : gui.Window_Style;
+	window_style.padding = window_style.resize_border_thickness + 2;
 	window_style.move_caption_height = 30;
 	window_style.resize_border_thickness = 8;
 	window_style.title_font = g_font;
 	window_style.title_font_height = 13;
 	window_style.title_color = .{255,255,255,255};
-	window_style.background_color = .{20,20,20,255};
+	window_style.background_color = .{20,20,20,200};
 	window_style.border_color = .{80,80,80,255};
 	window_style.border_thickness = 1;
 	window_style.border_inset = button_style.normal.border_thickness * 0.5 + 2;

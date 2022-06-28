@@ -14,6 +14,9 @@ Text_Input_Style :: struct
 
 	cursor_color : math.RGBA;
 
+	clip := true;
+	padding : f32;
+
 	normal  : State_Style;
 	focused : State_Style;
 	hot     : State_Style;
@@ -57,8 +60,6 @@ draw_text_input :: (ctrl : *Control, buffer : *[..]u8, style : *Text_Input_Style
 	else
 		state_style = style.normal;
 
-	imdraw.scope_clip_rect (get_renderer (), math.recti (ctrl.rect));
-
 	imdraw.draw_rect (get_renderer (), ctrl.rect, state_style.background_color, corner_radius = state_style.corner_radiuses.top_left);
 	if state_style.border_thickness > 0
 		imdraw.draw_rect_outline (
@@ -69,11 +70,24 @@ draw_text_input :: (ctrl : *Control, buffer : *[..]u8, style : *Text_Input_Style
 			corner_radius = state_style.corner_radiuses.top_left
 		);
 
+	prev_clip : bool;
+	prev_clip_rect : math.Recti;
+	if style.clip
+	{
+		prev_clip = imdraw.set_clipping (get_renderer (), true);
+		prev_clip_rect = imdraw.push_clip_rect (get_renderer (), math.recti (math.truncate_all_sides (ctrl.rect, style.padding)));
+	}
+	defer if style.clip
+	{
+		imdraw.set_clip_rect (get_renderer (), prev_clip_rect);
+		imdraw.set_clipping (get_renderer (), prev_clip);
+	}
+
 	text_rect := imdraw.draw_text (
 		get_renderer (),
 		style.text_font,
 		style.text_font_height,
-		linalg.vec2f (ctrl.rect.x1, (ctrl.rect.y1 + ctrl.rect.y2) * 0.5) + state_style.text_offset,
+		linalg.vec2f (style.padding + ctrl.rect.x1, (ctrl.rect.y1 + ctrl.rect.y2) * 0.5) + state_style.text_offset,
 		str.from_array (<<buffer),
 		state_style.text_color,
 		state_style.text_weight,

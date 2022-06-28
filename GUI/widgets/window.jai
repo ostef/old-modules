@@ -9,6 +9,9 @@ Window_Style :: struct
 	title_weight : font.Weight;
 	title_effects : imdraw.Text_Effects;
 
+	clip := true;
+	padding : f32;
+
 	using common : Common_Style;
 }
 
@@ -178,8 +181,6 @@ begin_window :: (rect : math.Rectf, title : string, style : *Window_Style = null
 		}
 	}
 
-	// Drawing
-	imdraw.set_clip_rect (get_renderer (), math.recti (occl.rect));
 	draw_window (occl, title, style);
 
 	return result;
@@ -194,9 +195,10 @@ end_window :: (using info : Window_Info)
 	end_occlusion ();
 }
 
-draw_window :: (win : *Occluder, title : string, style : *Window_Style = null)
+draw_window :: (win : *Occluder, title : string, style : *Window_Style)
 {
 	imdraw.draw_rect (get_renderer (), win.rect, style.background_color, corner_radius = style.corner_radiuses.top_left);
+
 	if style.border_thickness > 0
 		imdraw.draw_rect_outline (
 			get_renderer (),
@@ -218,4 +220,7 @@ draw_window :: (win : *Occluder, title : string, style : *Window_Style = null)
 			style.title_effects,
 			.CENTER_LEFT
 		);
+
+	if style.clip
+		imdraw.push_clip_rect (get_renderer (), math.recti (math.truncate_all_sides (win.rect, style.padding)));
 }
