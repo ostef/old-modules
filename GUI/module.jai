@@ -163,14 +163,7 @@ terminate :: ()
 	check_init ();
 
 	for * layer : ui.occlusion_layers
-	{
-		for * layer.occluders
-			cleanup (it);
-
-		array.reset (*layer.occluders_bottommost_to_topmost);
-		map.reset (*layer.occluders_by_id);
-		storage.reset (*layer.occluders);
-	}
+		reset (layer);
 
 	storage.reset (*ui.controls);
 	map.reset (*ui.controls_by_id);
@@ -504,6 +497,15 @@ init :: (layer : *Occlusion_Layer, name : string)
 	storage.init (*layer.occluders, mem.HEAP_ALLOC);
 	map.init (*layer.occluders_by_id, 100, mem.HEAP_ALLOC);
 	array.init (*layer.occluders_bottommost_to_topmost, 100, mem.HEAP_ALLOC);
+}
+
+reset :: (using layer : *Occlusion_Layer)
+{
+	for * occluders
+		cleanup (it);
+	storage.reset (*occluders);
+	map.reset (*occluders_by_id);
+	array.reset (*occluders_bottommost_to_topmost);
 }
 
 #scope_export
