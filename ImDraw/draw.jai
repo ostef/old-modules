@@ -110,27 +110,27 @@ draw_rect :: inline (
 	uv_rect := math.Rectf.{ 0, 0, 1, 1 }
 )
 {
-	if rect.x1 >= rect.x2 || rect.y1 >= rect.y2
+	if rect.w <= 0 || rect.h <= 0
 		return;
 	draw_triangle (
 		renderer,
-		vec2f (rect.x1, rect.y2),
-		vec2f (rect.x1, rect.y1),
-		vec2f (rect.x2, rect.y1),
+		vec2f (rect.x, rect.y + rect.h),
+		vec2f (rect.x, rect.y),
+		vec2f (rect.x + rect.w, rect.y),
 		color,
-		uv0 = vec2f (uv_rect.x1, uv_rect.y2),
-		uv1 = vec2f (uv_rect.x1, uv_rect.y1),
-		uv2 = vec2f (uv_rect.x2, uv_rect.y1)
+		uv0 = vec2f (uv_rect.x, uv_rect.y + uv_rect.h),
+		uv1 = vec2f (uv_rect.x, uv_rect.y),
+		uv2 = vec2f (uv_rect.x + uv_rect.w, uv_rect.y)
 	);
 	draw_triangle (
 		renderer,
-		vec2f (rect.x1, rect.y2),
-		vec2f (rect.x2, rect.y1),
-		vec2f (rect.x2, rect.y2),
+		vec2f (rect.x, rect.y + rect.h),
+		vec2f (rect.x + rect.w, rect.y),
+		vec2f (rect.x + rect.w, rect.y + rect.h),
 		color,
-		uv0 = vec2f (uv_rect.x1, uv_rect.y2),
-		uv1 = vec2f (uv_rect.x2, uv_rect.y1),
-		uv2 = vec2f (uv_rect.x2, uv_rect.y2)
+		uv0 = vec2f (uv_rect.x, uv_rect.y + uv_rect.h),
+		uv1 = vec2f (uv_rect.x + uv_rect.w, uv_rect.y),
+		uv2 = vec2f (uv_rect.x + uv_rect.w, uv_rect.y + uv_rect.h)
 	);
 }
 
@@ -155,7 +155,7 @@ draw_rect :: inline (
 	uv_rect := math.Rectf.{ 0, 0, 1, 1 }
 )
 {
-	if rect.x1 >= rect.x2 || rect.y1 >= rect.y2
+	if rect.w <= 0 || rect.h <= 0
 		return;
 	if corner_radius <= 0 || round_corners == .NONE
 	{
@@ -163,185 +163,185 @@ draw_rect :: inline (
 		return;
 	}
 	inner_rect    := math.truncate_all_sides (rect, corner_radius);
-	uv_radius     := (corner_radius / math.rect_width (rect)) * math.rect_width (uv_rect);
+	uv_radius     := (corner_radius / rect.w) * uv_rect.w;
 	inner_uv_rect := math.truncate_all_sides (uv_rect, uv_radius);
 	// Inner rect
 	draw_triangle (
 		renderer,
-		vec2f (inner_rect.x1, inner_rect.y2),
-		vec2f (inner_rect.x1, inner_rect.y1),
-		vec2f (inner_rect.x2, inner_rect.y1),
+		vec2f (inner_rect.x, inner_rect.y + inner_rect.h),
+		vec2f (inner_rect.x, inner_rect.y),
+		vec2f (inner_rect.x + inner_rect.w, inner_rect.y),
 		color,
-		uv0 = vec2f (inner_uv_rect.x1, inner_uv_rect.y2),
-		uv1 = vec2f (inner_uv_rect.x1, inner_uv_rect.y1),
-		uv2 = vec2f (inner_uv_rect.x2, inner_uv_rect.y1)
+		uv0 = vec2f (inner_uv_rect.x, inner_uv_rect.y + inner_uv_rect.h),
+		uv1 = vec2f (inner_uv_rect.x, inner_uv_rect.y),
+		uv2 = vec2f (inner_uv_rect.x + inner_uv_rect.w, inner_uv_rect.y)
 	);
 	draw_triangle (
 		renderer,
-		vec2f (inner_rect.x1, inner_rect.y2),
-		vec2f (inner_rect.x2, inner_rect.y1),
-		vec2f (inner_rect.x2, inner_rect.y2),
+		vec2f (inner_rect.x, inner_rect.y + inner_rect.h),
+		vec2f (inner_rect.x + inner_rect.w, inner_rect.y),
+		vec2f (inner_rect.x + inner_rect.w, inner_rect.y + inner_rect.h),
 		color,
-		uv0 = vec2f (inner_uv_rect.x1, inner_uv_rect.y2),
-		uv1 = vec2f (inner_uv_rect.x2, inner_uv_rect.y1),
-		uv2 = vec2f (inner_uv_rect.x2, inner_uv_rect.y2)
+		uv0 = vec2f (inner_uv_rect.x, inner_uv_rect.y + inner_uv_rect.h),
+		uv1 = vec2f (inner_uv_rect.x + inner_uv_rect.w, inner_uv_rect.y),
+		uv2 = vec2f (inner_uv_rect.x + inner_uv_rect.w, inner_uv_rect.y + inner_uv_rect.h)
 	);
 	// Draw corners
 	if flagged (round_corners, .TOP_LEFT)
 		draw_semi_circle (
 			renderer,
-			math.rect_top_left (inner_rect),
+			math.top_left (inner_rect),
 			corner_radius,
 			math.PI / 2,
 			math.PI / 2,
 			color,
-			uv_center = math.rect_top_left (inner_uv_rect),
+			uv_center = math.top_left (inner_uv_rect),
 			uv_radius = uv_radius
 		);
 	else
 		draw_rect (
 			renderer,
-			math.rectf (rect.x1, rect.y1, inner_rect.x1, inner_rect.y1),
+			math.ltrbf (rect.x, rect.y, inner_rect.x, inner_rect.y),
 			color,
-			uv_rect = math.rectf (uv_rect.x1, uv_rect.y1, inner_uv_rect.x1, inner_uv_rect.y1)
+			uv_rect = math.ltrbf (uv_rect.x, uv_rect.y, inner_uv_rect.x, inner_uv_rect.y)
 		);
 	if flagged (round_corners, .TOP_RIGHT)
 		draw_semi_circle (
 			renderer,
-			math.rect_top_right (inner_rect),
+			math.top_right (inner_rect),
 			corner_radius,
 			0,
 			math.PI / 2,
 			color,
-			uv_center = math.rect_top_right (inner_uv_rect),
+			uv_center = math.top_right (inner_uv_rect),
 			uv_radius = uv_radius
 		);
 	else
 		draw_rect (
 			renderer,
-			math.rectf (inner_rect.x2, rect.y1, rect.x2, inner_rect.y1),
+			math.ltrbf (inner_rect.x + inner_rect.w, rect.y, rect.x + rect.w, inner_rect.y),
 			color,
-			uv_rect = math.rectf (inner_uv_rect.x2, uv_rect.y1, uv_rect.x2, inner_uv_rect.y1)
+			uv_rect = math.ltrbf (inner_uv_rect.x + inner_uv_rect.w, uv_rect.y, uv_rect.x + uv_rect.w, inner_uv_rect.y)
 		);
 	if flagged (round_corners, .BOTTOM_LEFT)
 		draw_semi_circle (
 			renderer,
-			math.rect_bottom_left (inner_rect),
+			math.bottom_left (inner_rect),
 			corner_radius,
 			math.PI,
 			math.PI / 2,
 			color,
-			uv_center = math.rect_bottom_left (inner_uv_rect),
+			uv_center = math.bottom_left (inner_uv_rect),
 			uv_radius = uv_radius
 		);
 	else
 		draw_rect (
 			renderer,
-			math.rectf (rect.x1, inner_rect.y2, inner_rect.x1, rect.y2),
+			math.ltrbf (rect.x, inner_rect.y + inner_rect.h, inner_rect.x, rect.y + rect.h),
 			color,
-			uv_rect = math.rectf (uv_rect.x1, inner_uv_rect.y2, inner_uv_rect.x1, uv_rect.y2)
+			uv_rect = math.ltrbf (uv_rect.x, inner_uv_rect.y + inner_uv_rect.h, inner_uv_rect.x, uv_rect.y + uv_rect.h)
 		);
 	if flagged (round_corners, .BOTTOM_RIGHT)
 		draw_semi_circle (
 			renderer,
-			math.rect_bottom_right (inner_rect),
+			math.bottom_right (inner_rect),
 			corner_radius,
 			3 * math.PI / 2,
 			math.PI / 2,
 			color,
-			uv_center = math.rect_bottom_right (inner_uv_rect),
+			uv_center = math.bottom_right (inner_uv_rect),
 			uv_radius = uv_radius
 		);
 	else
 		draw_rect (
 			renderer,
-			math.rectf (inner_rect.x2, inner_rect.y2, rect.x2, rect.y2),
+			math.ltrbf (inner_rect.x + inner_rect.w, inner_rect.y + inner_rect.h, rect.x + rect.w, rect.y + rect.h),
 			color,
-			uv_rect = math.rectf (inner_uv_rect.x2, inner_uv_rect.y2, uv_rect.x2, uv_rect.y2)
+			uv_rect = math.ltrbf (inner_uv_rect.x + inner_uv_rect.w, inner_uv_rect.y + inner_uv_rect.h, uv_rect.x + uv_rect.w, uv_rect.y + uv_rect.h)
 		);
 	// Top
 	draw_triangle (
 		renderer,
-		vec2f (inner_rect.x1, rect.y1),
-		vec2f (inner_rect.x2, rect.y1),
-		vec2f (inner_rect.x1, inner_rect.y1),
+		vec2f (inner_rect.x, rect.y),
+		vec2f (inner_rect.x + inner_rect.w, rect.y),
+		vec2f (inner_rect.x, inner_rect.y),
 		color,
-		uv0 = vec2f (inner_uv_rect.x1, uv_rect.y1),
-		uv1 = vec2f (inner_uv_rect.x2, uv_rect.y1),
-		uv2 = vec2f (inner_uv_rect.x1, inner_uv_rect.y1),
+		uv0 = vec2f (inner_uv_rect.x, uv_rect.y),
+		uv1 = vec2f (inner_uv_rect.x + inner_uv_rect.w, uv_rect.y),
+		uv2 = vec2f (inner_uv_rect.x, inner_uv_rect.y),
 	);
 	draw_triangle (
 		renderer,
-		vec2f (inner_rect.x1, inner_rect.y1),
-		vec2f (inner_rect.x2, rect.y1),
-		vec2f (inner_rect.x2, inner_rect.y1),
+		vec2f (inner_rect.x, inner_rect.y),
+		vec2f (inner_rect.x + inner_rect.w, rect.y),
+		vec2f (inner_rect.x + inner_rect.w, inner_rect.y),
 		color,
-		uv0 = vec2f (inner_uv_rect.x1, inner_uv_rect.y1),
-		uv1 = vec2f (inner_uv_rect.x2, uv_rect.y1),
-		uv2 = vec2f (inner_uv_rect.x2, inner_uv_rect.y1),
+		uv0 = vec2f (inner_uv_rect.x, inner_uv_rect.y),
+		uv1 = vec2f (inner_uv_rect.x + inner_uv_rect.w, uv_rect.y),
+		uv2 = vec2f (inner_uv_rect.x + inner_uv_rect.w, inner_uv_rect.y),
 	);
 	// Right
 	draw_triangle (
 		renderer,
-		vec2f (inner_rect.x2, inner_rect.y1),
-		vec2f (rect.x2, inner_rect.y1),
-		vec2f (rect.x2, inner_rect.y2),
+		vec2f (inner_rect.x + inner_rect.w, inner_rect.y),
+		vec2f (rect.x + rect.w, inner_rect.y),
+		vec2f (rect.x + rect.w, inner_rect.y + inner_rect.h),
 		color,
-		uv0 = vec2f (inner_uv_rect.x2, inner_uv_rect.y1),
-		uv1 = vec2f (uv_rect.x2, inner_uv_rect.y1),
-		uv2 = vec2f (uv_rect.x2, inner_uv_rect.y2),
+		uv0 = vec2f (inner_uv_rect.x + inner_uv_rect.w, inner_uv_rect.y),
+		uv1 = vec2f (uv_rect.x + uv_rect.w, inner_uv_rect.y),
+		uv2 = vec2f (uv_rect.x + uv_rect.w, inner_uv_rect.y + inner_uv_rect.h),
 	);
 	draw_triangle (
 		renderer,
-		vec2f (inner_rect.x2, inner_rect.y1),
-		vec2f (rect.x2, inner_rect.y2),
-		vec2f (inner_rect.x2, inner_rect.y2),
+		vec2f (inner_rect.x + inner_rect.w, inner_rect.y),
+		vec2f (rect.x + rect.w, inner_rect.y + inner_rect.h),
+		vec2f (inner_rect.x + inner_rect.w, inner_rect.y + inner_rect.h),
 		color,
-		uv0 = vec2f (inner_uv_rect.x2, inner_uv_rect.y1),
-		uv1 = vec2f (uv_rect.x2, inner_uv_rect.y2),
-		uv2 = vec2f (inner_uv_rect.x2, inner_uv_rect.y2),
+		uv0 = vec2f (inner_uv_rect.x + inner_uv_rect.w, inner_uv_rect.y),
+		uv1 = vec2f (uv_rect.x + uv_rect.w, inner_uv_rect.y + inner_uv_rect.h),
+		uv2 = vec2f (inner_uv_rect.x + inner_uv_rect.w, inner_uv_rect.y + inner_uv_rect.h),
 	);
 	// Bottom
 	draw_triangle (
 		renderer,
-		vec2f (inner_rect.x1, inner_rect.y2),
-		vec2f (inner_rect.x2, inner_rect.y2),
-		vec2f (inner_rect.x2, rect.y2),
+		vec2f (inner_rect.x, inner_rect.y + inner_rect.h),
+		vec2f (inner_rect.x + inner_rect.w, inner_rect.y + inner_rect.h),
+		vec2f (inner_rect.x + inner_rect.w, rect.y + rect.h),
 		color,
-		uv0 = vec2f (inner_uv_rect.x1, inner_uv_rect.y2),
-		uv1 = vec2f (inner_uv_rect.x2, inner_uv_rect.y2),
-		uv2 = vec2f (inner_uv_rect.x2, uv_rect.y2),
+		uv0 = vec2f (inner_uv_rect.x, inner_uv_rect.y + inner_uv_rect.h),
+		uv1 = vec2f (inner_uv_rect.x + inner_uv_rect.w, inner_uv_rect.y + inner_uv_rect.h),
+		uv2 = vec2f (inner_uv_rect.x + inner_uv_rect.w, uv_rect.y + uv_rect.h),
 	);
 	draw_triangle (
 		renderer,
-		vec2f (inner_rect.x1, inner_rect.y2),
-		vec2f (inner_rect.x2, rect.y2),
-		vec2f (inner_rect.x1, rect.y2),
+		vec2f (inner_rect.x, inner_rect.y + inner_rect.h),
+		vec2f (inner_rect.x + inner_rect.w, rect.y + rect.h),
+		vec2f (inner_rect.x, rect.y + rect.h),
 		color,
-		uv0 = vec2f (inner_uv_rect.x1, inner_uv_rect.y2),
-		uv1 = vec2f (inner_uv_rect.x2, uv_rect.y2),
-		uv2 = vec2f (inner_uv_rect.x1, uv_rect.y2),
+		uv0 = vec2f (inner_uv_rect.x, inner_uv_rect.y + inner_uv_rect.h),
+		uv1 = vec2f (inner_uv_rect.x + inner_uv_rect.w, uv_rect.y + uv_rect.h),
+		uv2 = vec2f (inner_uv_rect.x, uv_rect.y + uv_rect.h),
 	);
 	// Left
 	draw_triangle (
 		renderer,
-		vec2f (rect.x1, inner_rect.y1),
-		vec2f (inner_rect.x1, inner_rect.y1),
-		vec2f (inner_rect.x1, inner_rect.y2),
+		vec2f (rect.x, inner_rect.y),
+		vec2f (inner_rect.x, inner_rect.y),
+		vec2f (inner_rect.x, inner_rect.y + inner_rect.h),
 		color,
-		uv0 = vec2f (uv_rect.x1, inner_uv_rect.y1),
-		uv1 = vec2f (inner_uv_rect.x1, inner_uv_rect.y1),
-		uv2 = vec2f (inner_uv_rect.x1, inner_uv_rect.y2),
+		uv0 = vec2f (uv_rect.x, inner_uv_rect.y),
+		uv1 = vec2f (inner_uv_rect.x, inner_uv_rect.y),
+		uv2 = vec2f (inner_uv_rect.x, inner_uv_rect.y + inner_uv_rect.h),
 	);
 	draw_triangle (
 		renderer,
-		vec2f (rect.x1, inner_rect.y1),
-		vec2f (inner_rect.x1, inner_rect.y2),
-		vec2f (rect.x1, inner_rect.y2),
+		vec2f (rect.x, inner_rect.y),
+		vec2f (inner_rect.x, inner_rect.y + inner_rect.h),
+		vec2f (rect.x, inner_rect.y + inner_rect.h),
 		color,
-		uv0 = vec2f (uv_rect.x1, inner_uv_rect.y1),
-		uv1 = vec2f (inner_uv_rect.x1, inner_uv_rect.y2),
-		uv2 = vec2f (uv_rect.x1, inner_uv_rect.y2),
+		uv0 = vec2f (uv_rect.x, inner_uv_rect.y),
+		uv1 = vec2f (inner_uv_rect.x, inner_uv_rect.y + inner_uv_rect.h),
+		uv2 = vec2f (uv_rect.x, inner_uv_rect.y + inner_uv_rect.h),
 	);
 }
 
@@ -368,12 +368,12 @@ draw_rect_outline :: inline (
 	uv_rect := math.Rectf.{ 0, 0, 1, 1 }
 )
 {
-	if rect.x1 >= rect.x2 || rect.y1 >= rect.y2
+	if rect.x >= rect.x + rect.w || rect.y >= rect.y + rect.h
 		return;
 	inner_rect := math.truncate_all_sides (rect, thickness * 0.5);
 	outer_rect := math.expand_all_sides (rect, thickness * 0.5);
-	uv_thickness  := thickness / math.rect_width (rect) * math.rect_width (uv_rect);
-	uv_radius     := (corner_radius / math.rect_width (rect)) * math.rect_width (uv_rect);
+	uv_thickness  := thickness / rect.w * uv_rect.w;
+	uv_radius     := (corner_radius / rect.w) * uv_rect.w;
 	inner_uv_rect := math.truncate_all_sides (uv_rect, uv_thickness * 0.5);
 	outer_uv_rect := math.expand_all_sides (uv_rect, uv_thickness * 0.5);
 	inset := corner_radius - thickness;
@@ -383,104 +383,104 @@ draw_rect_outline :: inline (
 	if flagged (round_corners, .TOP_LEFT)
 		draw_semi_circle_outline (
 			renderer,
-			math.rect_top_left (inner_rect) + vec2f (inset, inset),
+			math.top_left (inner_rect) + vec2f (inset, inset),
 			corner_radius,
 			math.PI / 2,
 			math.PI / 2,
 			color,
 			thickness,
-			uv_center = math.rect_top_left (inner_uv_rect),
+			uv_center = math.top_left (inner_uv_rect),
 			uv_radius = uv_radius
 		);
 	
 	if flagged (round_corners, .TOP_RIGHT)
 		draw_semi_circle_outline (
 			renderer,
-			math.rect_top_right (inner_rect) + vec2f (-inset, inset),
+			math.top_right (inner_rect) + vec2f (-inset, inset),
 			corner_radius,
 			0,
 			math.PI / 2,
 			color,
 			thickness,
-			uv_center = math.rect_top_right (inner_uv_rect),
+			uv_center = math.top_right (inner_uv_rect),
 			uv_radius = uv_radius
 		);
 	if flagged (round_corners, .BOTTOM_LEFT)
 		draw_semi_circle_outline (
 			renderer,
-			math.rect_bottom_left (inner_rect) + vec2f (inset, -inset),
+			math.bottom_left (inner_rect) + vec2f (inset, -inset),
 			corner_radius,
 			math.PI,
 			math.PI / 2,
 			color,
 			thickness,
-			uv_center = math.rect_bottom_left (inner_uv_rect),
+			uv_center = math.bottom_left (inner_uv_rect),
 			uv_radius = uv_radius
 		);
 	if flagged (round_corners, .BOTTOM_RIGHT)
 		draw_semi_circle_outline (
 			renderer,
-			math.rect_bottom_right (inner_rect) + vec2f (-inset, -inset),
+			math.bottom_right (inner_rect) + vec2f (-inset, -inset),
 			corner_radius,
 			3 * math.PI / 2,
 			math.PI / 2,
 			color,
 			thickness,
-			uv_center = math.rect_bottom_right (inner_uv_rect),
+			uv_center = math.bottom_right (inner_uv_rect),
 			uv_radius = uv_radius
 		);
 	
 	// Top
 	draw_quad (
 		renderer,
-		vec2f (inner_rect.x1 + inset, inner_rect.y1),
-		vec2f (inner_rect.x1 + inset, outer_rect.y1),
-		vec2f (inner_rect.x2 - inset, outer_rect.y1),
-		vec2f (inner_rect.x2 - inset, inner_rect.y1),
+		vec2f (inner_rect.x + inset, inner_rect.y),
+		vec2f (inner_rect.x + inset, outer_rect.y),
+		vec2f (inner_rect.x + inner_rect.w - inset, outer_rect.y),
+		vec2f (inner_rect.x + inner_rect.w - inset, inner_rect.y),
 		color,
-		vec2f (inner_uv_rect.x1 + uv_inset, inner_uv_rect.y1),
-		vec2f (inner_uv_rect.x1 + uv_inset, outer_uv_rect.y1),
-		vec2f (inner_uv_rect.x2 - uv_inset, outer_uv_rect.y1),
-		vec2f (inner_uv_rect.x2 - uv_inset, inner_uv_rect.y1),
+		vec2f (inner_uv_rect.x + uv_inset, inner_uv_rect.y),
+		vec2f (inner_uv_rect.x + uv_inset, outer_uv_rect.y),
+		vec2f (inner_uv_rect.x + inner_uv_rect.w - uv_inset, outer_uv_rect.y),
+		vec2f (inner_uv_rect.x + inner_uv_rect.w - uv_inset, inner_uv_rect.y),
 	);
 	// Right
 	draw_quad (
 		renderer,
-		vec2f (inner_rect.x2, inner_rect.y1 + inset),
-		vec2f (outer_rect.x2, inner_rect.y1 + inset),
-		vec2f (outer_rect.x2, inner_rect.y2 - inset),
-		vec2f (inner_rect.x2, inner_rect.y2 - inset),
+		vec2f (inner_rect.x + inner_rect.w, inner_rect.y + inset),
+		vec2f (outer_rect.x + outer_rect.w, inner_rect.y + inset),
+		vec2f (outer_rect.x + outer_rect.w, inner_rect.y + inner_rect.h - inset),
+		vec2f (inner_rect.x + inner_rect.w, inner_rect.y + inner_rect.h - inset),
 		color,
-		vec2f (inner_uv_rect.x2, inner_uv_rect.y1 + uv_inset),
-		vec2f (outer_uv_rect.x2, inner_uv_rect.y1 + uv_inset),
-		vec2f (outer_uv_rect.x2, inner_uv_rect.y2 - uv_inset),
-		vec2f (inner_uv_rect.x2, inner_uv_rect.y2 - uv_inset),
+		vec2f (inner_uv_rect.x + inner_uv_rect.w, inner_uv_rect.y + uv_inset),
+		vec2f (outer_uv_rect.x + outer_uv_rect.w, inner_uv_rect.y + uv_inset),
+		vec2f (outer_uv_rect.x + outer_uv_rect.w, inner_uv_rect.y + inner_uv_rect.h - uv_inset),
+		vec2f (inner_uv_rect.x + inner_uv_rect.w, inner_uv_rect.y + inner_uv_rect.h - uv_inset),
 	);
 	// Bottom
 	draw_quad (
 		renderer,
-		vec2f (inner_rect.x1 + inset, outer_rect.y2),
-		vec2f (inner_rect.x1 + inset, inner_rect.y2),
-		vec2f (inner_rect.x2 - inset, inner_rect.y2),
-		vec2f (inner_rect.x2 - inset, outer_rect.y2),
+		vec2f (inner_rect.x + inset, outer_rect.y + outer_rect.h),
+		vec2f (inner_rect.x + inset, inner_rect.y + inner_rect.h),
+		vec2f (inner_rect.x + inner_rect.w - inset, inner_rect.y + inner_rect.h),
+		vec2f (inner_rect.x + inner_rect.w - inset, outer_rect.y + outer_rect.h),
 		color,
-		vec2f (inner_uv_rect.x1 + uv_inset, outer_uv_rect.y2),
-		vec2f (inner_uv_rect.x1 + uv_inset, inner_uv_rect.y2),
-		vec2f (inner_uv_rect.x2 - uv_inset, inner_uv_rect.y2),
-		vec2f (inner_uv_rect.x2 - uv_inset, outer_uv_rect.y2),
+		vec2f (inner_uv_rect.x + uv_inset, outer_uv_rect.y + outer_uv_rect.h),
+		vec2f (inner_uv_rect.x + uv_inset, inner_uv_rect.y + inner_uv_rect.h),
+		vec2f (inner_uv_rect.x + inner_uv_rect.w - uv_inset, inner_uv_rect.y + inner_uv_rect.h),
+		vec2f (inner_uv_rect.x + inner_uv_rect.w - uv_inset, outer_uv_rect.y + outer_uv_rect.h),
 	);
 	// Left
 	draw_quad (
 		renderer,
-		vec2f (outer_rect.x1, inner_rect.y1 + inset),
-		vec2f (inner_rect.x1, inner_rect.y1 + inset),
-		vec2f (inner_rect.x1, inner_rect.y2 - inset),
-		vec2f (outer_rect.x1, inner_rect.y2 - inset),
+		vec2f (outer_rect.x, inner_rect.y + inset),
+		vec2f (inner_rect.x, inner_rect.y + inset),
+		vec2f (inner_rect.x, inner_rect.y + inner_rect.h - inset),
+		vec2f (outer_rect.x, inner_rect.y + inner_rect.h - inset),
 		color,
-		vec2f (outer_uv_rect.x1, inner_uv_rect.y1 + uv_inset),
-		vec2f (inner_uv_rect.x1, inner_uv_rect.y1 + uv_inset),
-		vec2f (inner_uv_rect.x1, inner_uv_rect.y2 - uv_inset),
-		vec2f (outer_uv_rect.x1, inner_uv_rect.y2 - uv_inset),
+		vec2f (outer_uv_rect.x, inner_uv_rect.y + uv_inset),
+		vec2f (inner_uv_rect.x, inner_uv_rect.y + uv_inset),
+		vec2f (inner_uv_rect.x, inner_uv_rect.y + inner_uv_rect.h - uv_inset),
+		vec2f (outer_uv_rect.x, inner_uv_rect.y + inner_uv_rect.h - uv_inset),
 	);
 }
 

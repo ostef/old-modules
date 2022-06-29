@@ -1,24 +1,16 @@
 #import "Linalg";
 
-// @Note (stefan): I kinda regret making Rect have x1, y1, x2 and y2 instead of the position and the size...
-// See if we can change it without too much hassle
-
 Rect :: struct (T : Type)
 {
 	V :: Vec2 (T);
 
-	x1, y1, x2, y2 : T;
+	x, y, w, h : T;
 
-	#place x1;
-	left, top, right, bottom : T;
+	#place x;
+	position : V;
+	size : V;
 
-	#place x1;
-	l, t, r, b : T;
-
-	#place x1;
-	min, max : V;
-
-	#place x1;
+	#place x;
 	n : [4]T;
 }
 
@@ -26,159 +18,137 @@ Recti :: Rect (s32);
 Rectf :: Rect (f32);
 
 rectf :: make_rectf;
-ltrbf :: make_rectf;
-make_rectf :: inline (x1 : f32, y1 : f32, x2 : f32, y2 : f32) -> Rectf #must
+xywhf :: make_rectf;
+make_rectf :: inline (x : f32, y : f32, w : f32, h : f32) -> Rectf #must
 #no_context
 {
-	return make_rect (x1, y1, x2, y2);
+	return make_rect (x, y, w, h);
 }
 
 make_rectf :: inline (other : $R/Rect) -> Rectf #must
 #no_context
 {
-	return make_rectf (xx other.x1, xx other.y1, xx other.x2, xx other.y2);
+	return make_rectf (xx other.x, xx other.y, xx other.w, xx other.h);
 }
 
-xywhf :: make_rectf_size;
-make_rectf_size :: inline (x : f32, y : f32, w : f32, h : f32) -> Rectf #must
+ltrbf :: inline (l : f32, t : f32, r : f32, b : f32) -> Rectf #must
 #no_context
 {
-	return make_rect_size (x, y, w, h);
+	return make_rectf (l, t, r - l, b - t);
 }
+
 
 recti :: make_recti;
-ltrbi :: make_recti;
-make_recti :: inline (x1 : s32, y1 : s32, x2 : s32, y2 : s32) -> Recti #must
+xywhi :: make_recti;
+make_recti :: inline (x : s32, y : s32, w : s32, h : s32) -> Recti #must
 #no_context
 {
-	return make_rect (x1, y1, x2, y2);
+	return make_rect (x, y, w, h);
 }
 
 make_recti :: inline (other : $R/Rect) -> Recti #must
 #no_context
 {
-	return make_recti (xx other.x1, xx other.y1, xx other.x2, xx other.y2);
+	return make_recti (xx other.x, xx other.y, xx other.w, xx other.h);
 }
 
-xywhi :: make_recti_size;
-make_recti_size :: inline (x : s32, y : s32, w : s32, h : s32) -> Recti #must
+ltrbi :: inline (l : s32, t : s32, r : s32, b : s32) -> Recti #must
 #no_context
 {
-	return make_rect_size (x, y, w, h);
+	return make_recti (l, t, r - l, b - t);
 }
 
-ltrb :: make_rect;
-make_rect :: inline (x1 : $T, y1 : T, x2 : T, y2 : T) -> Rect (T) #must
+xywh :: make_rect;
+make_rect :: inline (x : $T, y : T, w : T, h : T) -> Rect (T) #must
 #no_context
 {
 	result : Rect (T) = ---;
-	result.x1 = x1;
-	result.y1 = y1;
-	result.x2 = x2;
-	result.y2 = y2;
+	result.x = x;
+	result.y = y;
+	result.w = w;
+	result.h = h;
 	
 	return result;
 }
 
-xywh :: make_rect_size;
-make_rect_size :: inline (x : $T, y : T, w : T, h : T) -> Rect (T) #must
+ltrb :: inline (l : $T, t : T, r : T, b : T) -> Rect (T) #must
 #no_context
 {
 	result : Rect (T) = ---;
-	result.x1 = x;
-	result.y1 = y;
-	result.x2 = x + w;
-	result.y2 = y + h;
+	result.x = l;
+	result.y = t;
+	result.w = r - l;
+	result.h = b - t;
 	
 	return result;
 }
 
-rect_top_left :: inline (using rect : $R/Rect) -> R.V #must
+top_left :: inline (using rect : $R/Rect) -> R.V #must
 #no_context
 {
 	result : R.V;
-	result.x = rect.left;
-	result.y = rect.top;
+	result.x = rect.x;
+	result.y = rect.y;
 	return result;
 }
 
-rect_top_right :: inline (using rect : $R/Rect) -> R.V #must
+top_right :: inline (using rect : $R/Rect) -> R.V #must
 #no_context
 {
 	result : R.V;
-	result.x = rect.right;
-	result.y = rect.top;
+	result.x = rect.x + rect.w;
+	result.y = rect.y;
 	return result;
 }
 
-rect_bottom_left :: inline (using rect : $R/Rect) -> R.V #must
+bottom_left :: inline (using rect : $R/Rect) -> R.V #must
 #no_context
 {
 	result : R.V;
-	result.x = rect.left;
-	result.y = rect.bottom;
+	result.x = rect.x;
+	result.y = rect.y + rect.h;
 	return result;
 }
 
-rect_bottom_right :: inline (using rect : $R/Rect) -> R.V #must
+bottom_right :: inline (using rect : $R/Rect) -> R.V #must
 #no_context
 {
 	result : R.V;
-	result.x = rect.right;
-	result.y = rect.bottom;
+	result.x = rect.x + rect.w;
+	result.y = rect.y + rect.h;
 	return result;
 }
 
-rect_x :: inline (using rect : $R/Rect) -> R.T #must
-#no_context
+set_left :: inline (using rect : *$R/Rect, l : R.T)
 {
-	return x1;
+	w += x - l;
+	x = l;
 }
 
-rect_y :: inline (using rect : $R/Rect) -> R.T #must
-#no_context
+set_right :: inline (using rect : *$R/Rect, r : R.T)
 {
-	return y1;
+	w = r - x;
 }
 
-rect_width :: inline (using rect : $R/Rect) -> R.T #must
-#no_context
+set_top :: inline (using rect : *$R/Rect, t : R.T)
 {
-	return x2 - x1;
+	h += y - t;
+	y = t;
 }
 
-rect_height :: inline (using rect : $R/Rect) -> R.T #must
-#no_context
+set_bottom :: inline (using rect : *$R/Rect, b : R.T)
 {
-	return y2 - y1;
-}
-
-rect_position :: inline (using rect : $R/Rect) -> R.V #must
-#no_context
-{
-	result : R.V;
-	result.x = x1;
-	result.y = y1;
-	return result;
-}
-
-rect_size :: inline (using rect : $R/Rect) -> R.V #must
-#no_context
-{
-	result : R.V;
-	result.x = x2 - x1;
-	result.y = y2 - y1;
-	return result;
+	h = b - y;
 }
 
 expand_all_sides :: inline (using rect : $R/Rect, amount : R.T) -> R #must
 #no_context
 {
 	result := rect;
-	result.x1 -= amount;
-	result.y1 -= amount;
-	result.x2 += amount;
-	result.y2 += amount;
+	result.x -= amount;
+	result.y -= amount;
+	result.w += amount * 2;
+	result.h += amount * 2;
 	
 	return result;
 }
@@ -187,8 +157,9 @@ expand_left :: inline (using rect : $R/Rect, amount : R.T) -> R #must
 #no_context
 {
 	result := rect;
-	result.left -= amount;
-	
+	result.x -= amount;
+	result.w += amount;
+
 	return result;
 }
 
@@ -196,8 +167,9 @@ expand_top :: inline (using rect : $R/Rect, amount : R.T) -> R #must
 #no_context
 {
 	result := rect;
-	result.top -= amount;
-	
+	result.y -= amount;
+	result.h += amount;
+
 	return result;
 }
 
@@ -205,8 +177,8 @@ expand_right :: inline (using rect : $R/Rect, amount : R.T) -> R #must
 #no_context
 {
 	result := rect;
-	result.right += amount;
-	
+	result.w += amount;
+
 	return result;
 }
 
@@ -214,8 +186,8 @@ expand_bottom :: inline (using rect : $R/Rect, amount : R.T) -> R #must
 #no_context
 {
 	result := rect;
-	result.bottom += amount;
-	
+	result.h += amount;
+
 	return result;
 }
 
@@ -223,10 +195,10 @@ truncate_all_sides :: inline (rect : $R/Rect, amount : R.T) -> R #must
 #no_context
 {
 	result := rect;
-	result.x1 += amount;
-	result.y1 += amount;
-	result.x2 -= amount;
-	result.y2 -= amount;
+	result.x += amount;
+	result.y += amount;
+	result.w -= amount * 2;
+	result.h -= amount * 2;
 	
 	return result;
 }
@@ -235,7 +207,8 @@ truncate_left :: inline (rect : $R/Rect, amount : R.T) -> R #must
 #no_context
 {
 	result := rect;
-	result.left += amount;
+	result.x += amount;
+	result.w -= amount;
 	
 	return result;
 }
@@ -244,8 +217,9 @@ truncate_top :: inline (rect : $R/Rect, amount : R.T) -> R #must
 #no_context
 {
 	result := rect;
-	result.top += amount;
-	
+	result.y += amount;
+	result.h -= amount;
+
 	return result;
 }
 
@@ -253,7 +227,7 @@ truncate_right :: inline (rect : $R/Rect, amount : R.T) -> R #must
 #no_context
 {
 	result := rect;
-	result.right -= amount;
+	result.w -= amount;
 	
 	return result;
 }
@@ -262,39 +236,17 @@ truncate_bottom :: inline (rect : $R/Rect, amount : R.T) -> R #must
 #no_context
 {
 	result := rect;
-	result.bottom -= amount;
+	result.h -= amount;
 	
 	return result;
-}
-
-set_position :: inline (rect : $R/Rect, new_x : R.T, new_y : R.T) -> R #must
-#no_context
-{
-	width  := rect_width (rect);
-	height := rect_height (rect);
-	result : R = ---;
-	result.x1 = new_x;
-	result.y1 = new_y;
-	result.x2 = new_x + width;
-	result.y2 = new_y + height;
-	
-	return result;
-}
-
-set_position :: inline (rect : $R/Rect, new_position : R.V) -> R #must
-#no_context
-{
-	return set_position (rect, new_position.x, new_position.y);
 }
 
 move :: inline (rect : $R/Rect, x_amount : R.T, y_amount : R.T) -> R #must
 #no_context
 {
 	result := rect;
-	result.x1 += x_amount;
-	result.y1 += y_amount;
-	result.x2 += x_amount;
-	result.y2 += y_amount;
+	result.x += x_amount;
+	result.y += y_amount;
 	
 	return result;
 }
@@ -305,58 +257,14 @@ move :: inline (rect : $R/Rect, amount : R.V) -> R #must
 	return move (rect, amount.x, amount.y);
 }
 
-set_width :: inline (rect : $R/Rect, new_w : R.T) -> R #must
-#no_context
-{
-	result := rect;
-	result.x2 = result.x1 + new_w;
-	
-	return result;
-}
-
-set_height :: inline (rect : $R/Rect, new_h : R.T) -> R #must
-#no_context
-{
-	result := rect;
-	result.y2 = result.y1 + new_h;
-	
-	return result;
-}
-
-set_size :: inline (rect : $R/Rect, new_w : R.T, new_h : R.T) -> R #must
-#no_context
-{
-	result := rect;
-	result.x2 = result.x1 + new_w;
-	result.y2 = result.y1 + new_h;
-	
-	return result;
-}
-
-set_size :: inline (rect : $R/Rect, new_size : R.V) -> R #must
-#no_context
-{
-	return set_size (rect, new_size.x, new_size.y);
-}
-
 grow :: inline (rect : $R/Rect, x_amount : R.T, y_amount : R.T) -> R #must
 #no_context
 {
 	result := rect;
-	result.x2 += x_amount;
-	result.y2 += y_amount;
+	result.w += x_amount;
+	result.h += y_amount;
 	
 	return result;
-}
-
-scale :: inline (rect : $R/Rect, factor : $T) -> R #must
-{
-	return make_rect (
-		cast (R.T) (rect.x1 * factor),
-		cast (R.T) (rect.y1 * factor),
-		cast (R.T) (rect.x2 * factor),
-		cast (R.T) (rect.y2 * factor)
-	);
 }
 
 grow :: inline (rect : $R/Rect, amount : R.V) -> R #must
@@ -369,10 +277,10 @@ clip :: inline (rect : $R/Rect, clip_by : R) -> R #must
 #no_context
 {
 	result : R = ---;
-	result.x1 = max (rect.x1, clip_by.x1);
-	result.y1 = max (rect.y1, clip_by.y1);
-	result.x2 = min (rect.x2, clip_by.x2);
-	result.y2 = min (rect.y2, clip_by.y2);
+	result.x = max (rect.x, clip_by.x);
+	result.y = max (rect.y, clip_by.y);
+	result.w = min (rect.x + rect.w, clip_by.x + clip_by.w) - result.x;
+	result.h = min (rect.y + rect.h, clip_by.y + clip_by.h) - result.y;
 	
 	return result;
 }
@@ -380,11 +288,11 @@ clip :: inline (rect : $R/Rect, clip_by : R) -> R #must
 contains :: inline (rect : $R/Rect, point : R.V) -> bool #must
 #no_context
 {
-	return point.x >= rect.x1 && point.x <= rect.x2 && point.y >= rect.y1 && point.y <= rect.y2;
+	return point.x >= rect.x && point.x <= rect.x + rect.w && point.y >= rect.y && point.y <= rect.y + rect.h;
 }
 
 operator == :: inline (left : $R/Rect, right : R) -> bool #must
 #no_context
 {
-	return left.x1 == right.x1 && left.y1 == right.y1 && left.x2 == right.x2 && left.y2 == right.y2;
+	return left.x == right.x && left.y == right.y && left.w == right.w && left.h == right.h;
 }

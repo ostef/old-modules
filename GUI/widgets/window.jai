@@ -35,7 +35,7 @@ begin_window :: (rect : math.Rectf, title : string, style : *Window_Style = null
 	if ui.mouse_focused_occluder == occl && input.is_mouse_button_down (.LEFT)
 		raise_window ();
 
-	width, height := math.rect_width (occl.rect), math.rect_height (occl.rect);
+	width, height := occl.rect.w, occl.rect.h;
 	button_flags := Control.Flags.FOCUSABLE | .INTERACT_ON_HELD | .CONTINUE_INTERACTION_WHEN_UNFOCUSED;
 
 	min_width  := style.resize_border_thickness * 4;
@@ -51,8 +51,10 @@ begin_window :: (rect : math.Rectf, title : string, style : *Window_Style = null
 
 		if flagged (button.state_flags, .INTERACTING)
 		{
-			modified_window_rect.x1 = ui.mouse_position.x - button.relative_mouse_position_when_started_interacting.x;
-			modified_window_rect.x1 = math.min (modified_window_rect.x1, modified_window_rect.x2 - min_width);
+			x2 := modified_window_rect.x + modified_window_rect.w;
+			math.set_left (*modified_window_rect, ui.mouse_position.x - button.relative_mouse_position_when_started_interacting.x);
+			if modified_window_rect.w < min_width
+				math.set_left (*modified_window_rect, x2 - min_width);
 		}
 	}
 
@@ -66,8 +68,9 @@ begin_window :: (rect : math.Rectf, title : string, style : *Window_Style = null
 
 		if flagged (button.state_flags, .INTERACTING)
 		{
-			modified_window_rect.x2 = ui.mouse_position.x - button.relative_mouse_position_when_started_interacting.x + style.resize_border_thickness;
-			modified_window_rect.x2 = math.max (modified_window_rect.x2, modified_window_rect.x1 + min_width);
+			math.set_right (*modified_window_rect, ui.mouse_position.x - button.relative_mouse_position_when_started_interacting.x + style.resize_border_thickness);
+			if modified_window_rect.w < min_width
+				math.set_right (*modified_window_rect, modified_window_rect.x + min_width);
 		}
 	}
 
@@ -81,8 +84,10 @@ begin_window :: (rect : math.Rectf, title : string, style : *Window_Style = null
 
 		if flagged (button.state_flags, .INTERACTING)
 		{
-			modified_window_rect.y1 = ui.mouse_position.y - button.relative_mouse_position_when_started_interacting.y;
-			modified_window_rect.y1 = math.min (modified_window_rect.y1, modified_window_rect.y2 - min_height);
+			y2 := modified_window_rect.y + modified_window_rect.h;
+			math.set_top (*modified_window_rect, ui.mouse_position.y - button.relative_mouse_position_when_started_interacting.y);
+			if modified_window_rect.h < min_height
+				math.set_top (*modified_window_rect, y2 - min_height);
 		}
 	}
 
@@ -96,8 +101,9 @@ begin_window :: (rect : math.Rectf, title : string, style : *Window_Style = null
 
 		if flagged (button.state_flags, .INTERACTING)
 		{
-			modified_window_rect.y2 = ui.mouse_position.y - button.relative_mouse_position_when_started_interacting.y + style.resize_border_thickness;
-			modified_window_rect.y2 = math.max (modified_window_rect.y2, modified_window_rect.y1 + min_height);
+			math.set_bottom (*modified_window_rect, ui.mouse_position.y - button.relative_mouse_position_when_started_interacting.y + style.resize_border_thickness);
+			if modified_window_rect.h < min_height
+				math.set_bottom (*modified_window_rect, modified_window_rect.y + min_height);
 		}
 	}
 
@@ -111,10 +117,14 @@ begin_window :: (rect : math.Rectf, title : string, style : *Window_Style = null
 
 		if flagged (button.state_flags, .INTERACTING)
 		{
-			modified_window_rect.x2 = ui.mouse_position.x - button.relative_mouse_position_when_started_interacting.x + style.resize_border_thickness;
-			modified_window_rect.x2 = math.max (modified_window_rect.x2, modified_window_rect.x1 + min_width);
-			modified_window_rect.y1 = ui.mouse_position.y - button.relative_mouse_position_when_started_interacting.y;
-			modified_window_rect.y1 = math.min (modified_window_rect.y1, modified_window_rect.y2 - min_height);
+			math.set_right (*modified_window_rect, ui.mouse_position.x - button.relative_mouse_position_when_started_interacting.x + style.resize_border_thickness);
+			if modified_window_rect.w < min_width
+				math.set_right (*modified_window_rect, modified_window_rect.x + min_width);
+			
+			y2 := modified_window_rect.y + modified_window_rect.h;
+			math.set_top (*modified_window_rect, ui.mouse_position.y - button.relative_mouse_position_when_started_interacting.y);
+			if modified_window_rect.h < min_height
+				math.set_top (*modified_window_rect, y2 - min_height);
 		}
 	}
 
@@ -128,10 +138,13 @@ begin_window :: (rect : math.Rectf, title : string, style : *Window_Style = null
 
 		if flagged (button.state_flags, .INTERACTING)
 		{
-			modified_window_rect.x2 = ui.mouse_position.x - button.relative_mouse_position_when_started_interacting.x + style.resize_border_thickness;
-			modified_window_rect.x2 = math.max (modified_window_rect.x2, modified_window_rect.x1 + min_width);
-			modified_window_rect.y2 = ui.mouse_position.y - button.relative_mouse_position_when_started_interacting.y + style.resize_border_thickness;
-			modified_window_rect.y2 = math.max (modified_window_rect.y2, modified_window_rect.y1 + min_height);
+			math.set_right (*modified_window_rect, ui.mouse_position.x - button.relative_mouse_position_when_started_interacting.x + style.resize_border_thickness);
+			if modified_window_rect.w < min_width
+				math.set_right (*modified_window_rect, modified_window_rect.x + min_width);
+
+			math.set_bottom (*modified_window_rect, ui.mouse_position.y - button.relative_mouse_position_when_started_interacting.y + style.resize_border_thickness);
+			if modified_window_rect.h < min_height
+				math.set_bottom (*modified_window_rect, modified_window_rect.y + min_height);
 		}
 	}
 
@@ -145,10 +158,14 @@ begin_window :: (rect : math.Rectf, title : string, style : *Window_Style = null
 
 		if flagged (button.state_flags, .INTERACTING)
 		{
-			modified_window_rect.x1 = ui.mouse_position.x - button.relative_mouse_position_when_started_interacting.x;
-			modified_window_rect.x1 = math.min (modified_window_rect.x1, modified_window_rect.x2 - min_width);
-			modified_window_rect.y2 = ui.mouse_position.y - button.relative_mouse_position_when_started_interacting.y + style.resize_border_thickness;
-			modified_window_rect.y2 = math.max (modified_window_rect.y2, modified_window_rect.y1 + min_height);
+			x2 := modified_window_rect.x + modified_window_rect.w;
+			math.set_left (*modified_window_rect, ui.mouse_position.x - button.relative_mouse_position_when_started_interacting.x);
+			if modified_window_rect.w < min_width
+				math.set_left (*modified_window_rect, x2 - min_width);
+
+			math.set_bottom (*modified_window_rect, ui.mouse_position.y - button.relative_mouse_position_when_started_interacting.y + style.resize_border_thickness);
+			if modified_window_rect.h < min_height
+				math.set_bottom (*modified_window_rect, modified_window_rect.y + min_height);
 		}
 	}
 
@@ -162,22 +179,27 @@ begin_window :: (rect : math.Rectf, title : string, style : *Window_Style = null
 
 		if flagged (button.state_flags, .INTERACTING)
 		{
-			modified_window_rect.x1 = ui.mouse_position.x - button.relative_mouse_position_when_started_interacting.x;
-			modified_window_rect.x1 = math.min (modified_window_rect.x1, modified_window_rect.x2 - min_width);
-			modified_window_rect.y1 = ui.mouse_position.y - button.relative_mouse_position_when_started_interacting.y;
-			modified_window_rect.y1 = math.min (modified_window_rect.y1, modified_window_rect.y2 - min_height);
+			x2 := modified_window_rect.x + modified_window_rect.w;
+			math.set_left (*modified_window_rect, ui.mouse_position.x - button.relative_mouse_position_when_started_interacting.x);
+			if modified_window_rect.w < min_width
+				math.set_left (*modified_window_rect, x2 - min_width);
+			
+			y2 := modified_window_rect.y + modified_window_rect.h;
+			math.set_top (*modified_window_rect, ui.mouse_position.y - button.relative_mouse_position_when_started_interacting.y);
+			if modified_window_rect.h < min_height
+				math.set_top (*modified_window_rect, y2 - min_height);
 		}
 	}
 
 	// Caption
 	{
-		button_rect := math.xywhf (0, 0, math.rect_width (occl.rect), style.move_caption_height);
+		button_rect := math.xywhf (0, 0, occl.rect.w, style.move_caption_height);
 		button := declare_control (button_rect, location, button_flags, id_offset = 9);
 
 		if flagged (button.state_flags, .INTERACTING)
 		{
 			new_position := ui.mouse_position - button.relative_mouse_position_when_started_interacting;
-			modified_window_rect = math.set_position (modified_window_rect, new_position);
+			modified_window_rect.position = new_position;
 		}
 	}
 
@@ -218,7 +240,7 @@ draw_window :: (win : *Occluder, title : string, style : *Window_Style)
 			get_renderer (),
 			style.title_font,
 			style.title_font_height,
-			math.rect_position (win.rect) + linalg.vec2f (style.move_caption_height, style.move_caption_height) * 0.5,
+			win.rect.position + linalg.vec2f (style.move_caption_height, style.move_caption_height) * 0.5,
 			title,
 			style.title_color,
 			style.title_weight,

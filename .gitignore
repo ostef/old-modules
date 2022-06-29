@@ -2,3 +2,4 @@
 *.pdb
 benchmark/
 .build/
+_GUI/

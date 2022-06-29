@@ -87,7 +87,7 @@ draw_text_input :: (ctrl : *Control, buffer : *[..]u8, style : *Text_Input_Style
 		get_renderer (),
 		style.text_font,
 		style.text_font_height,
-		linalg.vec2f (style.padding + ctrl.rect.x1, (ctrl.rect.y1 + ctrl.rect.y2) * 0.5) + state_style.text_offset,
+		linalg.vec2f (style.padding + ctrl.rect.x, ctrl.rect.y + ctrl.rect.h * 0.5) + state_style.text_offset,
 		str.from_array (<<buffer),
 		state_style.text_color,
 		state_style.text_weight,
@@ -97,8 +97,8 @@ draw_text_input :: (ctrl : *Control, buffer : *[..]u8, style : *Text_Input_Style
 	if is_editing_text (buffer)
 		imdraw.draw_line (
 			get_renderer (),
-			math.rect_top_right (text_rect) + linalg.vec2f (0.5, 0),
-			math.rect_bottom_right (text_rect) + linalg.vec2f (0.5, 0),
+			math.top_right (text_rect) + linalg.vec2f (0.5, 0),
+			math.bottom_right (text_rect) + linalg.vec2f (0.5, 0),
 			style.cursor_color,
 			thickness = 1
 		);

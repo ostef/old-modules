@@ -21,23 +21,6 @@ Button_Style :: struct
 	hot     : State_Style;
 }
 
-/*
-button :: (
-	rect : math.Rectf,
-	style : *Button_Style = null,
-	interaction_flags := Control.Flags.DEFAULT_INTERACTION,
-	id_offset : u32 = 0,
-	location := #caller_location
-) -> bool
-{
-	ctrl := declare_control (rect, location, Control.Flags.FOCUSABLE | interaction_flags, id_offset = id_offset);
-
-	draw_button (ctrl, "", null, style);
-
-	return flagged (ctrl.state_flags, .INTERACTING);
-}
-*/
-
 text_button :: (
 	rect : math.Rectf,
 	text : string,
@@ -103,10 +86,10 @@ draw_button :: (ctrl : *Control, text : string, image : *render.Texture, image_u
 	image_rect : math.Rectf;
 	if image
 	{
-		image_padding := (math.rect_height (ctrl.rect) - xx image.height) * 0.5;
+		image_padding := (ctrl.rect.h - xx image.height) * 0.5;
 		image_rect = math.xywhf (image_padding + state_style.text_and_image_offset.x, image_padding + state_style.text_and_image_offset.y, xx image.width, xx image.height);
 		imdraw.set_texture (get_renderer (), image);
-		imdraw.draw_rect (get_renderer (), math.move (image_rect, math.rect_position (ctrl.rect)), state_style.image_color, uv_rect = image_uv);
+		imdraw.draw_rect (get_renderer (), math.move (image_rect, ctrl.rect.position), state_style.image_color, uv_rect = image_uv);
 		imdraw.set_texture (get_renderer (), null);
 	}
 
@@ -115,7 +98,7 @@ draw_button :: (ctrl : *Control, text : string, image : *render.Texture, image_u
 			get_renderer (),
 			style.text_font,
 			style.text_font_height,
-			linalg.vec2f ((ctrl.rect.x1 + ctrl.rect.x2) * 0.5, (ctrl.rect.y1 + ctrl.rect.y2) * 0.5) + state_style.text_and_image_offset + linalg.vec2f (image_rect.x2, 0),
+			linalg.vec2f (ctrl.rect.x + ctrl.rect.w * 0.5, ctrl.rect.y + ctrl.rect.h * 0.5) + state_style.text_and_image_offset + linalg.vec2f (image_rect.x + image_rect.w, 0),
 			text,
 			state_style.text_color,
 			state_style.text_weight,

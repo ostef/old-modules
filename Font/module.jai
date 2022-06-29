@@ -376,7 +376,7 @@ render_glyph :: (using page : *Page, codepoint : u32) -> *Glyph
 		atlas.row_end += glyph.bitmap_height;
 	}
 
-	glyph.uv_rect = math.rectf (
+	glyph.uv_rect = math.ltrbf (
 		atlas.pen_x / cast (f32) atlas.width,
 		1 - atlas.pen_y / cast (f32) atlas.height,
 		(atlas.pen_x + glyph.bitmap_width) / cast (f32) atlas.width,

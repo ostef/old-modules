@@ -392,10 +392,9 @@ declare_control :: (
 
 	ctrl, created_this_frame := find_or_create_control (get_id (location) + id_offset);
 
+	ctrl.rect = rect;
 	if ui.current_occluder
-		ctrl.rect = math.move (rect, math.rect_position (ui.current_occluder.rect));
-	else
-		ctrl.rect = rect;
+		ctrl.rect.position += ui.current_occluder.rect.position;
 
 	if ui.clipping_stack.count > 0
 		ctrl.clipped_rect = math.clip (ctrl.rect, array.top (ui.clipping_stack));
@@ -463,7 +462,7 @@ END
 			set_mouse_interacting_control (ctrl);
 			// Update the relative mouse position if we started interacting
 			if !flagged (ctrl.prev_state_flags, .INTERACTING)
-				ctrl.relative_mouse_position_when_started_interacting = ui.mouse_position - math.rect_position (ctrl.rect);
+				ctrl.relative_mouse_position_when_started_interacting = ui.mouse_position - ctrl.rect.position;
 		}
 	}
 
@@ -485,7 +484,7 @@ get_occluder_size :: inline () -> linalg.Vec2f
 	check_init ();
 
 	assert (ui.current_occluder != null, "Cannot call this function outside begin_occluder and end_occluder calls.");
-	return math.rect_size (ui.current_occluder.rect);
+	return ui.current_occluder.rect.size;
 }
 
 #scope_file

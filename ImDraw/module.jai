@@ -136,32 +136,29 @@ flush :: inline ()
 	if !imdraw.framebuffer
 	{
 		viewport_w, viewport_h := window.get_viewport_size (imdraw.win);
-		viewport.x1 = 0;
-		viewport.y1 = 0;
-		viewport.x2 = viewport_w;
-		viewport.y2 = viewport_h;
+		viewport.x = 0;
+		viewport.y = 0;
+		viewport.w = viewport_w;
+		viewport.h = viewport_h;
 	}
 	view_projection := mat4f_orthographic_projection (
-		cast (f32) viewport.x1,
-		cast (f32) viewport.x2,
-		cast (f32) viewport.y2,
-		cast (f32) viewport.y1,
+		cast (f32) viewport.x,
+		cast (f32) (viewport.x + viewport.w),
+		cast (f32) (viewport.y + viewport.h),
+		cast (f32) viewport.y,
 		0,
 		1
 	);
-	gl.Viewport (viewport.x1, viewport.y1, xx math.rect_width (viewport), xx math.rect_height (viewport));
+	gl.Viewport (viewport.x, viewport.y, xx viewport.w, xx viewport.h);
 	render.set_shader_parameter (shader, "u_View_Projection_Matrix", view_projection);
 	render.set_shader_parameter (shader, "u_Use_Texture", imdraw.texture != null);
 
 	if imdraw.clipping_enabled
 	{
 		clip_rect := imdraw.clip_rect;
+		clip_rect.y = viewport.h - (clip_rect.y + clip_rect.h);
 		gl.Enable (gl.SCISSOR_TEST);
-		new_y1 := math.rect_height (viewport) - clip_rect.y2;
-		new_y2 := math.rect_height (viewport) - clip_rect.y1;
-		clip_rect.y1 = new_y1;
-		clip_rect.y2 = new_y2;
-		gl.Scissor (xx clip_rect.x1, xx clip_rect.y1, xx math.rect_width (clip_rect), xx math.rect_height (clip_rect));
+		gl.Scissor (xx clip_rect.x, xx clip_rect.y, xx clip_rect.w, xx clip_rect.h);
 	}
 	defer gl.Disable (gl.SCISSOR_TEST);
 	gl.Disable (gl.DEPTH_TEST);
@@ -206,8 +203,8 @@ set_clip_rect :: inline (ctx : *Draw_Context, clip_rect : Recti) -> previous : R
 	ctx.clipping_enabled = true;
 	ctx.clip_rect = clip_rect;
 	using ctx.clip_rect;
-	if x1 > x2 then x1 = x2;
-	if y1 > y2 then y1 = y2;
+	if w < 0 then w = 0;
+	if h < 0 then h = 0;
 
 	return previous;
 }
