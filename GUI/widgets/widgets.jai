@@ -1,6 +1,7 @@
 #load "window.jai";
 #load "text_input.jai";
 #load "button.jai";
+#load "non_interactive.jai";
 
 Common_Style :: struct
 {

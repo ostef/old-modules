@@ -24,7 +24,6 @@ input  :: #import "Input";
 
 #scope_export
 
-#load "non_interactive.jai";
 #load "widgets/widgets.jai";
 
 UI_Context :: struct
