@@ -187,9 +187,9 @@ update_ui :: ()
 	text_input_style.active.border_thickness = 2;
 
 	window_style : gui.Window_Style;
-	window_style.padding = window_style.resize_border_thickness + 2;
 	window_style.move_caption_height = 30;
 	window_style.resize_border_thickness = 8;
+	window_style.padding = window_style.resize_border_thickness;
 	window_style.title_font = g_font;
 	window_style.title_font_height = 13;
 	window_style.title_color = .{255,255,255,255};
@@ -216,11 +216,15 @@ update_ui :: ()
 	prev := gui.set_occlusion_layer ("Windows");
 	
 	window_info = gui.begin_window (math.xywhf (50, 30, 300, 200), "Window 2", style = *window_style);
-		gui.text_input (math.xywhf (10, window_style.move_caption_height + 10, 150, 25), *g_text_buffer, *text_input_style);
+	{
+		size := gui.get_occluder_size ();
+
+		gui.text_input (math.xywhf (10, window_style.move_caption_height + 10, size.x * 0.5, 25), *g_text_buffer, *text_input_style);
 		
-		gui.image_button (math.xywhf (10 + 150 + 2, window_style.move_caption_height + 10, 25, 25), *g_icons.exclamation, style = *image_button_style);
+		gui.image_button (math.xywhf (10 + size.x * 0.5 + 2, window_style.move_caption_height + 10, 25, 25), *g_icons.exclamation, style = *image_button_style);
 		
-		gui.text_input (math.xywhf (10, window_style.move_caption_height + 40, 150, 25), *g_text_buffer2, *text_input_style);
+		gui.text_input (math.xywhf (10, window_style.move_caption_height + 40, size.x * 0.5, 25), *g_text_buffer2, *text_input_style);
+	}
 	gui.end_window (window_info);
 
 	window_info = gui.begin_window (math.xywhf (100, 10, 80, 75), "Window 3", style = *window_style);

@@ -488,6 +488,14 @@ END
 
 // [Occlusion]
 
+get_occluder_size :: inline () -> linalg.Vec2f
+{
+	check_init ();
+
+	assert (ui.current_occluder != null, "Cannot call this function outside begin_occluder and end_occluder calls.");
+	return math.rect_size (ui.current_occluder.rect);
+}
+
 #scope_file
 
 init :: (layer : *Occlusion_Layer, name : string)

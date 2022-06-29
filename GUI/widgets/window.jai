@@ -15,7 +15,7 @@ Window_Style :: struct
 	using common : Common_Style;
 }
 
-// For now, the way we need to pass some info to end_window, to modify the occluder
+// For now, we need to pass some info to end_window, to modify the occluder
 // after every control declaration/drawing relative to the window has been done
 // Maybe we'll find a way to not have this later
 
@@ -33,7 +33,7 @@ begin_window :: (rect : math.Rectf, title : string, style : *Window_Style = null
 	modified_window_rect = occl.rect;
 
 	if ui.mouse_focused_occluder == occl && input.is_mouse_button_down (.LEFT)
-		raise_occluder ();
+		raise_window ();
 
 	width, height := math.rect_width (occl.rect), math.rect_height (occl.rect);
 	button_flags := Control.Flags.FOCUSABLE | .INTERACT_ON_HELD | .CONTINUE_INTERACTION_WHEN_UNFOCUSED;
@@ -195,6 +195,8 @@ end_window :: (using info : Window_Info)
 	end_occlusion ();
 }
 
+raise_window :: raise_occluder;	// If we ever want to do something when a window gets raised we can make this its own routine
+
 draw_window :: (win : *Occluder, title : string, style : *Window_Style)
 {
 	imdraw.draw_rect (get_renderer (), win.rect, style.background_color, corner_radius = style.corner_radiuses.top_left);
@@ -208,6 +210,9 @@ draw_window :: (win : *Occluder, title : string, style : *Window_Style)
 			corner_radius = style.corner_radiuses.top_left
 		);
 
+	if style.clip
+		imdraw.push_clip_rect (get_renderer (), math.recti (math.truncate_all_sides (win.rect, style.padding)));
+
 	if title
 		imdraw.draw_text (
 			get_renderer (),
@@ -220,7 +225,4 @@ draw_window :: (win : *Occluder, title : string, style : *Window_Style)
 			style.title_effects,
 			.CENTER_LEFT
 		);
-
-	if style.clip
-		imdraw.push_clip_rect (get_renderer (), math.recti (math.truncate_all_sides (win.rect, style.padding)));
 }
