@@ -29,6 +29,7 @@ g_show_second_window := false;
 g_icons : struct
 {
 	exclamation : render.Texture;
+	check : render.Texture;
 };
 
 handle_window_message :: (msg : window.Message)
@@ -73,6 +74,9 @@ main :: ()
 	defer font.destroy_family (*g_font, mem.HEAP_ALLOC);
 
 	if !render.load_texture_from_file (*g_icons.exclamation, "data/icons/exclamation_16.png")
+		error ("Could not load icon.");
+
+	if !render.load_texture_from_file (*g_icons.check, "data/icons/check_16.png")
 		error ("Could not load icon.");
 
 	gui.init ();
@@ -221,9 +225,11 @@ update_ui :: ()
 
 		gui.text_input (math.xywhf (10, window_style.move_caption_height + 10, size.x * 0.5, 25), *g_text_buffer, *text_input_style);
 		
-		gui.image_button (math.xywhf (10 + size.x * 0.5 + 2, window_style.move_caption_height + 10, 25, 25), *g_icons.exclamation, style = *image_button_style);
+		gui.image_button (math.xywhf (10 + size.x * 0.5 + 2, window_style.move_caption_height + 10, 25, 25), *g_icons.check, style = *image_button_style);
 		
 		gui.text_input (math.xywhf (10, window_style.move_caption_height + 40, size.x * 0.5, 25), *g_text_buffer2, *text_input_style);
+
+		gui.image_button (math.xywhf (10 + size.x * 0.5 + 2, window_style.move_caption_height + 40, 25, 25), *g_icons.check, style = *image_button_style);
 	}
 	gui.end_window (window_info);
 
