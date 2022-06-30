@@ -2,7 +2,7 @@ Button_Style :: struct
 {
 	State_Style :: struct
 	{
-		using common : Common_Style;
+		using rect_style : Rectangle_Style;
 		image_color := math.RGBA_WHITE;
 		text_weight : font.Weight;
 		text_effects : imdraw.Text_Effects;

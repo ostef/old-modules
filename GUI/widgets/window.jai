@@ -12,7 +12,7 @@ Window_Style :: struct
 	clip := true;
 	padding : f32;
 
-	using common : Common_Style;
+	using rect_style : Rectangle_Style;
 }
 
 // For now, we need to pass some info to end_window, to modify the occluder

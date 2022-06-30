@@ -2,7 +2,7 @@ Text_Input_Style :: struct
 {
 	State_Style :: struct
 	{
-		using common : Common_Style;
+		using rect_style : Rectangle_Style;
 		text_weight : font.Weight;
 		text_effects : imdraw.Text_Effects;
 		text_color : math.RGBA;

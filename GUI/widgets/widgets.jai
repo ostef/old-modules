@@ -3,7 +3,7 @@
 #load "button.jai";
 #load "non_interactive.jai";
 
-Common_Style :: struct
+Rectangle_Style :: struct
 {
 	background_color : math.RGBA;
 	border_color : math.RGBA;
