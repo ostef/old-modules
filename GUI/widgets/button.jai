@@ -25,11 +25,10 @@ text_button :: (
 	rect : math.Rectf,
 	text : string,
 	style : *Button_Style = null,
-	id_offset : u32 = 0,
 	location := #caller_location
 ) -> bool
 {
-	ctrl := declare_control (rect, location, Control.Flags.FOCUSABLE | .INTERACT_ON_RELEASED, id_offset = id_offset);
+	ctrl := declare_control (rect, location, Control.Flags.FOCUSABLE | .INTERACT_ON_RELEASED);
 	draw_button (ctrl, text, null, .{}, style);
 
 	return flagged (ctrl.state_flags, .INTERACTING);
@@ -40,11 +39,10 @@ image_button :: (
 	image : *render.Texture,
 	image_uv := math.Rectf.{0,0,1,1},
 	style : *Button_Style = null,
-	id_offset : u32 = 0,
 	location := #caller_location
 ) -> bool
 {
-	ctrl := declare_control (rect, location, Control.Flags.FOCUSABLE | .INTERACT_ON_RELEASED, id_offset = id_offset);
+	ctrl := declare_control (rect, location, Control.Flags.FOCUSABLE | .INTERACT_ON_RELEASED);
 	draw_button (ctrl, "", image, image_uv, style);
 
 	return flagged (ctrl.state_flags, .INTERACTING);

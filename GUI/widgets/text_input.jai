@@ -23,10 +23,10 @@ Text_Input_Style :: struct
 	active  : State_Style;
 }
 
-text_input :: (rect : math.Rectf, buffer : *[..]u8, style : *Text_Input_Style = null, id_offset : u32 = 0, location := #caller_location) -> bool
+text_input :: (rect : math.Rectf, buffer : *[..]u8, style : *Text_Input_Style = null, location := #caller_location) -> bool
 {
 	check_init ();
-	ctrl := declare_control (rect, location, Control.Flags.FOCUSABLE | .INTERACT_ON_HELD, id_offset = id_offset);
+	ctrl := declare_control (rect, location, Control.Flags.FOCUSABLE | .INTERACT_ON_HELD);
 	if input.is_mouse_button_pressed (.LEFT) && !flagged (ctrl.state_flags, .HOT)
 		stop_grabbing_text_input (buffer);
 

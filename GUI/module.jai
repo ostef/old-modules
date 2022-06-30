@@ -39,16 +39,19 @@ UI_Context :: struct
 
 	controls : storage.Storage (Control, 20);
 	controls_by_id : map.Hash_Map (Id, *Control);
+
 	clipping_stack : [..]math.Rectf;
+	id_offset_stack : [..]Id;
+	auto_increment_id_offset : bool;
 
 	edited_text_buffer : *[..]u8;
 	text_input : [..]u32;
 
+	mouse_focused_occluder : *Occluder;
+
 	occlusion_layers : [..]Occlusion_Layer;
 	#place occlusion_layers;
 	occlusion_layers_bottommost_to_topmost : [..]Occlusion_Layer;
-
-	mouse_focused_occluder : *Occluder;
 
 	current_occlusion_layer : s64;
 	current_occluder : *Occluder;
@@ -95,8 +98,7 @@ Control :: struct
 		// Useful for scrollbars and sliders
 		CONTINUE_INTERACTION_WHEN_UNFOCUSED :: 0x8000;
 		DEFAULT_INTERACTION :: INTERACT_ON_RELEASED;
-		INTERACTION_FLAGS   ::
-			INTERACT_ON_PRESSED
+		INTERACTION_FLAGS   :: INTERACT_ON_PRESSED
 			| INTERACT_ON_HELD
 			| INTERACT_ON_RELEASED
 			| CONTINUE_INTERACTION_WHEN_UNFOCUSED;
@@ -150,6 +152,7 @@ init :: ()
 	map.init (*ui.controls_by_id, 300, mem.HEAP_ALLOC);
 	array.init (*ui.text_input, 300, mem.HEAP_ALLOC);
 	array.init (*ui.clipping_stack, 50, mem.HEAP_ALLOC);
+	array.init (*ui.id_offset_stack, 50, mem.HEAP_ALLOC);
 	array.init (*ui.occlusion_layers, 50, mem.HEAP_ALLOC);
 	imdraw.init (*ui.renderer, 5000, 1000, mem.HEAP_ALLOC);
 
@@ -167,6 +170,7 @@ terminate :: ()
 	storage.reset (*ui.controls);
 	map.reset (*ui.controls_by_id);
 	array.reset (*ui.clipping_stack);
+	array.reset (*ui.id_offset_stack);
 	imdraw.reset (*ui.renderer);
 
 	mem.free (ui, mem.HEAP_ALLOC);
@@ -275,7 +279,7 @@ end :: ()
 	array.clear (*ui.text_input);
 }
 
-get_id :: (location : Source_Code_Location) -> Id #must
+get_id :: (location : Source_Code_Location, $handle_id_offset := true) -> Id #must
 {
 	combine_hashes :: inline (a : u32, b : u32) -> u32 #must
 	{
@@ -293,7 +297,59 @@ get_id :: (location : Source_Code_Location) -> Id #must
 	if h == 0
 		h = 69105;
 
+	#if handle_id_offset
+	{
+		check_init ();
+		if ui.id_offset_stack.count > 0
+		{
+			h += array.top (ui.id_offset_stack);
+			if ui.auto_increment_id_offset
+				increment_id_offset ();
+		}
+	}
+
 	return h;
+}
+
+push_id_offset :: inline (value : Id)
+{
+	check_init ();
+	array.push (*ui.id_offset_stack, value);
+}
+
+pop_id_offset :: inline ()
+{
+	check_init ();
+	array.pop (*ui.id_offset_stack);
+}
+
+add_to_id_offset :: inline (value : Id)
+{
+	check_init ();
+	assert (ui.id_offset_stack.count > 0, "No id offset was previously pushed.");
+	ui.id_offset_stack[ui.id_offset_stack.count - 1] += value;
+}
+
+increment_id_offset :: inline ()
+{
+	add_to_id_offset (1);
+}
+
+scope_id_offset :: (value : Id, auto_increment : bool) #expand
+{
+	push_id_offset (value);
+	prev_auto_increment := set_auto_increment_id_offset (auto_increment);
+
+	`defer set_auto_increment_id_offset (prev_auto_increment);
+	`defer pop_id_offset ();
+}
+
+set_auto_increment_id_offset :: inline (enable : bool) -> previous : bool
+{
+	check_init ();
+	previous := ui.auto_increment_id_offset;
+	ui.auto_increment_id_offset = enable;
+	return previous;
 }
 
 push_clipping_rect :: inline (rect : math.Rectf)
@@ -384,13 +440,12 @@ find_or_create_control :: (id : Id) -> *Control #must, created_this_frame : bool
 declare_control :: (
 	rect : math.Rectf,
 	location : Source_Code_Location,
-	flags : Control.Flags,
-	id_offset : u32 = 0
+	flags : Control.Flags
 ) -> *Control, created_this_frame : bool
 {
 	check_init ();
 
-	ctrl, created_this_frame := find_or_create_control (get_id (location) + id_offset);
+	ctrl, created_this_frame := find_or_create_control (get_id (location));
 
 	ctrl.rect = rect;
 	if ui.current_occluder
@@ -403,8 +458,8 @@ declare_control :: (
 
 TEXT :: #string END
 Two controls have the same id.
-This might be due to a call to begin_control in a loop, or a collision in the hashing function.
-Use the `id_offset' parameter to begin_control to apply an offset to the id, in the case of creating controls in a loop.
+This might be due to a call to declare_control with the same location parameter, or a collision in the hashing function.
+To differentiate controls that have the same location, see id offset functions.
 END
 	assert (ctrl.last_frame_index != ui.frame_index, TEXT);
 

@@ -37,14 +37,15 @@ begin_window :: (rect : math.Rectf, title : string, style : *Window_Style = null
 
 	width, height := occl.rect.w, occl.rect.h;
 	button_flags := Control.Flags.FOCUSABLE | .INTERACT_ON_HELD | .CONTINUE_INTERACTION_WHEN_UNFOCUSED;
-
 	min_width  := style.resize_border_thickness * 4;
 	min_height := style.resize_border_thickness * 4 + style.move_caption_height;
+
+	scope_id_offset (1, auto_increment = true);
 
 	// Resize left
 	{
 		button_rect := math.xywhf (0, style.resize_border_thickness, style.resize_border_thickness, height - style.resize_border_thickness * 2);
-		button := declare_control (button_rect, location, button_flags, id_offset = 1);
+		button := declare_control (button_rect, location, button_flags);
 
 		if flagged (button.state_flags, .FOCUSED)
 			window.set_cursor (.SIZE_HORIZONTAL);
@@ -61,7 +62,7 @@ begin_window :: (rect : math.Rectf, title : string, style : *Window_Style = null
 	// Resize right
 	{
 		button_rect := math.xywhf (width - style.resize_border_thickness, style.resize_border_thickness, style.resize_border_thickness, height - style.resize_border_thickness * 2);
-		button := declare_control (button_rect, location, button_flags, id_offset = 2);
+		button := declare_control (button_rect, location, button_flags);
 
 		if flagged (button.state_flags, .FOCUSED)
 			window.set_cursor (.SIZE_HORIZONTAL);
@@ -77,7 +78,7 @@ begin_window :: (rect : math.Rectf, title : string, style : *Window_Style = null
 	// Resize top
 	{
 		button_rect := math.xywhf (style.resize_border_thickness, 0, width - style.resize_border_thickness * 2, style.resize_border_thickness);
-		button := declare_control (button_rect, location, button_flags, id_offset = 3);
+		button := declare_control (button_rect, location, button_flags);
 
 		if flagged (button.state_flags, .FOCUSED)
 			window.set_cursor (.SIZE_VERTICAL);
@@ -94,7 +95,7 @@ begin_window :: (rect : math.Rectf, title : string, style : *Window_Style = null
 	// Resize bottom
 	{
 		button_rect := math.xywhf (style.resize_border_thickness, height - style.resize_border_thickness, width - style.resize_border_thickness * 2, style.resize_border_thickness);
-		button := declare_control (button_rect, location, button_flags, id_offset = 4);
+		button := declare_control (button_rect, location, button_flags);
 
 		if flagged (button.state_flags, .FOCUSED)
 			window.set_cursor (.SIZE_VERTICAL);
@@ -110,7 +111,7 @@ begin_window :: (rect : math.Rectf, title : string, style : *Window_Style = null
 	// Resize top-right
 	{
 		button_rect := math.xywhf (width - style.resize_border_thickness, 0, style.resize_border_thickness, style.resize_border_thickness);
-		button := declare_control (button_rect, location, button_flags, id_offset = 5);
+		button := declare_control (button_rect, location, button_flags);
 
 		if flagged (button.state_flags, .FOCUSED)
 			window.set_cursor (.SIZE_NESW);
@@ -131,7 +132,7 @@ begin_window :: (rect : math.Rectf, title : string, style : *Window_Style = null
 	// Resize bottom-right
 	{
 		button_rect := math.xywhf (width - style.resize_border_thickness, height - style.resize_border_thickness, style.resize_border_thickness, style.resize_border_thickness);
-		button := declare_control (button_rect, location, button_flags, id_offset = 6);
+		button := declare_control (button_rect, location, button_flags);
 
 		if flagged (button.state_flags, .FOCUSED)
 			window.set_cursor (.SIZE_NWSE);
@@ -151,7 +152,7 @@ begin_window :: (rect : math.Rectf, title : string, style : *Window_Style = null
 	// Resize bottom-left
 	{
 		button_rect := math.xywhf (0, height - style.resize_border_thickness, style.resize_border_thickness, style.resize_border_thickness);
-		button := declare_control (button_rect, location, button_flags, id_offset = 7);
+		button := declare_control (button_rect, location, button_flags);
 
 		if flagged (button.state_flags, .FOCUSED)
 			window.set_cursor (.SIZE_NESW);
@@ -172,7 +173,7 @@ begin_window :: (rect : math.Rectf, title : string, style : *Window_Style = null
 	// Resize top-left
 	{
 		button_rect := math.xywhf (0, 0, style.resize_border_thickness, style.resize_border_thickness);
-		button := declare_control (button_rect, location, button_flags, id_offset = 8);
+		button := declare_control (button_rect, location, button_flags);
 
 		if flagged (button.state_flags, .FOCUSED)
 			window.set_cursor (.SIZE_NWSE);
@@ -194,7 +195,7 @@ begin_window :: (rect : math.Rectf, title : string, style : *Window_Style = null
 	// Caption
 	{
 		button_rect := math.xywhf (0, 0, occl.rect.w, style.move_caption_height);
-		button := declare_control (button_rect, location, button_flags, id_offset = 9);
+		button := declare_control (button_rect, location, button_flags);
 
 		if flagged (button.state_flags, .INTERACTING)
 		{
