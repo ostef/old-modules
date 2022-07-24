@@ -19,20 +19,24 @@ g_cursors : struct
 	size_nesw : win32.HCURSOR;
 	size_horizontal : win32.HCURSOR;
 	size_vertical : win32.HCURSOR;
+	not_allowed : win32.HCURSOR;
 };
 g_initialized : bool;
 
 #scope_export
 
-Window :: win32.HWND;
+Window :: win32.HWND;	// @Deprecated @Todo: This will go away at some point
+Window_Handle :: win32.HWND;
 
 Win32_Window_Data :: struct
 {
+	flags : Flags;
+	caption_hit_test : Caption_Hit_Test_Proc;
+
 	wm_char_utf16_high_surrogate : u16;
 	message_queue : [..]Message;
 	last_retrieved_message : s64;
-	flags : Flags;
-	caption_hit_test : Caption_Hit_Test_Proc;
+	is_mouse_inside_client_area : bool;
 }
 
 win32_init_window_context :: inline () -> bool
@@ -75,6 +79,7 @@ win32_init_window_context :: inline () -> bool
 		g_cursors.size_nesw = win32.LoadCursorW (null, cast (*u16) win32.IDC_SIZENESW);
 		g_cursors.size_horizontal = win32.LoadCursorW (null, cast (*u16) win32.IDC_SIZEWE);
 		g_cursors.size_vertical = win32.LoadCursorW (null, cast (*u16) win32.IDC_SIZENS);
+		g_cursors.not_allowed = win32.LoadCursorW (null, cast (*u16) win32.IDC_NO);
 	}
 	g_initialized = true;
 
@@ -589,10 +594,22 @@ win32_wnd_proc :: (window : win32.HWND, msg : u32, wparam : win32.WPARAM, lparam
 			push_message (data, window_msg);
 
 		case win32.WM_MOUSEMOVE;
+			if !data.is_mouse_inside_client_area
+			{
+				window_msg.kind = .MOUSE_ENTERED_WINDOW;
+				push_message (data, window_msg);
+				data.is_mouse_inside_client_area = true;
+			}
+
 			window_msg.kind = .MOUSE_MOVED;
 			window_msg.mods = input.get_mod_state ();
 			window_msg.mouse_x = win32.LOWORD (lparam);
 			window_msg.mouse_y = win32.HIWORD (lparam);
+			push_message (data, window_msg);
+
+		case win32.WM_MOUSELEAVE;
+			data.is_mouse_inside_client_area = false;
+			window_msg.kind = .MOUSE_LEFT_WINDOW;
 			push_message (data, window_msg);
 
 		case win32.WM_INPUT;

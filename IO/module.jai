@@ -140,7 +140,7 @@ read :: inline (stream : Stream, $T : Type) -> T #must, Error
 	result : T = ---;
 	bytes, err := read (stream, *result, size_of (T));
 	if bytes != size_of (T)
-		return 0, .EOI;
+		return result, .EOI;
 	return result, err;
 }
 
