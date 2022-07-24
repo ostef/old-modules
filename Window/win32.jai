@@ -25,7 +25,8 @@ g_initialized : bool;
 
 #scope_export
 
-Window :: win32.HWND;
+Window :: win32.HWND;	// @Deprecated @Todo: This will go away at some point
+Window_Handle :: win32.HWND;
 
 Win32_Window_Data :: struct
 {
