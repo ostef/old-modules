@@ -4,6 +4,7 @@ traits :: #import "Traits";
 
 Trait :: struct
 {
+	// Everywhere This_Type is used, it means the actual type that implements the trait
 	This_Type :: struct {};
 
 	get :: #type (this : This_Type) -> s64;

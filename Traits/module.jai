@@ -1,9 +1,30 @@
 #scope_module
 
 #import "Runtime";
-fmt :: #import "Fmt";
 
 #scope_export
+
+// Usage:
+// The following code defines a trait. The trait has two functions,
+// get and set. This_Type refers to the type that implements the trait.
+// For example, for a struct A implementing the trait, A needs to provide
+// a function get :: (A) -> s64 and a set :: (*A, s64);
+/*
+Trait :: struct
+{
+	This_Type :: struct {};
+
+	get :: #type (This_Type) -> s64;
+	set :: #type (*This_Type, s64);
+}
+*/
+
+// To implement a trait for a struct type, you need to put the procedures
+// that you want to implement in the struct itself. This might not be ideal
+// because that means you cannot implement traits for structs that you cannot
+// modify, but for now this is how it's done. The functions don't have to be
+// constant, so you can use function pointers to have dynamic dispatch.
+// See tests/main.jai
 
 implements :: inline (type : Type, trait_type : Type) -> bool #must
 {
