@@ -4,11 +4,19 @@ traits :: #import "Traits";
 
 Trait :: struct
 {
-	// Everywhere This_Type is used, it means the actual type that implements the trait
-	This_Type :: struct {};
+	// Everywhere Self is used, it means the actual type that implements the trait
+	Self :: struct {};
 
-	get :: #type (this : This_Type) -> s64;
-	set :: #type (this : *This_Type, val : s64);
+	get :: #type (this : Self) -> s64;
+	set :: #type (this : *Self, val : s64);
+}
+
+Get_Set :: struct (T : Type)
+{
+	Self :: struct {};
+
+	get :: #type (Self) -> T;
+	set :: #type (*Self, T);
 }
 
 // For dynamic dispatch, we can use non constant functions, and a
@@ -54,7 +62,7 @@ dynamic :: (a : *A) -> Dynamic_Trait #must
 
 B :: struct
 {
-	get :: (using this : *Trait.This_Type) {}
+	get :: (using this : *Trait.Self) {}
 	set :: () {}
 }
 
@@ -64,17 +72,27 @@ foo :: (t : $T)
 	fmt.println ("%.get returned %.", T, t.get (t));
 }
 
+bar :: (t : $T)
+#modify { return traits.implements (T, Get_Set (s64)); }
+{
+	fmt.println ("%.get returned %.", T, t.get (t));
+}
+
 main :: ()
 {
 	a : A;
 	a.set (*a, 12);
 	foo (a);
+	bar (a);
 
 	d := dynamic (*a);
 	d.set (*d, 69105);
 	foo (d);
+	bar (d);
 	
 	assert (traits.implements (A, Trait));
 	assert (traits.implements (Dynamic_Trait, Trait));
+	assert (traits.implements (A, Get_Set (s64)));
+	assert (traits.implements (Dynamic_Trait, Get_Set (s64)));
 	assert (!traits.implements (B, Trait));
 }

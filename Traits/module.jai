@@ -6,16 +6,16 @@
 
 // Usage:
 // The following code defines a trait. The trait has two functions,
-// get and set. This_Type refers to the type that implements the trait.
+// get and set. Self refers to the type that implements the trait.
 // For example, for a struct A implementing the trait, A needs to provide
 // a function get :: (A) -> s64 and a set :: (*A, s64);
 /*
 Trait :: struct
 {
-	This_Type :: struct {};
+	Self :: struct {};
 
-	get :: #type (This_Type) -> s64;
-	set :: #type (*This_Type, s64);
+	get :: #type (Self) -> s64;
+	set :: #type (*Self, s64);
 }
 */
 
@@ -25,6 +25,10 @@ Trait :: struct
 // modify, but for now this is how it's done. The functions don't have to be
 // constant, so you can use function pointers to have dynamic dispatch.
 // See tests/main.jai
+
+// When you want to implement a function that expects a type implementing a given
+// trait, you need to use polymorphism and the #modify directive like so:
+// foo :: (a : *$T) #modify { return implements (T, Trait); }
 
 implements :: inline (type : Type, trait_type : Type) -> bool #must
 {
@@ -93,17 +97,17 @@ implements :: (info : *Type_Info_Struct, trait_info : *Type_Info_Struct) -> bool
 		}
 	}
 
-	// Find This_Type struct
-	this_type : *Type_Info_Struct;	// Can be null
+	// Find Self struct
+	self : *Type_Info_Struct;	// Can be null
 	for trait_info.members
 	{
-		if it.name == "This_Type"
+		if it.name == "Self"
 		{
-			assert (it.offset_into_constant_storage != -1, "Trait % has member This_Type but it is not constant. This_Type should be a constant empty struct.", trait_info.name);
-			assert (it.type.type == .TYPE, "Trait % has member This_Type but it is not an empty struct.", trait_info.name);
+			assert (it.offset_into_constant_storage != -1, "Trait % has member Self but it is not constant. Self should be a constant empty struct.", trait_info.name);
+			assert (it.type.type == .TYPE, "Trait % has member Self but it is not an empty struct.", trait_info.name);
 
-			this_type = <<cast (**Type_Info_Struct) (trait_info.constant_storage_buffer + it.offset_into_constant_storage);
-			assert (this_type.type == .STRUCT && this_type.members.count == 0, "Trait % has member This_Type but it is not an empty struct.", trait_info.name);
+			self = <<cast (**Type_Info_Struct) (trait_info.constant_storage_buffer + it.offset_into_constant_storage);
+			assert (self.type == .STRUCT && self.members.count == 0, "Trait % has member Self but it is not an empty struct.", trait_info.name);
 
 			break;
 		}
@@ -125,7 +129,7 @@ implements :: (info : *Type_Info_Struct, trait_info : *Type_Info_Struct) -> bool
 		{
 			if it.name == proc_name
 			{
-				implemented = compare_types (proc_type, this_type, it.type, info);
+				implemented = compare_types (proc_type, self, it.type, info);
 				break;
 			}
 		}
