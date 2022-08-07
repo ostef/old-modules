@@ -67,8 +67,6 @@ ImDrawCornerFlags :: ImDrawFlags;
 
 IM_DRAWLIST_TEX_LINES_WIDTH_MAX :: 63;
 
-ImDrawCallback_ResetRenderState :: cast,trunc(ImDrawCallback)(-1);
-
 ImDrawListSharedData :: struct {}
 
 ImFontBuilderIO :: struct {}
