@@ -3,7 +3,7 @@
 #import "String";
 bdgen :: #import "Bindings_Generator";
 
-#if OS != .WINDOW
+#if OS != .WINDOWS
 	#assert false "Only Windows is supported for now.";
 
 CPP_SOURCE_PATH :: "source";

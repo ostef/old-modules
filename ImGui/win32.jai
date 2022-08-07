@@ -9,6 +9,19 @@
 IMGUI_VERSION :: "1.89 WIP";
 IMGUI_VERSION_NUM :: 18802;
 
+KeyModFlags_ :: enum_flags s32 {
+    None  :: 0x0;
+    Ctrl  :: 0x1;
+    Shift :: 0x2;
+    Alt   :: 0x4;
+    Super :: 0x8;
+    ImGuiKeyModFlags_None  :: None;
+    ImGuiKeyModFlags_Ctrl  :: Ctrl;
+    ImGuiKeyModFlags_Shift :: Shift;
+    ImGuiKeyModFlags_Alt   :: Alt;
+    ImGuiKeyModFlags_Super :: Super;
+}
+
 IMGUI_PAYLOAD_TYPE_COLOR_3F :: "_COL3F";
 IMGUI_PAYLOAD_TYPE_COLOR_4F :: "_COL4F";
 
@@ -22,7 +35,39 @@ IM_COL32_B_SHIFT :: 16;
 IM_COL32_A_SHIFT :: 24;
 IM_COL32_A_MASK :: 0xFF000000;
 
+// RENAMED ImGuiKeyModFlags -> ImGuiModFlags in 1.88 (from April 2022)
+KeyModFlags :: s32;
+
+ImDrawCornerFlags_ :: enum_flags s32 {
+    None     :: 0x100;
+    TopLeft  :: 0x10;
+    TopRight :: 0x20;
+    BotLeft  :: 0x40;
+    BotRight :: 0x80;
+    All      :: 0xf0;
+    Top      :: 0x30;
+    Bot      :: 0xc0;
+    Left     :: 0x50;
+    Right    :: 0xa0;
+
+    ImDrawCornerFlags_None     :: None;
+    ImDrawCornerFlags_TopLeft  :: TopLeft;
+    ImDrawCornerFlags_TopRight :: TopRight;
+    ImDrawCornerFlags_BotLeft  :: BotLeft;
+    ImDrawCornerFlags_BotRight :: BotRight;
+    ImDrawCornerFlags_All      :: All;
+    ImDrawCornerFlags_Top      :: Top;
+    ImDrawCornerFlags_Bot      :: Bot;
+    ImDrawCornerFlags_Left     :: Left;
+    ImDrawCornerFlags_Right    :: Right;
+}
+
+// OBSOLETED in 1.82 (from Mars 2021): flags for AddRect(), AddRectFilled(), AddImageRounded(), PathRect()
+ImDrawCornerFlags :: ImDrawFlags;
+
 IM_DRAWLIST_TEX_LINES_WIDTH_MAX :: 63;
+
+ImDrawCallback_ResetRenderState :: cast,trunc(ImDrawCallback)(-1);
 
 ImDrawListSharedData :: struct {}
 
@@ -3396,47 +3441,6 @@ PlatformImeData :: struct {
     WantVisible:     bool; // A widget wants the IME to be visible
     InputPos:        ImVec2; // Position of the input cursor
     InputLineHeight: float; // Line height
-}
-
-// OBSOLETED in 1.82 (from Mars 2021): flags for AddRect(), AddRectFilled(), AddImageRounded(), PathRect()
-ImDrawCornerFlags :: ImDrawFlags;
-ImDrawCornerFlags_ :: enum_flags s32 {
-    None     :: 0x100;
-    TopLeft  :: 0x10;
-    TopRight :: 0x20;
-    BotLeft  :: 0x40;
-    BotRight :: 0x80;
-    All      :: 0xf0;
-    Top      :: 0x30;
-    Bot      :: 0xc0;
-    Left     :: 0x50;
-    Right    :: 0xa0;
-
-    ImDrawCornerFlags_None     :: None;
-    ImDrawCornerFlags_TopLeft  :: TopLeft;
-    ImDrawCornerFlags_TopRight :: TopRight;
-    ImDrawCornerFlags_BotLeft  :: BotLeft;
-    ImDrawCornerFlags_BotRight :: BotRight;
-    ImDrawCornerFlags_All      :: All;
-    ImDrawCornerFlags_Top      :: Top;
-    ImDrawCornerFlags_Bot      :: Bot;
-    ImDrawCornerFlags_Left     :: Left;
-    ImDrawCornerFlags_Right    :: Right;
-}
-
-// RENAMED ImGuiKeyModFlags -> ImGuiModFlags in 1.88 (from April 2022)
-KeyModFlags :: s32;
-KeyModFlags_ :: enum_flags s32 {
-    None  :: 0x0;
-    Ctrl  :: 0x1;
-    Shift :: 0x2;
-    Alt   :: 0x4;
-    Super :: 0x8;
-    ImGuiKeyModFlags_None  :: None;
-    ImGuiKeyModFlags_Ctrl  :: Ctrl;
-    ImGuiKeyModFlags_Shift :: Shift;
-    ImGuiKeyModFlags_Alt   :: Alt;
-    ImGuiKeyModFlags_Super :: Super;
 }
 
 #scope_file
