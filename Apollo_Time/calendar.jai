@@ -81,7 +81,6 @@ format :: (time : Calendar_Time, fmt_str : string, allocator : Allocator, names 
 
 	new_fmt_str : string;
 	{
-		state := mem.get_temporary_storage_state ();
 		b : builder.Builder;
 		builder.init (*b, mem.TEMP_ALLOC);
 		i := 0;
@@ -109,7 +108,6 @@ format :: (time : Calendar_Time, fmt_str : string, allocator : Allocator, names 
 				i += 1;
 			}
 		}
-		mem.set_temporary_storage_state (state);
 		new_fmt_str = builder.build (b, mem.TEMP_ALLOC);
 	}
 
