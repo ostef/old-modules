@@ -61,6 +61,12 @@ to_nanoseconds :: inline (t : Apollo_Time) -> s64 #must
 }
 
 to_float_seconds :: inline (t : Apollo_Time) -> f64 #must
+#deprecated "Use to_f64_seconds instead."
+{
+	return to_f64_seconds (t);
+}
+
+to_f64_seconds :: inline (t : Apollo_Time) -> f64 #must
 {
 	// @Incomplete @Robustness:
 	// Not sure what the best strategy is here. We probably should manually convert,
@@ -83,6 +89,12 @@ to_float_seconds :: inline (t : Apollo_Time) -> f64 #must
 }
 
 from_float_seconds :: inline (sec : f64) -> Apollo_Time #must
+#deprecated "Use from_f64_seconds instead."
+{
+	return from_f64_seconds (sec);
+}
+
+from_f64_seconds :: inline (sec : f64) -> Apollo_Time #must
 {
 	MANTISSA_BITS     :: 52;
 	MANTISSA_HIGH_BIT :: 1 << MANTISSA_BITS;
