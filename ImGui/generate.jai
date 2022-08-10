@@ -110,6 +110,14 @@ visitor :: (decl : *bdgen.Declaration, parent_decl : *bdgen.Declaration) -> bdge
 		return name;
 	}
 
+	// ImDrawCallback_ResetRenderState is a special value of ImDrawCallback, which
+	// is a function pointer. This does not get generated correctly, so we ignore it.
+	if decl.kind == .MACRO_DEFINITION && decl.name == "ImDrawCallback_ResetRenderState"
+	{
+		decl.decl_flags |= .OMIT_FROM_OUTPUT;
+		return .STOP;
+	}
+
 	if !parent_decl
 	{
 		if array_find (TYPES_TO_OMIT, decl.name)
