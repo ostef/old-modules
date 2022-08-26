@@ -22,8 +22,10 @@ hash :: #import "Hash";
 //	- reset: Clear the map and free the allocated memory, resetting
 // it to a valid state.
 //	- grow: Grow the map by a factor of 2.
-//	- insert: Insert a key-value pair. If an entry with the given
-// key already exists, then the value is replaced, otherwise a new
+//	- insert: There are two versions of this one. The first inserts
+// an element with a given key, and returns a pointer to it. If the entry
+// is not new, it is returned as is.
+// The second one inserts a key-value pair and assigns the given value in any case
 // entry is added.
 //	- remove_at: Remove a key-value pair.
 //	- set: Set the value of the entry with the given key, if the
