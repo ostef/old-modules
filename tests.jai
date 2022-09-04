@@ -80,7 +80,7 @@ build :: ()
 		options.output_executable_name = test.name;
 		options.output_path = path.join (mem.HEAP_ALLOC, path.get_parent_dir (test.filename), "/");
 		options.intermediate_path = path.join (mem.HEAP_ALLOC, path.get_parent_dir (test.filename), ".build/");
-		options.import_path = .[ ".", "c:/jai/modules/" ];
+		options.import_path = .[ ".", "d:/jai/modules/" ];
 		jaic.set_build_options (options, test.workspace);
 		jaic.compiler_begin_intercept (test.workspace);
 		jaic.add_build_file (test.filename, test.workspace);
