@@ -24,16 +24,21 @@ build :: ()
 {
 	fill_default_context ();
 	context.temporary_storage.overflow_allocator = mem.HEAP_ALLOC;
+	
 	test_only : [..]string;
 	array.init (*test_only, 20, mem.HEAP_ALLOC);
+	
 	tests : [..]Test_Entry;
 	array.init (*tests, 20, mem.HEAP_ALLOC);
+	
 	opt := jaic.get_build_options ();
 	args := opt.compile_time_command_line;
+	
 	i := 0;
 	while i < args.count
 	{
 		defer i += 1;
+		
 		arg := args[i];
 		if arg ==
 		{
@@ -43,8 +48,7 @@ build :: ()
 				array.push (*test_only, args[i]);
 		}
 	}
-	// Don't log temporary storage page allocation messages
-	context.logger = null;
+	
 	// Find all tests
 	for info : fs.file_search (".")
 	{
@@ -56,23 +60,30 @@ build :: ()
 				if str.ends_with (info.name, ".jai")
 				{
 					module_name := path.get_basename (path.get_parent_dir (path.get_parent_dir (info.full_name)));
+
 					if test_only.count != 0 && array.find_first (test_only, module_name) == -1
 						continue;
+
 					test := array.push (*tests);
 					test.module_name = module_name;
 					test.filename = info.full_name;
 					test.name = path.remove_extension (path.get_basename (test.filename));
 				}
 			}
+			
 			continue;
 		}
 	}
+	
 	context.logger = context.default_logger;
+	
+	// Compile all tests
 	for * test : tests
 	{
 		workspace_name := path.join (mem.HEAP_ALLOC, test.module_name, test.name);
 		fmt.println ("Creating workspace %", workspace_name);
 		test.workspace = jaic.compiler_create_workspace (workspace_name);
+		
 		options := jaic.get_build_options (test.workspace);
 		options.text_output_flags = 0;
 		options.dead_code_elimination = .NONE;
@@ -80,10 +91,11 @@ build :: ()
 		options.output_executable_name = test.name;
 		options.output_path = path.join (mem.HEAP_ALLOC, path.get_parent_dir (test.filename), "/");
 		options.intermediate_path = path.join (mem.HEAP_ALLOC, path.get_parent_dir (test.filename), ".build/");
-		options.import_path = .[ ".", "c:/jai/modules/" ];
+
 		jaic.set_build_options (options, test.workspace);
 		jaic.compiler_begin_intercept (test.workspace);
 		jaic.add_build_file (test.filename, test.workspace);
+		
 		while true
 		{
 			msg := jaic.compiler_wait_for_message ();
@@ -93,28 +105,36 @@ build :: ()
 				break;
 			}
 		}
+
 		jaic.compiler_end_intercept (test.workspace);
+
 		if !test.compilation_success
 			log.error ("Failed to compile workspace '%'.", workspace_name);
 	}
+
+	// Execute all tests
 	for test : tests
 	{
 		if !test.compilation_success
 			continue;
+
 		test_filename := path.join (mem.TEMP_ALLOC, path.get_parent_dir (test.filename), test.name);
 		exit_code, out_str, err_str := ps.run_command (
 			test_filename,
 			working_directory = path.get_parent_dir (test.filename),
 			output = .CAPTURE
 		);
+
 		if exit_code != 0
 		{
 			fmt.println ("Test %/% failed.", test.module_name, test.name);
+	
 			if out_str
 			{
 				fmt.println (" => STDOUT");
 				fmt.println (out_str);
 			}
+
 			if err_str
 			{
 				fmt.println (" => STDERR");
@@ -128,7 +148,8 @@ build :: ()
 
 #run build ();
 
-// Import everything so we know everything compiles
+// Import everything else so we know everything compiles
+time    :: #import "Apollo_Time";
 map     :: #import "Containers/Hash_Map";
 list    :: #import "Containers/List";
 storage :: #import "Containers/Storage";
