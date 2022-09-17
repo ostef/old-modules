@@ -12,7 +12,7 @@ imgui          :: #import "ImGui";
 imgui_platform :: #import "ImGui/Impl/Platform";
 imgui_gl       :: #import "ImGui/Impl/GL";
 
-g_window : window.Window_Handle;
+g_window : window.Handle;
 g_is_running : bool;
 
 main :: ()

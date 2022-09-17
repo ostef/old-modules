@@ -26,7 +26,7 @@ g_initialized : bool;
 #scope_export
 
 Window :: win32.HWND;	// @Deprecated @Todo: This will go away at some point
-Window_Handle :: win32.HWND;
+Handle :: win32.HWND;
 
 Win32_Window_Data :: struct
 {
@@ -86,7 +86,7 @@ win32_init_window_context :: inline () -> bool
 	return true;
 }
 
-show_error_box :: inline (parent : Window, fmt_str : string, args : ..Any)
+show_error_box :: inline (parent : Handle, fmt_str : string, args : ..Any)
 {
 	mem.temporary_block ();
 	str := fmt.format (mem.TEMP_ALLOC, fmt_str, ..args);
@@ -110,8 +110,8 @@ create :: inline (
 	width : s32,
 	height : s32,
 	flags := Creation_Flags.VISIBLE,
-	parent : Window = null
-) -> Window #must
+	parent : Handle = null
+) -> Handle #must
 {
 	if !g_initialized
 		win32_init_window_context ();
@@ -169,7 +169,7 @@ create :: inline (
 	return hwnd;
 }
 
-destroy :: inline (window : Window)
+destroy :: inline (window : Handle)
 #no_context
 {
 	win32.DestroyWindow (window);
@@ -177,19 +177,19 @@ destroy :: inline (window : Window)
 	// that automatically get destroyed also free their user data.
 }
 
-close :: inline (window : Window)
+close :: inline (window : Handle)
 #no_context
 {
 	win32.PostMessageW (window, win32.WM_CLOSE, 0, 0);
 }
 
-win32_get_window_data :: inline (window : Window) -> *Win32_Window_Data #must
+win32_get_window_data :: inline (window : Handle) -> *Win32_Window_Data #must
 #no_context
 {
 	return cast (*Win32_Window_Data) win32.GetWindowLongPtrW (window, win32.GWLP_USERDATA);
 }
 
-get_flags :: inline (window : Window) -> Flags #must
+get_flags :: inline (window : Handle) -> Flags #must
 #no_context
 {
 	data := win32_get_window_data (window);
@@ -197,7 +197,7 @@ get_flags :: inline (window : Window) -> Flags #must
 	return data.flags;
 }
 
-get_caption_hit_test :: inline (window : Window) -> Caption_Hit_Test_Proc #must
+get_caption_hit_test :: inline (window : Handle) -> Caption_Hit_Test_Proc #must
 #no_context
 {
 	data := win32_get_window_data (window);
@@ -205,7 +205,7 @@ get_caption_hit_test :: inline (window : Window) -> Caption_Hit_Test_Proc #must
 	return data.caption_hit_test;
 }
 
-set_caption_hit_test :: inline (window : Window, proc : Caption_Hit_Test_Proc)
+set_caption_hit_test :: inline (window : Handle, proc : Caption_Hit_Test_Proc)
 #no_context
 {
 	data := win32_get_window_data (window);
@@ -213,13 +213,13 @@ set_caption_hit_test :: inline (window : Window, proc : Caption_Hit_Test_Proc)
 	data.caption_hit_test = proc;
 }
 
-swap_buffers :: inline (window : Window)
+swap_buffers :: inline (window : Handle)
 #no_context
 {
 	win32.SwapBuffers (win32.GetDC (window));
 }
 
-get_position :: inline (window : Window) -> x : s32, y : s32
+get_position :: inline (window : Handle) -> x : s32, y : s32
 #no_context
 {
 	rect : win32.RECT;
@@ -228,13 +228,13 @@ get_position :: inline (window : Window) -> x : s32, y : s32
 	return rect.left, rect.top;
 }
 
-set_position :: inline (window : Window, x : s32, y : s32)
+set_position :: inline (window : Handle, x : s32, y : s32)
 #no_context
 {
 	win32.SetWindowPos (window, null, x, y, 0, 0, win32.SWP_NOSIZE | win32.SWP_NOZORDER | win32.SWP_NOACTIVATE);
 }
 
-get_size :: inline (window : Window) -> width : s32, height : s32
+get_size :: inline (window : Handle) -> width : s32, height : s32
 #no_context
 {
 	rect : win32.RECT;
@@ -243,13 +243,13 @@ get_size :: inline (window : Window) -> width : s32, height : s32
 	return rect.right - rect.left, rect.bottom - rect.top;
 }
 
-set_size :: inline (window : Window, width : s32, height : s32)
+set_size :: inline (window : Handle, width : s32, height : s32)
 #no_context
 {
 	win32.SetWindowPos (window, null, 0, 0, width, height, win32.SWP_NOMOVE | win32.SWP_NOZORDER | win32.SWP_NOACTIVATE);
 }
 
-get_viewport_size :: inline (window : Window) -> width : s32, height : s32
+get_viewport_size :: inline (window : Handle) -> width : s32, height : s32
 #no_context
 {
 	rect : win32.RECT;
@@ -258,18 +258,18 @@ get_viewport_size :: inline (window : Window) -> width : s32, height : s32
 	return rect.right - rect.left, rect.bottom - rect.top;
 }
 
-get_focused :: inline () -> Window #must
+get_focused :: inline () -> Handle #must
 {
 	return win32.GetFocus ();
 }
 
-is_focused :: inline (window : Window) -> bool #must
+is_focused :: inline (window : Handle) -> bool #must
 #no_context
 {
 	return win32.GetFocus () == window;
 }
 
-is_maximized :: inline (window : Window) -> bool #must
+is_maximized :: inline (window : Handle) -> bool #must
 #no_context
 {
 	placement : win32.WINDOWPLACEMENT;
@@ -279,7 +279,7 @@ is_maximized :: inline (window : Window) -> bool #must
 	return false;
 }
 
-is_minimized :: inline (window : Window) -> bool #must
+is_minimized :: inline (window : Handle) -> bool #must
 #no_context
 {
 	placement : win32.WINDOWPLACEMENT;
@@ -289,19 +289,19 @@ is_minimized :: inline (window : Window) -> bool #must
 	return false;
 }
 
-maximize :: inline (window : Window)
+maximize :: inline (window : Handle)
 #no_context
 {
 	win32.ShowWindow (window, win32.SW_MAXIMIZE);
 }
 
-restore :: inline (window : Window)
+restore :: inline (window : Handle)
 #no_context
 {
 	win32.ShowWindow (window, win32.SW_RESTORE);
 }
 
-minimize :: inline (window : Window)
+minimize :: inline (window : Handle)
 #no_context
 {
 	win32.ShowWindow (window, win32.SW_MINIMIZE);
@@ -315,7 +315,7 @@ get_mouse_position :: inline () -> x : s32, y : s32
 	return result.x, result.y;
 }
 
-get_mouse_position :: inline (window : Window) -> x : s32, y : s32
+get_mouse_position :: inline (window : Handle) -> x : s32, y : s32
 #no_context
 {
 	result : win32.POINT;
@@ -324,7 +324,7 @@ get_mouse_position :: inline (window : Window) -> x : s32, y : s32
 	return result.x, result.y;
 }
 
-set_mouse_position :: inline (window : Window, x : s32, y : s32)
+set_mouse_position :: inline (window : Handle, x : s32, y : s32)
 #no_context
 {
 	pt : win32.POINT;
@@ -334,7 +334,7 @@ set_mouse_position :: inline (window : Window, x : s32, y : s32)
 	win32.SetCursorPos (pt.x, pt.y);
 }
 
-poll_messages :: inline (window : Window)
+poll_messages :: inline (window : Handle)
 {
 	data := win32_get_window_data (window);
 	msg : win32.MSG;
@@ -345,7 +345,7 @@ poll_messages :: inline (window : Window)
 	}
 }
 
-get_next_message :: inline (window : Window, msg : *Message) -> bool
+get_next_message :: inline (window : Handle, msg : *Message) -> bool
 {
 	data := win32_get_window_data (window);
 	if data.last_retrieved_message >= data.message_queue.count
