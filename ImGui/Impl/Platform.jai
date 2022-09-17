@@ -8,7 +8,7 @@ utf8   :: #import "Unicode/UTF8";
 
 #scope_export
 
-init :: (main_window : window.Window) -> bool
+init :: (window_handle : window.Handle) -> bool
 {
 	io := imgui.GetIO ();
 
@@ -21,7 +21,7 @@ init :: (main_window : window.Window) -> bool
 
 	io.BackendFlags_ |= .HasMouseCursors;
 	io.BackendFlags_ |= .HasSetMousePos;
-	imgui.GetMainViewport ().PlatformHandleRaw = cast (*void) main_window;
+	imgui.GetMainViewport ().PlatformHandleRaw = cast (*void) window_handle;
 
 	return true;
 }
@@ -91,7 +91,7 @@ handle_window_message :: (msg : window.Message) -> handled : bool
 
 new_frame :: (delta_time : f32)
 {
-	win_handle := cast (window.Window) imgui.GetMainViewport ().PlatformHandleRaw;
+	win_handle := cast (window.Handle) imgui.GetMainViewport ().PlatformHandleRaw;
 	io := imgui.GetIO ();
 
 	io.DeltaTime = delta_time;

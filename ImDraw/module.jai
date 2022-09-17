@@ -39,7 +39,7 @@ Vertex :: struct
 
 Draw_Context :: struct
 {
-	win    : *window.Window;
+	win    : *window.Handle;
 	gl_ctx : *gl.GL_Context;
 
 	vertices : [MAX_VERTICES]Vertex;
@@ -73,7 +73,7 @@ check_init :: () #expand
 	assert (imdraw != null, "No drawing context.");
 }
 
-create_context :: inline (win : *window.Window, gl_ctx : *gl.GL_Context) -> *Draw_Context #must
+create_context :: inline (win : *window.Handle, gl_ctx : *gl.GL_Context) -> *Draw_Context #must
 {
 	if !win || !gl_ctx
 		return null;

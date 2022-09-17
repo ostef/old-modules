@@ -6,7 +6,7 @@ win32 :: #import "Win32";
 
 GL_Context :: win32.HGLRC;
 
-create_context :: inline (win : window.Window, flags := GL_Context_Creation_Flags.MULTISAMPLED) -> GL_Context #must
+create_context :: inline (win : window.Handle, flags := GL_Context_Creation_Flags.MULTISAMPLED) -> GL_Context #must
 {
 	hdc := win32.GetDC (win);
 	pfd : win32.PIXELFORMATDESCRIPTOR;
@@ -57,14 +57,14 @@ create_context :: inline (win : window.Window, flags := GL_Context_Creation_Flag
 	return ctx;
 }
 
-destroy_context :: inline (win : window.Window, ctx : GL_Context)
+destroy_context :: inline (win : window.Handle, ctx : GL_Context)
 {
 	if get_current_context () == ctx
 		make_context_current (win, null);
 	wglDeleteContext (ctx);
 }
 
-make_context_current :: inline (win : window.Window, ctx : GL_Context)
+make_context_current :: inline (win : window.Handle, ctx : GL_Context)
 {
 	hdc := win32.GetDC (win);
 	wglMakeCurrent (hdc, ctx);

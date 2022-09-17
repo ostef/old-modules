@@ -8,7 +8,7 @@ window :: #import "Window";
 imdraw :: #import "ImDraw";
 gl     :: #import "GL";
 
-g_window : window.Window;
+g_window : window.Handle;
 g_is_running  : bool;
 
 CAPTION_HEIGHT :: 32;
@@ -69,7 +69,7 @@ handle_window_message :: (msg : window.Message)
 	}
 }
 
-caption_hit_test :: (win : window.Window, mouse_x : s32, mouse_y : s32) -> bool
+caption_hit_test :: (win : window.Handle, mouse_x : s32, mouse_y : s32) -> bool
 {
 	if is_button_hovered (.CLOSE) || is_button_hovered (.MAXIMIZE) || is_button_hovered (.MINIMIZE)
 		return false;

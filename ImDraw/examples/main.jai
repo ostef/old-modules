@@ -16,7 +16,7 @@ render :: #import "Render_Core";
 imdraw :: #import "ImDraw";
 time   :: #import "Apollo_Time";
 
-g_window : window.Window;
+g_window : window.Handle;
 g_is_running : bool;
 
 handle_window_message :: (msg : window.Message)
