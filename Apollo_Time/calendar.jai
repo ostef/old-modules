@@ -53,6 +53,20 @@ FRENCH_ASCII_NAMES :: Calendar_Names.{
 	short_months = .[ "Jan", "Fev", "Mar", "Avr", "Mai", "Jun", "Jul", "Aou", "Sep", "Oct", "Nov", "Dec" ]
 };
 
+SPANISH_NAMES :: Calendar_Names.{
+	days = .[ "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo" ],
+	short_days = .[ "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom" ],
+	months = .[ "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre" ],
+	short_months = .[ "Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic" ],
+};
+
+SPANISH_ASCII_NAMES :: Calendar_Names.{
+	days = .[ "Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado", "Domingo" ],
+	short_days = .[ "Lun", "Mar", "Mie", "Jue", "Vie", "Sab", "Dom" ],
+	months = .[ "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre" ],
+	short_months = .[ "Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic" ],
+};
+
 // Usage:
 // 		format (time, "{D} {d} {M} {Y}, {hr:02}:{mn:02} {AMPM}", allocator) => "Mon 10 Feb 2022, 10:04 AM"
 // y : time.year % 100,
