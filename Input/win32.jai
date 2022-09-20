@@ -138,9 +138,9 @@ win32_vk_to_key_code :: inline (vk : s32) -> Key_Code #must
 {
 	WIN32_VK_TO_KEY_CODE :: #insert -> string
 	{
-		code : builder.Builder;
-		builder.init (*code, mem.HEAP_ALLOC);
-		builder.append_line (*code, "Key_Code.[");
+		code : strbuild.Builder;
+		strbuild.init (*code, mem.HEAP_ALLOC);
+		strbuild.append_line (*code, "Key_Code.[");
 		for i : 0..256
 		{
 			key_code := Key_Code.UNKNOWN;
@@ -152,11 +152,11 @@ win32_vk_to_key_code :: inline (vk : s32) -> Key_Code #must
 					break;
 				}
 			}
-			builder.append_line (*code, "\t.%,", key_code);
+			strbuild.append_line (*code, "\t.%,", key_code);
 		}
-		builder.append_line (*code, "];");
+		strbuild.append_line (*code, "];");
 
-		return builder.build (code, mem.HEAP_ALLOC);
+		return strbuild.build (code, mem.HEAP_ALLOC);
 	};
 
 	return WIN32_VK_TO_KEY_CODE[vk];
@@ -167,9 +167,9 @@ win32_key_code_to_vk :: inline (key_code : Key_Code) -> s32 #must
 {
 	WIN32_KEY_CODE_TO_VK :: #insert -> string
 	{
-		code : builder.Builder;
-		builder.init (*code, mem.HEAP_ALLOC);
-		builder.append_line (*code, "s32.[");
+		code : strbuild.Builder;
+		strbuild.init (*code, mem.HEAP_ALLOC);
+		strbuild.append_line (*code, "s32.[");
 		for i : 0..256
 		{
 			vk := 0;
@@ -181,11 +181,11 @@ win32_key_code_to_vk :: inline (key_code : Key_Code) -> s32 #must
 					break;
 				}
 			}
-			builder.append_line (*code, "\t%,", vk);
+			strbuild.append_line (*code, "\t%,", vk);
 		}
-		builder.append_line (*code, "];");
+		strbuild.append_line (*code, "];");
 
-		return builder.build (code, mem.HEAP_ALLOC);
+		return strbuild.build (code, mem.HEAP_ALLOC);
 	};
 
 	return WIN32_KEY_CODE_TO_VK[cast (s64) key_code];

@@ -4,7 +4,7 @@
 mem     :: #import "Memory";
 log     :: #import "Log";
 str     :: #import "String";
-builder :: #import "String/Builder";
+strbuild :: #import "String/Builder";
 math    :: #import "Math";
 using linalg  :: #import "Linalg";
 gl      :: #import "GL";

@@ -6,7 +6,7 @@
 mem  :: #import "Memory";
 math :: #import "Math";
 rand :: #import "Math/Random";
-builder :: #import "String/Builder";
+strbuild :: #import "String/Builder";
 
 #scope_export
 
@@ -144,17 +144,17 @@ generate_perlin_permutation_table :: () -> string
 		ints[PERLIN_REPEAT + i] = ints[i];
 
 	// Generate int array literal
-	code : builder.Builder;
-	builder.init (*code, mem.HEAP_ALLOC);
-	builder.append (*code, "int.[ ");
+	code : strbuild.Builder;
+	strbuild.init (*code, mem.HEAP_ALLOC);
+	strbuild.append (*code, "int.[ ");
 	for ints
 	{
-		builder.append_s64 (*code, it);
+		strbuild.append_s64 (*code, it);
 		if it_index != PERLIN_REPEAT - 1
-			builder.append (*code, ", ");
+			strbuild.append (*code, ", ");
 	}
-	builder.append (*code, " ];");
+	strbuild.append (*code, " ];");
 
-	return builder.build (code, mem.HEAP_ALLOC);
+	return strbuild.build (code, mem.HEAP_ALLOC);
 }
 

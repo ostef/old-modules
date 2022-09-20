@@ -33,13 +33,13 @@ offset_of :: ($T : Type, member : string) -> s64 #must #expand
 {
 	#insert -> string
 	{
-		builder :: #import "String/Builder";
+		strbuild :: #import "String/Builder";
 		
-		code : builder.Builder;
-		builder.init (*code, mem.HEAP_ALLOC);
-		builder.append_line (*code, "base : T = ---;");
-		builder.append_line (*code, "return cast (*u8) *base.% - cast (*u8) *base;", member);
-		return builder.build (code, mem.HEAP_ALLOC);
+		code : strbuild.Builder;
+		strbuild.init (*code, mem.HEAP_ALLOC);
+		strbuild.append_line (*code, "base : T = ---;");
+		strbuild.append_line (*code, "return cast (*u8) *base.% - cast (*u8) *base;", member);
+		return strbuild.build (code, mem.HEAP_ALLOC);
 	};
 }
 

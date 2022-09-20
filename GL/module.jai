@@ -22,36 +22,36 @@ load :: inline ($log_errors := false) -> bool
 	{
 		#insert -> string
 		{
-			builder :: #import "String/Builder";
+			strbuild :: #import "String/Builder";
 
 			info := type_info (T);
-			code : builder.Builder;
-			builder.init (*code, mem.HEAP_ALLOC);
-			builder.append_line (*code, "// load_functions for T = %", T);
-			builder.append_line (*code, "member_ptr : **void;");
+			code : strbuild.Builder;
+			strbuild.init (*code, mem.HEAP_ALLOC);
+			strbuild.append_line (*code, "// load_functions for T = %", T);
+			strbuild.append_line (*code, "member_ptr : **void;");
 			for * info.members
 			{
 				if flagged (it.flags, .CONSTANT)
 					continue;
 				if it.type.type == .PROCEDURE || flagged (it.flags, .PROCEDURE_WITH_VOID_POINTER_TYPE_INFO)
 				{
-					builder.append_line (*code, "member_ptr = cast (**void) (cast (*u8) ptr + %);", it.offset_in_bytes);
+					strbuild.append_line (*code, "member_ptr = cast (**void) (cast (*u8) ptr + %);", it.offset_in_bytes);
 					if prefix
-						builder.append_line (*code, "<<member_ptr = get_proc_address (\"{}{}\");", prefix, it.name);
+						strbuild.append_line (*code, "<<member_ptr = get_proc_address (\"{}{}\");", prefix, it.name);
 					else
-						builder.append_line (*code, "<<member_ptr = get_proc_address (\"{}\");", it.name);
+						strbuild.append_line (*code, "<<member_ptr = get_proc_address (\"{}\");", it.name);
 					#if log_errors
 					{
-						builder.append_line (*code, "if !(<<member_ptr)");
+						strbuild.append_line (*code, "if !(<<member_ptr)");
 						if prefix
-							builder.append_line (*code, "\tlog.warning (\"get_proc_address returned null for procedure {}{}.\");", prefix, it.name);
+							strbuild.append_line (*code, "\tlog.warning (\"get_proc_address returned null for procedure {}{}.\");", prefix, it.name);
 						else
-							builder.append_line (*code, "\tlog.warning (\"get_proc_address returned null for procedure {}.\");", it.name);
+							strbuild.append_line (*code, "\tlog.warning (\"get_proc_address returned null for procedure {}.\");", it.name);
 					}
 				}
 			}
 
-			return builder.build (*code, mem.HEAP_ALLOC);
+			return strbuild.build (*code, mem.HEAP_ALLOC);
 		};
 	}
 
