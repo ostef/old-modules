@@ -93,6 +93,12 @@ push :: inline (arr : *[..]$T, elem : T) -> *T
 	return ptr;
 }
 
+push :: inline (arr : *[..]$T, elems : []T)
+{
+	for elems
+		push (arr, it);
+}
+
 pop :: inline (arr : *[..]$T) -> T
 {
 	assert (arr.count > 0, "Array is empty.");
