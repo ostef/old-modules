@@ -7,7 +7,7 @@ for_expansion :: map.for_expansion;
 main :: ()
 {
 	ages : map.Hash_Map (string, int);
-	map.init (*ages, 10, mem.HEAP_ALLOC);
+	map.init (*ages, 10);
 	defer map.reset (*ages);
 	ptr, was_present := map.insert (*ages, "Stéfan", 20);
 	assert (!was_present);

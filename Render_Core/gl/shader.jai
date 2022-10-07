@@ -148,7 +148,7 @@ init_shader :: inline (shader : *Shader, vertex_src : string, fragment_src : str
 	shader.spo = spo;
 	param_count : s32;
 	gl.GetProgramiv (shader.spo, gl.ACTIVE_UNIFORMS, *param_count);
-	shader.parameters.data = mem.alloc (size_of (Shader.Parameter) * param_count, mem.HEAP_ALLOC);
+	shader.parameters.data = mem.alloc (size_of (Shader.Parameter) * param_count);
 	shader.parameters.count = 0;
 	name_data := cast (*u8) mem.alloc (256, mem.TEMP_ALLOC);
 	for i : 0..param_count - 1
@@ -161,7 +161,7 @@ init_shader :: inline (shader : *Shader, vertex_src : string, fragment_src : str
 		param.kind = shader_parameter_kind_from_gl (type);
 		if param.kind == .UNKNOWN
 			continue;
-		param.name = str.clone (str.make (name_data, name_len), mem.HEAP_ALLOC);
+		param.name = str.clone (str.make (name_data, name_len));
 		param.count = size;
 		param.location = gl.GetUniformLocation (shader.spo, name_data);
 		shader.parameters.data[shader.parameters.count] = param;
@@ -174,8 +174,8 @@ init_shader :: inline (shader : *Shader, vertex_src : string, fragment_src : str
 destroy_shader :: inline (shader : *Shader)
 {
 	for shader.parameters
-		mem.free (it.name, mem.HEAP_ALLOC);
-	mem.free (shader.parameters, mem.HEAP_ALLOC);
+		mem.free (it.name);
+	mem.free (shader.parameters);
 	gl.DeleteProgram (shader.spo);
 	shader.spo = 0;
 	shader.parameters = .[];

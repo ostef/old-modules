@@ -9,7 +9,7 @@ main :: ()
 {
 	// We want a small page size so we can test adding and removing pages
 	container : storage.Storage (string, 2);
-	storage.init (*container, mem.HEAP_ALLOC);
+	storage.init (*container);
 	val1, info1 := storage.find_free_slot (*container);
 	fmt.println ("info1: {:!}", info1);
 	assert (val1 != null);

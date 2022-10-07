@@ -206,7 +206,7 @@ set_file_attributes :: inline (filename : string, attrs : File_Attributes) -> Er
 	return .OK;
 }
 
-get_full_filename :: inline (filename : string, allocator : Allocator) -> string #must, Error
+get_full_filename :: inline (filename : string, allocator := context.allocator) -> string #must, Error
 {
 	wstr_filename := win32.utf8_to_wide (filename, mem.TEMP_ALLOC);
 	length := win32.GetFullPathNameW (wstr_filename, 0, null, null);

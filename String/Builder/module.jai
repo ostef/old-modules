@@ -53,7 +53,7 @@ to_stream :: inline (builder : *Builder) -> io.Stream #must
 	return result;
 }
 
-init :: inline (builder : *Builder, allocator : Allocator)
+init :: inline (builder : *Builder, allocator := context.allocator)
 {
 	builder.base_buffer.count = 0;
 	builder.base_buffer.next = null;
@@ -114,7 +114,7 @@ write :: (using builder : *Builder, buff : *void, size : s64) -> s64
 	return written;
 }
 
-build :: (builder : Builder, allocator : Allocator) -> string #must
+build :: (builder : Builder, allocator := context.allocator) -> string #must
 {
 	result : string;
 	result.data = mem.alloc (builder.count, allocator);
@@ -131,7 +131,7 @@ build :: (builder : Builder, allocator : Allocator) -> string #must
 	return result;
 }
 
-build_cstr :: (builder : Builder, allocator : Allocator) -> *u8 #must
+build_cstr :: (builder : Builder, allocator := context.allocator) -> *u8 #must
 {
 	result := cast (*u8) mem.alloc (builder.count + 1, allocator);
 	i := 0;
@@ -147,7 +147,7 @@ build_cstr :: (builder : Builder, allocator : Allocator) -> *u8 #must
 	return result;
 }
 
-build_and_reset :: inline (builder : *Builder, allocator : Allocator) -> string #must
+build_and_reset :: inline (builder : *Builder, allocator := context.allocator) -> string #must
 {
 	result := build (builder, allocator);
 	reset (builder);
@@ -155,7 +155,7 @@ build_and_reset :: inline (builder : *Builder, allocator : Allocator) -> string 
 }
 
 
-build_cstr_and_reset :: inline (builder : *Builder, allocator : Allocator) -> *u8 #must
+build_cstr_and_reset :: inline (builder : *Builder, allocator := context.allocator) -> *u8 #must
 {
 	result := build_cstr (builder, allocator);
 	reset (builder);

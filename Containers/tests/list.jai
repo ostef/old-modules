@@ -15,12 +15,12 @@ Node :: struct
 main :: ()
 {
 	container : *Node;
-	p1 := list.push_front (*container, mem.HEAP_ALLOC);
+	p1 := list.push_front (*container, mem.alloc (Node));
 	p1.val = "Hello";
-	p2 := list.push_front (*container, mem.HEAP_ALLOC);
+	p2 := list.push_front (*container, mem.alloc (Node));
 	assert (p2 != p1);
 	p2.val = "Sailor";
-	p3 := list.push_front (*container, mem.HEAP_ALLOC);
+	p3 := list.push_front (*container, mem.alloc (Node));
 	assert (p3 != p2);
 	assert (p3 != p1);
 	p3.val = "!";

@@ -31,7 +31,7 @@ to_allocator :: inline (arena : *Memory_Arena) -> Allocator #must
 }
 
 // By default, disable overflow by giving overflow_allocator a default value of { null, null } 
-init :: inline (arena : *Memory_Arena, size : s64, allocator : Allocator, overflow_allocator := Allocator.{ null, null })
+init :: inline (arena : *Memory_Arena, size : s64, allocator := context.allocator, overflow_allocator := Allocator.{ null, null })
 {
 	mem.init (arena);
 	arena.data = mem.alloc (size, allocator);
@@ -42,7 +42,7 @@ init :: inline (arena : *Memory_Arena, size : s64, allocator : Allocator, overfl
 	arena.original_size = size;
 }
 
-reset :: inline (arena : *Memory_Arena, allocator := Allocator.{ null, null })
+reset :: inline (arena : *Memory_Arena, allocator := context.allocator)
 {
 	if !arena then return;
 	free_pages (arena);

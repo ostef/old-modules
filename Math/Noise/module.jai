@@ -145,7 +145,7 @@ generate_perlin_permutation_table :: () -> string
 
 	// Generate int array literal
 	code : strbuild.Builder;
-	strbuild.init (*code, mem.HEAP_ALLOC);
+	strbuild.init (*code);
 	strbuild.append (*code, "int.[ ");
 	for ints
 	{
@@ -155,6 +155,6 @@ generate_perlin_permutation_table :: () -> string
 	}
 	strbuild.append (*code, " ];");
 
-	return strbuild.build (code, mem.HEAP_ALLOC);
+	return strbuild.build (code);
 }
 

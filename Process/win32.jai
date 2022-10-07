@@ -56,7 +56,7 @@ get_current :: inline () -> Process #must
 	return win32.GetCurrentProcess ();
 }
 
-get_environment_variable :: inline (name : string, allocator : Allocator) -> string #must, Error
+get_environment_variable :: inline (name : string, allocator := context.allocator) -> string #must, Error
 {
 	wstr_name := win32.utf8_to_wide (name, mem.TEMP_ALLOC);
 	size := win32.GetEnvironmentVariableW (wstr_name, null, 0);

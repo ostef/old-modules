@@ -47,7 +47,7 @@ for_expansion :: (s : *Str, body : Code, flags : For_Flags) #expand
 	}
 }
 
-decode :: inline (s : string, allocator : Allocator) -> []u32 #must, valid : bool
+decode_string :: inline (s : string, allocator := context.allocator) -> []u32 #must, valid : bool
 #no_abc
 {
 	valid_input := true;
@@ -156,7 +156,7 @@ encoding_length :: inline (codepoint : u32) -> size : s64 #must
 	return 3;
 }
 
-encode :: inline (s : []u32, allocator : Allocator) -> string #must, valid : bool
+encode_string :: inline (s : []u32, allocator := context.allocator) -> string #must, valid : bool
 {
 	valid := true;
 	result : string;

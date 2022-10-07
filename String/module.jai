@@ -93,7 +93,7 @@ copy :: inline (dst : *string, src : string)
 	dst.count = n;
 }
 
-clone :: inline (s : string, allocator : Allocator) -> string #must
+clone :: inline (s : string, allocator := context.allocator) -> string #must
 {
 	data := mem.alloc (s.count, allocator);
 	mem.copy (data, s.data, s.count);
@@ -101,7 +101,7 @@ clone :: inline (s : string, allocator : Allocator) -> string #must
 	return make (data, s.count);
 }
 
-clone_to_cstring :: inline (s : string, allocator : Allocator) -> *u8 #must
+clone_to_cstring :: inline (s : string, allocator := context.allocator) -> *u8 #must
 {
 	result := cast (*u8) mem.alloc (s.count + 1, allocator);
 	mem.copy (result, s.data, s.count);
@@ -168,6 +168,11 @@ find_last :: inline (s : string, char : u8) -> s64 #must
 	return -1;
 }
 
+join :: inline (args : ..string) -> string #must
+{
+	return join (context.allocator, ..args);
+}
+
 join :: (allocator : Allocator, args : ..string) -> string #must
 #no_abc
 {
@@ -187,6 +192,11 @@ join :: (allocator : Allocator, args : ..string) -> string #must
 	}
 
 	return result;
+}
+
+join_sep :: inline (sep : string, args : ..string) -> string #must
+{
+	return join_sep (context.allocator, sep, ..args);
 }
 
 join_sep :: (allocator : Allocator, sep : string, args : ..string) -> string #must
@@ -219,6 +229,11 @@ join_sep :: (allocator : Allocator, sep : string, args : ..string) -> string #mu
 	return result;
 }
 
+format :: inline (s : string, args : ..Any) -> string #must
+{
+	fmt :: #import "Fmt";
+	return fmt.format (s, ..args);
+}
 
 format :: inline (allocator : Allocator, s : string, args : ..Any) -> string #must
 {

@@ -99,7 +99,7 @@ ITALIAN_ASCII_NAMES :: Calendar_Names.{
 // sc : time.second,
 // ms : time.millisecond,
 // tz : time.time_zone
-format :: (time : Calendar_Time, fmt_str : string, allocator : Allocator, names := ENGLISH_NAMES) -> string #must
+format :: (time : Calendar_Time, fmt_str : string, allocator := context.allocator, names := ENGLISH_NAMES) -> string #must
 {
 	fmt :: #import "Fmt";
 	str :: #import "String";

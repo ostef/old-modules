@@ -36,7 +36,7 @@ init :: () -> bool
 {
 	io := imgui.GetIO ();
 
-	data := mem.alloc (Renderer_Data, mem.HEAP_ALLOC);
+	data := mem.alloc (Renderer_Data);
 	io.BackendRendererName = "OpenGL";
 	io.BackendRendererUserData = cast (*void) data;
 	io.BackendFlags_ |= .RendererHasVtxOffset;
@@ -53,7 +53,7 @@ terminate :: ()
 	io.BackendRendererUserData = null;
 
 	data := get_renderer_user_data ();
-	mem.free (data, mem.HEAP_ALLOC);
+	mem.free (data);
 }
 
 new_frame :: ()

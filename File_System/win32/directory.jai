@@ -1,4 +1,4 @@
-get_working_directory :: inline (allocator : Allocator) -> string #must
+get_working_directory :: inline (allocator := context.allocator) -> string #must
 {
 	len := win32.GetCurrentDirectoryW (0, null);
 	buff := mem.alloc (2 * (len + 1), mem.TEMP_ALLOC);

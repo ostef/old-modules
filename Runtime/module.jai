@@ -23,7 +23,7 @@ get_cmd_line_args :: inline () -> []string #must
 {
 	if g_cmd_line_args.data
 		return g_cmd_line_args;
-	g_cmd_line_args = mem.alloc (string, __command_line_arguments.count, mem.HEAP_ALLOC);
+	g_cmd_line_args = mem.alloc (string, __command_line_arguments.count);
 	for arg, i : __command_line_arguments
 		g_cmd_line_args[i] = str.make (arg, str.length (arg));
 	return g_cmd_line_args;
@@ -36,10 +36,10 @@ offset_of :: ($T : Type, member : string) -> s64 #must #expand
 		strbuild :: #import "String/Builder";
 		
 		code : strbuild.Builder;
-		strbuild.init (*code, mem.HEAP_ALLOC);
+		strbuild.init (*code);
 		strbuild.append_line (*code, "base : T = ---;");
 		strbuild.append_line (*code, "return cast (*u8) *base.% - cast (*u8) *base;", member);
-		return strbuild.build (code, mem.HEAP_ALLOC);
+		return strbuild.build (code);
 	};
 }
 

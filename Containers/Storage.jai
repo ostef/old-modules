@@ -62,7 +62,7 @@ operator == :: inline (storage : Storage, a : storage.Slot_Info, b : storage.Slo
 	equals (storage, a, b);
 }
 
-init :: inline (storage : *Storage, allocator : Allocator)
+init :: inline (storage : *Storage, allocator := context.allocator)
 {
 	storage.count = 0;
 	storage.free_pages = null;
@@ -109,7 +109,7 @@ find_free_slot :: (using storage : *Storage, $initialize := true) -> *storage.T 
 		#if LOG_PAGE_ALLOCATIONS
 			log.message ("Allocating new page for %.", type_of (<<storage));
 		is_new_page = true;
-		page = list.push_front (*free_pages, allocator);
+		page = list.push_front (*free_pages, mem.alloc (Page));
 		array.push (*all_pages, page);
 		page.index = cast (s32) (all_pages.count - 1);
 		clear_page (storage, page);

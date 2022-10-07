@@ -4,15 +4,7 @@ mem :: #import "Memory";
 
 #scope_export
 
-push :: inline (list : **$T, allocator : Allocator, $initialize := true) -> *T
-#modify { return is_list (T); }
-{
-	node := mem.alloc (T, allocator, initialize);
-	push (list, node);
-	return node;
-}
-
-push :: inline (list : **$T, node : *T)
+push :: inline (list : **$T, node : *T) -> *T
 #modify { return is_list (T); }
 {
 	should_replace := !(<<list) || !(<<list).prev;
@@ -21,6 +13,8 @@ push :: inline (list : **$T, node : *T)
 	if (<<list)
 		insert_before (<<list, node);
 	if should_replace then <<list = node;
+
+	return node;
 }
 
 pop :: inline (list : **$T, node : *T)
@@ -38,25 +32,11 @@ pop :: inline (list : **$T, node : *T)
 
 push_front :: push;
 
-pop_front :: inline (list : **$T, allocator : Allocator)
-#modify { return is_list (T); }
-{
-	mem.free (pop_front (list), allocator);
-}
-
 pop_front :: inline (list : **$T) -> *T #must
 #modify { return is_list (T); }
 {
 	node := <<list;
 	pop (list, node);
-	return node;
-}
-
-insert_before :: inline (before : *$T, allocator : Allocator, $initialize := true) -> *T #must
-#modify { return is_list (T); }
-{
-	node := mem.alloc (T, allocator, initialize);
-	insert_before (before, node);
 	return node;
 }
 
@@ -68,14 +48,6 @@ insert_before :: inline (before : *$T, node : *T)
 	if node.prev
 		node.prev.next = node;
 	node.next.prev = node;
-}
-
-insert_after :: inline (after : *$T, allocator : Allocator, $initialize := true) -> *T #must
-#modify { return is_list (T); }
-{
-	node := mem.alloc (T, allocator, initialize);
-	insert_after (after, node);
-	return node;
 }
 
 insert_after :: inline (after : *$T, node : *T)

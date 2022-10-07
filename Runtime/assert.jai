@@ -42,8 +42,8 @@ always_panic :: inline (fmt_str := "", args : ..Any, location := #caller_locatio
 	if !context.panicking
 	{
 		context.panicking = true;
-		msg := fmt.format (mem.HEAP_ALLOC, fmt_str, ..args);
-		defer no_inline mem.free (msg, mem.HEAP_ALLOC);
+		msg := fmt.format (fmt_str, ..args);
+		defer no_inline mem.free (msg);
 		context.assertion_failed (location, msg);
 		context.panicking = false;
 	}
@@ -54,8 +54,8 @@ always_assert :: inline (assertion : bool, fmt_str := "", args : ..Any, location
 	if !assertion && !context.handling_assertion_failure
 	{
 		context.handling_assertion_failure = true;
-		msg := fmt.format (mem.HEAP_ALLOC, fmt_str, ..args);
-		defer no_inline mem.free (msg, mem.HEAP_ALLOC);
+		msg := fmt.format (fmt_str, ..args);
+		defer no_inline mem.free (msg);
 		context.assertion_failed (location, msg);
 		context.handling_assertion_failure = false;
 	}

@@ -139,7 +139,7 @@ win32_vk_to_key_code :: inline (vk : s32) -> Key_Code #must
 	WIN32_VK_TO_KEY_CODE :: #insert -> string
 	{
 		code : strbuild.Builder;
-		strbuild.init (*code, mem.HEAP_ALLOC);
+		strbuild.init (*code);
 		strbuild.append_line (*code, "Key_Code.[");
 		for i : 0..256
 		{
@@ -156,7 +156,7 @@ win32_vk_to_key_code :: inline (vk : s32) -> Key_Code #must
 		}
 		strbuild.append_line (*code, "];");
 
-		return strbuild.build (code, mem.HEAP_ALLOC);
+		return strbuild.build (code);
 	};
 
 	return WIN32_VK_TO_KEY_CODE[vk];
@@ -168,7 +168,7 @@ win32_key_code_to_vk :: inline (key_code : Key_Code) -> s32 #must
 	WIN32_KEY_CODE_TO_VK :: #insert -> string
 	{
 		code : strbuild.Builder;
-		strbuild.init (*code, mem.HEAP_ALLOC);
+		strbuild.init (*code);
 		strbuild.append_line (*code, "s32.[");
 		for i : 0..256
 		{
@@ -185,7 +185,7 @@ win32_key_code_to_vk :: inline (key_code : Key_Code) -> s32 #must
 		}
 		strbuild.append_line (*code, "];");
 
-		return strbuild.build (code, mem.HEAP_ALLOC);
+		return strbuild.build (code);
 	};
 
 	return WIN32_KEY_CODE_TO_VK[cast (s64) key_code];

@@ -26,7 +26,7 @@ load :: inline ($log_errors := false) -> bool
 
 			info := type_info (T);
 			code : strbuild.Builder;
-			strbuild.init (*code, mem.HEAP_ALLOC);
+			strbuild.init (*code);
 			strbuild.append_line (*code, "// load_functions for T = %", T);
 			strbuild.append_line (*code, "member_ptr : **void;");
 			for * info.members
@@ -51,7 +51,7 @@ load :: inline ($log_errors := false) -> bool
 				}
 			}
 
-			return strbuild.build (*code, mem.HEAP_ALLOC);
+			return strbuild.build (*code);
 		};
 	}
 

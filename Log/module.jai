@@ -21,8 +21,8 @@ message :: inline (
 {
 	if !context.logger
 		return;
-	s := fmt.format (mem.HEAP_ALLOC, fmt_str, ..args);
-	defer mem.free (s, mem.HEAP_ALLOC);
+	s := fmt.format (fmt_str, ..args);
+	defer mem.free (s);
 	info : Log_Info;
 	info.location = location;
 	info.common_flags = flags;

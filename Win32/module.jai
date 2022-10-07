@@ -47,7 +47,7 @@ get_error_string :: inline (error_code : DWORD) -> string #must
 	return result;
 }
 
-wide_to_utf8 :: (data : *u16, allocator : Allocator) -> string #must, success : bool
+wide_to_utf8 :: (data : *u16, allocator := context.allocator) -> string #must, success : bool
 {
 	result_length := WideCharToMultiByte (CP_UTF8, 0, data, -1, null, 0, null, null);
 	if result_length <= 0
@@ -66,7 +66,7 @@ wide_to_utf8 :: (data : *u16, allocator : Allocator) -> string #must, success : 
 	return "", false;
 }
 
-utf8_to_wide :: (utf8_str : string, allocator : Allocator) -> wide_str : *u16 #must, length : s32
+utf8_to_wide :: (utf8_str : string, allocator := context.allocator) -> wide_str : *u16 #must, length : s32
 {
 	if !utf8_str
 	{

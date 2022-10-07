@@ -77,7 +77,7 @@ create_context :: inline (win : *window.Handle, gl_ctx : *gl.GL_Context) -> *Dra
 {
 	if !win || !gl_ctx
 		return null;
-	imdraw := mem.alloc (Draw_Context, mem.HEAP_ALLOC);
+	imdraw := mem.alloc (Draw_Context);
 	if !imdraw
 		return null;
 	imdraw.win = win;
@@ -100,7 +100,7 @@ destroy_context :: inline (imdraw : *Draw_Context)
 	assert (context.imdraw_context != imdraw, "Cannot destroy ImDraw context because it is in use; end was not called.");
 	render.destroy_vertex_buffer (*imdraw.vertex_buffer);
 	render.destroy_shader (*imdraw.default_shader);
-	mem.free (imdraw, mem.HEAP_ALLOC);
+	mem.free (imdraw);
 }
 
 begin :: inline (imdraw : *Draw_Context)

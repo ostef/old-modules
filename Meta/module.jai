@@ -56,7 +56,7 @@ handle_compiler_message :: (msg : *jaic.Message)
 		if phase.phase == .TYPECHECKED_ALL_WE_CAN
 		{
 			for g_procedures_to_run
-				jaic.add_build_string (fmt.format (mem.HEAP_ALLOC, "#run % ();\t// Run after typechecking", it.name), msg.workspace);
+				jaic.add_build_string (fmt.format ("#run % ();\t// Run after typechecking", it.name), msg.workspace);
 			array.clear (*g_procedures_to_run);
 		}
 	}
@@ -64,8 +64,8 @@ handle_compiler_message :: (msg : *jaic.Message)
 
 parse_arguments :: (options : *jaic.Build_Options)
 {
-	map.init (*g_module_search_map, 10, mem.HEAP_ALLOC);
-	array.init (*g_module_search_dirs, 10, mem.HEAP_ALLOC);
+	map.init (*g_module_search_map, 10);
+	array.init (*g_module_search_dirs, 10);
 	user, system := jaic.compiler_get_command_line_arguments ();
 	i := 0;
 	while i < system.count
@@ -85,7 +85,7 @@ parse_arguments :: (options : *jaic.Build_Options)
 				dir = system[i];
 			if dir
 			{
-				fullpath := fs.get_full_filename (dir, mem.HEAP_ALLOC);
+				fullpath := fs.get_full_filename (dir);
 				if array.find_first (g_module_search_dirs, fullpath) == -1
 					array.push (*g_module_search_dirs, fullpath);
 			}
@@ -108,7 +108,7 @@ parse_arguments :: (options : *jaic.Build_Options)
 				dir = user[i];
 			if mount && dir
 			{
-				fullpath := fs.get_full_filename (dir, mem.HEAP_ALLOC);
+				fullpath := fs.get_full_filename (dir);
 				map.insert (*g_module_search_map, mount, fullpath);
 				if array.find_first (g_module_search_dirs, fullpath) == -1
 					array.push (*g_module_search_dirs, fullpath);
@@ -121,7 +121,7 @@ parse_arguments :: (options : *jaic.Build_Options)
 				dir = user[i];
 			if dir
 			{
-				fullpath := fs.get_full_filename (dir, mem.HEAP_ALLOC);
+				fullpath := fs.get_full_filename (dir);
 				if array.find_first (g_module_search_dirs, fullpath) == -1
 					array.push (*g_module_search_dirs, fullpath);
 			}
@@ -144,7 +144,7 @@ build :: ()
 	for files
 		jaic.add_build_file (it, w);
 	for run_strings
-		jaic.add_build_string (fmt.format (mem.HEAP_ALLOC, "#run %;\n", it), w);
+		jaic.add_build_string (fmt.format ("#run %;\n", it), w);
 	while true
 	{
 		msg := jaic.compiler_wait_for_message ();

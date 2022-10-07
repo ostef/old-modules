@@ -47,7 +47,7 @@ win32_init_window_context :: inline () -> bool
 		style         = win32.CS_DBLCLKS | win32.CS_OWNDC;
 		lpfnWndProc   = win32_wnd_proc;
 		hInstance     = win32.GetModuleHandleW (null);
-		lpszClassName = win32.utf8_to_wide ("WindowClass", mem.HEAP_ALLOC);
+		lpszClassName = win32.utf8_to_wide ("WindowClass");
 		if !win32.RegisterClassExW (*g_wndclass)
 		{
 			show_error_box ("RegisterClassExW for WindowClass failed: %", win32.get_last_error_string ());
@@ -60,7 +60,7 @@ win32_init_window_context :: inline () -> bool
 		style         = win32.CS_DBLCLKS | win32.CS_OWNDC;
 		lpfnWndProc   = win32_custom_caption_wnd_proc;
 		hInstance     = win32.GetModuleHandleW (null);
-		lpszClassName = win32.utf8_to_wide ("CustomCaptionWindowClass", mem.HEAP_ALLOC);
+		lpszClassName = win32.utf8_to_wide ("CustomCaptionWindowClass");
 		if !win32.RegisterClassExW (*g_custom_caption_wndclass)
 		{
 			show_error_box ("RegisterClassExW for CustomCaptionWindowClass failed: %", win32.get_last_error_string ());
@@ -161,7 +161,7 @@ create :: inline (
 		win32.GetModuleHandleW (null),
 		null
 	);
-	data := mem.alloc (Win32_Window_Data, mem.HEAP_ALLOC);
+	data := mem.alloc (Win32_Window_Data);
 	data.message_queue.allocator = mem.HEAP_ALLOC;
 	win32.SetWindowLongPtrW (hwnd, win32.GWLP_USERDATA, cast (*win32.LONG) data);
 	data.flags = window_flags;
@@ -431,7 +431,7 @@ win32_wnd_proc :: (window : win32.HWND, msg : u32, wparam : win32.WPARAM, lparam
 		{
 		case win32.WM_DESTROY;
 			array.reset (*message_queue);
-			mem.free (data, mem.HEAP_ALLOC);
+			mem.free (data);
 			data = null;
 
 		case win32.WM_MOVE;

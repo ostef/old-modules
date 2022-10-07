@@ -121,7 +121,7 @@ file_search :: inline (dirname : string, flags := File_Search.Flags.ALL, filenam
 {
 	result : File_Search;
 	// Allocate for about filename_capacity files of about 100 characters in name and full_name combined
-	arena.init (*result.filename_arena, filename_capacity * 100, mem.HEAP_ALLOC, mem.HEAP_ALLOC);
+	arena.init (*result.filename_arena, filename_capacity * 100, overflow_allocator = context.allocator);
 	result.flags = flags;
 	result.dirname = str.clone (dirname, arena.to_allocator (*result.filename_arena));
 	path.standardize (*result.dirname);
@@ -153,7 +153,7 @@ filter_hidden_files :: (info : File_Info) -> bool #must
 // the memory allocated for all the files, since first is the same as all_files.data.
 // Note however that the memory used for the filenames is allocated using the
 // File_Search's filename_arena.
-list_files :: (search : *File_Search, allocator : Allocator, filter := filter_hidden_files) -> first : *File_Node #must, all_files : []File_Node
+list_files :: (search : *File_Search, allocator := context.allocator, filter := filter_hidden_files) -> first : *File_Node #must, all_files : []File_Node
 {
 	if flagged (search.flags, .RECURSIVE)
 		search.flags |= .VISIT_DIRECTORIES;
@@ -205,7 +205,7 @@ list_files :: (search : *File_Search, allocator : Allocator, filter := filter_hi
 	return *all_files[0], all_files;
 }
 
-list_files :: inline (dirname : string, allocator : Allocator, flags := File_Search.Flags.ALL, filter := filter_hidden_files) -> first : *File_Node #must, search : File_Search #must, all_files : []File_Node
+list_files :: inline (dirname : string, allocator := context.allocator, flags := File_Search.Flags.ALL, filter := filter_hidden_files) -> first : *File_Node #must, search : File_Search #must, all_files : []File_Node
 {
 	search := file_search (dirname, allocator, flags = flags);
 	root, all_files := list_files (*search, allocator, filter);
@@ -214,7 +214,7 @@ list_files :: inline (dirname : string, allocator : Allocator, flags := File_Sea
 
 Seek_From :: io.Seek_From;
 
-read_entire_file :: (filename : string, allocator : Allocator) -> string #must, Error
+read_entire_file :: (filename : string, allocator := context.allocator) -> string #must, Error
 {
 	file, err := open (filename, File_Open_Flags.ACCESS_READ | .OPEN_IF_EXISTS);
 	if !file
@@ -226,7 +226,7 @@ read_entire_file :: (filename : string, allocator : Allocator) -> string #must, 
 	return s, err;
 }
 
-read_entire_file :: (file : File, allocator : Allocator) -> string #must, Error
+read_entire_file :: (file : File, allocator := context.allocator) -> string #must, Error
 {
 	size := get_file_size (file);
 	data := cast (*u8) mem.alloc (size, allocator);
@@ -303,7 +303,7 @@ copy_directory :: (source : string, dest : string)
 	for info : file_search (source)
 	{
 		relative_path := str.advance (info.full_name, source.count);
-		dest_path := path.join (mem.HEAP_ALLOC, dest, relative_path);
+		dest_path := path.join (dest, relative_path);
 		if flagged (info.attributes, .DIRECTORY)
 			create_directory_tree (dest_path);
 		else

@@ -32,7 +32,7 @@ init :: inline (arr : []$T)
 		set (arr.data, 0, size_of (T) * arr.count);
 }
 
-clone :: inline (ptr : *void, size : s64, allocator : Allocator) -> *void #must
+clone :: inline (ptr : *void, size : s64, allocator := context.allocator) -> *void #must
 {
 	result := alloc (size, allocator);
 	return copy (result, ptr, size);

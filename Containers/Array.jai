@@ -5,21 +5,21 @@ mem :: #import "Memory";
 
 #scope_export
 
-make :: inline ($T : Type, capacity : s64, allocator : Allocator) -> [..]T #must
+make :: inline ($T : Type, capacity : s64, allocator := context.allocator) -> [..]T #must
 {
 	result : [..]T;
 	init (*result, capacity, allocator);
 	return result;
 }
 
-make :: inline ($T : Type, allocator : Allocator, elems : ..Any) -> [..]T #must
+make :: inline ($T : Type, allocator := context.allocator, elems : ..Any) -> [..]T #must
 {
 	result : [..]T;
 	init (*result, allocator, ..elems);
 	return result;
 }
 
-init :: inline (arr : *[..]$T, capacity : s64, allocator : Allocator)
+init :: inline (arr : *[..]$T, capacity : s64, allocator := context.allocator)
 {
 	assert (capacity >= 0);
 	arr.data = mem.alloc (size_of (T) * capacity, allocator);
@@ -28,7 +28,7 @@ init :: inline (arr : *[..]$T, capacity : s64, allocator : Allocator)
 	arr.allocator = allocator;
 }
 
-init :: inline (arr : *[..]$T, allocator : Allocator, elems : ..T)
+init :: inline (arr : *[..]$T, allocator := context.allocator, elems : ..T)
 {
 	mem.init (arr, elems.count, allocator);
 	for elems

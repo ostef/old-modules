@@ -62,8 +62,8 @@ run_command :: (
 	err_str := "";
 	if output == .CAPTURE
 	{
-		out_str = fs.read_entire_file (output_pipe.read_end, mem.HEAP_ALLOC);
-		err_str = fs.read_entire_file (error_pipe.read_end, mem.HEAP_ALLOC);
+		out_str = fs.read_entire_file (output_pipe.read_end);
+		err_str = fs.read_entire_file (error_pipe.read_end);
 	}
 
 	return exit_code, out_str, err_str, err;

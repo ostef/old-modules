@@ -6,7 +6,7 @@ trap_allocator_proc :: (mode : Allocator_Mode, size : s64, old_size : s64, old_p
 	return null;
 }
 
-alloc :: inline (size : s64, allocator : Allocator) -> *void #must
+alloc :: inline (size : s64, allocator := context.allocator) -> *void #must
 {
 	assert (allocator.proc != null, "Allocator is null.");
 	if size <= 0
@@ -14,7 +14,7 @@ alloc :: inline (size : s64, allocator : Allocator) -> *void #must
 	return allocator.proc (.ALLOCATE, size, 0, null, allocator.data);
 }
 
-alloc :: inline ($T : Type, count : s64, allocator : Allocator, $initialize := false) -> []T #must
+alloc :: inline ($T : Type, count : s64, allocator := context.allocator, $initialize := false) -> []T #must
 {
 	assert (allocator.proc != null, "Allocator is null.");
 	result : []T = ---;
@@ -27,7 +27,7 @@ alloc :: inline ($T : Type, count : s64, allocator : Allocator, $initialize := f
 	return result;
 }
 
-alloc :: inline ($T : Type, allocator : Allocator, $initialize := true) -> *T #must
+alloc :: inline ($T : Type, allocator := context.allocator, $initialize := true) -> *T #must
 {
 	assert (allocator.proc != null, "Allocator is null.");
 	result := cast (*T) alloc (size_of (T), allocator);
@@ -39,7 +39,7 @@ alloc :: inline ($T : Type, allocator : Allocator, $initialize := true) -> *T #m
 	return result;
 }
 
-realloc :: inline (ptr : *void, old_size : s64, new_size : s64, allocator : Allocator) -> *void #must
+realloc :: inline (ptr : *void, old_size : s64, new_size : s64, allocator := context.allocator) -> *void #must
 {
 	assert (allocator.proc != null, "Allocator is null.");
 	if new_size == old_size
@@ -51,7 +51,7 @@ realloc :: inline (ptr : *void, old_size : s64, new_size : s64, allocator : Allo
 	return allocator.proc (.RESIZE, new_size, old_size, ptr, allocator.data);
 }
 
-free :: inline (ptr : *void, allocator : Allocator) -> *void
+free :: inline (ptr : *void, allocator := context.allocator) -> *void
 {
 	assert (allocator.proc != null, "Allocator is null.");
 	if ptr
@@ -59,14 +59,14 @@ free :: inline (ptr : *void, allocator : Allocator) -> *void
 	return null;
 }
 
-free :: inline (str : string, allocator : Allocator) -> string
+free :: inline (str : string, allocator := context.allocator) -> string
 {
 	assert (allocator.proc != null, "Allocator is null.");
 	free (str.data, allocator);
 	return "";
 }
 
-free :: inline (array : []$T, allocator : Allocator) -> []T
+free :: inline (array : []$T, allocator := context.allocator) -> []T
 {
 	assert (allocator.proc != null, "Allocator is null.");
 	free (array.data, allocator);

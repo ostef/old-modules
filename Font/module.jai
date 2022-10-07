@@ -196,7 +196,7 @@ load_from_file :: inline (font : *Font, filename : string) -> bool
 		return log.error ("Could not load FT_Face from file '%'. Error was %.", filename, ft_err);
 	font.filename = filename;
 	font.ft_face = ft_face;
-	map.init (*font.pages, 10, mem.HEAP_ALLOC);
+	map.init (*font.pages, 10);
 	suffix := path.remove_extension (font.filename);
 	dash_index := str.find_last (suffix, #char "-");
 	if dash_index != -1
@@ -208,7 +208,7 @@ load_from_file :: inline (font : *Font, filename : string) -> bool
 	return true;
 }
 
-load_family :: inline (search_dir : string, name : string, allocator : Allocator, recursive := true) -> *Font #must
+load_family :: inline (search_dir : string, name : string, allocator := context.allocator, recursive := true) -> *Font #must
 {
 	fs :: #import "File_System";
 	for_expansion :: fs.for_expansion;
@@ -245,7 +245,7 @@ load_family :: inline (search_dir : string, name : string, allocator : Allocator
 	return result;
 }
 
-destroy_family :: inline (family : **Font, allocator : Allocator)
+destroy_family :: inline (family : **Font, allocator := context.allocator)
 {
 	for (<<family)
 	{
@@ -279,8 +279,8 @@ load_page :: inline (using font : *Font, height : u32) -> *Page
 	if was_present then return page;
 	page.font   = font;
 	page.height = height;
-	array.init (*page.atlases, 3, mem.HEAP_ALLOC);
-	map.init (*page.glyphs, 512, mem.HEAP_ALLOC);
+	array.init (*page.atlases, 3);
+	map.init (*page.glyphs, 512);
 	space_glyph := load_glyph (page, #char " ");
 	page.ascent        = xx (ft_face.size.metrics.ascender >> 6);
 	page.descent       = xx (ft_face.size.metrics.descender >> 6);

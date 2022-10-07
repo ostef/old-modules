@@ -74,7 +74,7 @@ NEVER_OCCUPIED_HASH :: 0;
 REMOVED_HASH        :: 1;
 FIRST_OCCUPIED_HASH :: 2;
 
-init :: inline (map : *Hash_Map, capacity : s64, allocator : Allocator)
+init :: inline (map : *Hash_Map, capacity : s64, allocator := context.allocator)
 {
 	capacity = math.max (capacity, MIN_CAPACITY);
 	capacity = math.next_power_of_two (capacity);

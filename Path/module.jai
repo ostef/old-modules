@@ -34,6 +34,11 @@ standardize :: inline (filename : *string)
 	}
 }
 
+join :: (parts : ..string) -> string #must
+{
+	return join (context.allocator, ..parts);
+}
+
 join :: (allocator : Allocator, parts : ..string) -> string #must
 {
 	total_size := 0;

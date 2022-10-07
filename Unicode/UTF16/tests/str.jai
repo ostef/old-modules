@@ -4,7 +4,7 @@ for_expansion :: utf16.for_expansion;
 main :: ()
 {
 	s : utf16.Str;
-	codepoints := utf16.decode (s, context.allocator);
+	codepoints := utf16.decode_string (s, context.allocator);
 	for s
 	{
 	}

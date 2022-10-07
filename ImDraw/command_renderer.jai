@@ -23,7 +23,7 @@ Command_Renderer :: struct
 	current_command : *Command;
 }
 
-init :: inline (using renderer : *Command_Renderer, preallocated_vertices : s64, preallocated_commands : s64, allocator : Allocator)
+init :: inline (using renderer : *Command_Renderer, preallocated_vertices : s64, preallocated_commands : s64, allocator := context.allocator)
 {
 	array.init (*vertices, preallocated_vertices, allocator);
 	array.init (*commands, preallocated_commands, allocator);
