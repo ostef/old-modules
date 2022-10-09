@@ -110,7 +110,7 @@ file_search :: inline (dirname : string, allocator : Allocator, flags := File_Se
 	result.flags = flags;
 	// Allocate for about filename_capacity files of about 100 characters in name and full_name combined
 	arena.init (*result.filename_arena, filename_capacity * 100, allocator, allocator);
-	result.dirname =  str.clone (dirname, arena.to_allocator (*result.filename_arena));
+	result.dirname = str.clone (dirname, arena.to_allocator (*result.filename_arena));
 	path.standardize (*result.dirname);
 
 	return result;
@@ -157,37 +157,45 @@ list_files :: (search : *File_Search, allocator := context.allocator, filter := 
 {
 	if flagged (search.flags, .RECURSIVE)
 		search.flags |= .VISIT_DIRECTORIES;
+	
 	parent_index  := -1;
 	sibling_index := -1;
+	
 	all_files : [..]File_Node;
 	all_files.allocator = allocator;
 	for :direct_recurse info : search
 	{
 		if filter && !filter (info)
 			continue;
+	
 		// Find the parent directory
 		while parent_index != -1 && !str.starts_with (info.full_name, all_files[parent_index].full_name)
 		{
 			sibling_index = parent_index;
+	
 			if all_files[parent_index].parent
 				parent_index = array.get_index (all_files, all_files[parent_index].parent);
 			else
 				parent_index = -1;
 		}
+	
 		current_index := all_files.count;
 		current := array.push (*all_files);
 		current.info = info;
+	
 		if parent_index != -1
 		{
 			current.parent = *all_files[parent_index];
 			if !current.parent.first_child
 				current.parent.first_child = current;
 		}
+	
 		if sibling_index != -1
 		{
 			current.prev_sibling = *all_files[sibling_index];
 			all_files[sibling_index].next_sibling = current;
 		}
+
 		if flagged (info.attributes, .DIRECTORY)
 		{
 			parent_index = current_index;
@@ -200,8 +208,10 @@ list_files :: (search : *File_Search, allocator := context.allocator, filter := 
 	if all_files.count == 0
 	{
 		array.reset (*all_files);
+		
 		return null, .[];
 	}
+
 	return *all_files[0], all_files;
 }
 
@@ -209,6 +219,7 @@ list_files :: inline (dirname : string, allocator := context.allocator, flags :=
 {
 	search := file_search (dirname, allocator, flags = flags);
 	root, all_files := list_files (*search, allocator, filter);
+
 	return root, search, all_files;
 }
 
@@ -220,6 +231,7 @@ read_entire_file :: (filename : string, allocator := context.allocator) -> strin
 	if !file
 		return "", err;
 	defer close (file);
+
 	s : string;
 	s, err = read_entire_file (file, allocator);
 
@@ -232,11 +244,13 @@ read_entire_file :: (file : File, allocator := context.allocator) -> string #mus
 	data := cast (*u8) mem.alloc (size, allocator);
 	if !data
 		return "", .ALLOCATION_FAILURE;
+
 	err : Error;
 	size, err = read (file, data, size);
 	if err != .OK
 	{
 		mem.free (data, allocator);
+
 		return "", err;
 	}
 
@@ -246,12 +260,14 @@ read_entire_file :: (file : File, allocator := context.allocator) -> string #mus
 write_to_file :: inline (filename : string, data : []u8) -> written : s64, Error
 {
 	written, err := write_to_file (filename, data.data, data.count);
+
 	return written, err;
 }
 
 write_to_file :: inline (filename : string, str : string) -> written : s64, Error
 {
 	written, err := write_to_file (filename, str.data, str.count);
+
 	return written, err;
 }
 
@@ -261,6 +277,7 @@ write_to_file :: inline (filename : string, data : *void, size : s64) -> written
 	if !file
 		return 0, err;
 	defer close (file);
+
 	written : s64;
 	written, err = write (file, data, size);
 
@@ -272,8 +289,10 @@ create_directory_tree :: (tree : string) -> Error
 	dirname := tree;
 	while dirname.count != 0 && dirname[dirname.count - 1] == #char "/"
 		dirname.count -= 1;
+
 	if dirname == ""
 		return .OK;
+
 	parent := path.get_parent_dir (dirname);
 	create_directory_tree (parent);
 
@@ -294,6 +313,7 @@ purge_directory :: (dir : string)
 delete_directory :: inline (dir : string) -> Error
 {
 	purge_directory (dir);
+
 	return delete_empty_directory (dir);
 }
 
@@ -304,6 +324,7 @@ copy_directory :: (source : string, dest : string)
 	{
 		relative_path := str.advance (info.full_name, source.count);
 		dest_path := path.join (dest, relative_path);
+
 		if flagged (info.attributes, .DIRECTORY)
 			create_directory_tree (dest_path);
 		else

@@ -26,6 +26,7 @@ make_s128 :: inline (x : s64) -> s128 #must
 		result.high = 0;
 		result.low  = cast (u64) x;
 	}
+
 	return result;
 }
 
@@ -35,6 +36,7 @@ make_s128 :: inline (high : s64, low : u64) -> s128 #must
 	result : s128 = ---;
 	result.high = high;
 	result.low  = low;
+
 	return result;
 }
 
@@ -46,6 +48,7 @@ to_u128 :: inline (a : s128, $no_check := false) -> u128 #must
 		result.high = cast, no_check (u64) a.high;
 	else
 		result.high = cast (u64) a.high;
+
 	return result;
 }
 
@@ -55,6 +58,7 @@ to_s64 :: inline (a : s128, $no_check := false) -> s64 #must
 	#if no_check
 		if (a.low & 0x8000_0000_0000_0000) != 0 || (a.high & 0x0fff_ffff_ffff_ffff) != 0
 			contextless_panic ("Cast from s128 to s64 bounds check failed.");
+
 	return cast, no_check (s64) (a.low | cast, no_check (u64) (a.high & 0x8000_0000_0000_0000));
 }
 
@@ -77,6 +81,7 @@ add :: inline (a : s128, b : s128) -> s128 #must
 		add	[p + 8], bl;
 		adc	[p + 0], bh;
 	}
+
 	return result;
 }
 
@@ -99,6 +104,7 @@ sub :: inline (a : s128, b : s128) -> s128 #must
 		sub	[p + 8], bl;
 		sbb	[p + 0], bh;
 	}
+
 	return result;
 }
 
@@ -114,6 +120,7 @@ neg :: inline (a : s128) -> s128 #must
 		add	[p + 8], 1;
 		adc	[p + 0], 0;
 	}
+
 	return result;
 }
 
@@ -139,11 +146,13 @@ mul :: inline (a : s128, b : s128) -> s128 #must
 	mut_a := a;
 	mut_b := b;
 	negate := false;
+
 	if mut_a.high < 0
 	{
 		mut_a = -mut_a;
 		negate = true;
 	}
+
 	if mut_b.high < 0
 	{
 		mut_b = -mut_b;
@@ -156,6 +165,7 @@ mul :: inline (a : s128, b : s128) -> s128 #must
 	tmp_b := mut_b;
 	pa := *tmp_a;
 	pb := *tmp_b;
+
 	#asm
 	{
 		mul_low  : gpr === a;	// First and low destination operand of mul
@@ -181,8 +191,10 @@ mul :: inline (a : s128, b : s128) -> s128 #must
 		// Store the high part in the result
 		mov		[r + 0], high_sum;
 	}
+
 	if negate
 		return -result;
+
 	return result;
 }
 
@@ -191,11 +203,13 @@ mul :: inline (a : s128, b : s64) -> s128 #must
 {
 	mut_a := a;
 	negate := false;
+
 	if mut_a.high < 0
 	{
 		mut_a = -mut_a;
 		negate = true;
 	}
+
 	if b < 0
 	{
 		b = -b;
@@ -229,8 +243,10 @@ mul :: inline (a : s128, b : s64) -> s128 #must
 		// Store the high part in the result
 		mov		[r + 0], high_sum;
 	}
+
 	if negate
 		return -result;
+
 	return result;
 }
 
@@ -240,19 +256,24 @@ div :: inline (a : s128, b : s128) -> s128 #must
 	mut_a := a;
 	mut_b := b;
 	negate := false;
+
 	if mut_a.high < 0
 	{
 		mut_a = -mut_a;
 		negate = true;
 	}
+	
 	if mut_b.high < 0
 	{
 		mut_b = -mut_b;
 		negate = !negate;
 	}
+
 	result := to_s128 (mut_a.as_u128 / mut_b.as_u128);
+
 	if negate
 		return -result;
+
 	return result;
 }
 
@@ -274,6 +295,7 @@ lshift :: inline (a : s128, x : u8) -> s128 #must
 		shld	[p + 0], low, x;
 		shl		[p + 8], x;
 	}
+
 	return result;
 }
 
@@ -290,6 +312,7 @@ rlshift :: inline (a : s128, x : u8) -> s128 #must
 		shrd	[p + 8], high, x;
 		shr		[p + 0], x;
 	}
+
 	return result;
 }
 
@@ -306,6 +329,7 @@ rshift :: inline (a : s128, x : u8) -> s128 #must
 		shrd	[p + 8], high, x;
 		sar		[p + 0], x;
 	}
+
 	return result;
 }
 
@@ -383,6 +407,7 @@ operator < :: inline (a : s128, b : s128) -> bool #must
 		sbb		ah, bh;
 		setl	result;
 	}
+	
 	return result;
 }
 

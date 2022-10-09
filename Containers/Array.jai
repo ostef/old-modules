@@ -9,6 +9,7 @@ make :: inline ($T : Type, capacity : s64, allocator := context.allocator) -> [.
 {
 	result : [..]T;
 	init (*result, capacity, allocator);
+
 	return result;
 }
 
@@ -16,23 +17,18 @@ make :: inline ($T : Type, allocator := context.allocator, elems : ..Any) -> [..
 {
 	result : [..]T;
 	init (*result, allocator, ..elems);
+
 	return result;
 }
 
 init :: inline (arr : *[..]$T, capacity : s64, allocator := context.allocator)
 {
 	assert (capacity >= 0);
+
 	arr.data = mem.alloc (size_of (T) * capacity, allocator);
 	arr.count = 0;
 	arr.allocated = capacity;
 	arr.allocator = allocator;
-}
-
-init :: inline (arr : *[..]$T, allocator := context.allocator, elems : ..T)
-{
-	mem.init (arr, elems.count, allocator);
-	for elems
-		push (*reuslt, it);
 }
 
 reset :: inline (arr : *[..]$T)
@@ -52,6 +48,7 @@ grow :: inline (arr : *[..]$T, additional_capacity : s64)
 {
 	if additional_capacity <= 0
 		return;
+
 	new_capacity := arr.allocated + additional_capacity;
 	new_data := mem.realloc (arr.data, size_of (T) * arr.allocated, size_of (T) * new_capacity, arr.allocator);
 	arr.data = new_data;
@@ -62,9 +59,12 @@ push :: inline (arr : *[..]$T, $initialize := true) -> *T #must
 {
 	if arr.count >= arr.allocated
 		grow (arr, arr.allocated + 8);
+
 	ptr := *arr.data[arr.count];
+
 	#if initialize
 		mem.init (ptr);
+
 	arr.count += 1;
 
 	return ptr;
@@ -74,12 +74,15 @@ push_multiple :: inline (arr : *[..]$T, count : s64, $initialize := true) -> *T 
 {
 	if arr.count + count >= arr.allocated
 		grow (arr, arr.allocated + 8 + count);
+
 	ptr := *arr.data[arr.count];
+
 	#if initialize
 	{
 		for i : 0..count - 1
 			mem.init (ptr + i);
 	}
+
 	arr.count += count;
 
 	return ptr;
@@ -110,9 +113,12 @@ pop :: inline (arr : *[..]$T) -> T
 insert_at :: inline (arr : *[..]$T, at : s64, $initialize := true) -> *T #must
 {
 	assert (at >= 0 && at <= arr.count, "Index % is out of range [0, %].", at, arr.count);
+
 	ptr := *arr.data[at];
+
 	if at < arr.count
 		push (arr, arr.data[at]);
+
 	#if initialize
 		mem.init (ptr);
 
@@ -140,12 +146,17 @@ remove_at :: inline (arr : *[..]$T, at : s64) -> T
 ordered_insert_at :: inline (arr : *[..]$T, at : s64, $initialize := true) -> *T #must
 {
 	assert (at >= 0 && at <= arr.count, "Index % is out of range [0, %].", at, arr.count);
+
 	if arr.count == arr.allocated
 		grow (arr, arr.allocated + 8);
+
 	arr.count += 1;
+
 	for < i : arr.count - 1..at + 1
 		arr.data[i] = arr.data[i - 1];
+
 	ptr := *arr.data[at];
+
 	#if initialize
 		mem.init (ptr);
 	

@@ -111,6 +111,7 @@ format :: (time : Calendar_Time, fmt_str : string, allocator := context.allocato
 	{
 		b : strbuild.Builder;
 		strbuild.init (*b, mem.TEMP_ALLOC);
+
 		i := 0;
 		while i < fmt_str.count
 		#no_abc
@@ -118,14 +119,17 @@ format :: (time : Calendar_Time, fmt_str : string, allocator := context.allocato
 			if fmt_str[i] == #char "{"
 			{
 				strbuild.append_byte (*b, fmt_str[i]);
+
 				i += 1;
 				s := str.advance (fmt_str, i);
+
 				for FMT_STRINGS
 				{
 					if str.starts_with (s, it) && (s.count == it.count || s[it.count] == #char ":" || s[it.count] == #char "}")
 					{
 						strbuild.append_s64 (*b, it_index);
 						i += it.count;
+
 						break;
 					}
 				}
@@ -136,6 +140,7 @@ format :: (time : Calendar_Time, fmt_str : string, allocator := context.allocato
 				i += 1;
 			}
 		}
+
 		new_fmt_str = strbuild.build (b, mem.TEMP_ALLOC);
 	}
 

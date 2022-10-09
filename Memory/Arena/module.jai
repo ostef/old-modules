@@ -36,6 +36,7 @@ init :: inline (arena : *Memory_Arena, size : s64, allocator := context.allocato
 	mem.init (arena);
 	arena.data = mem.alloc (size, allocator);
 	if !arena.data then return;
+
 	arena.size = size;
 	arena.overflow_allocator = overflow_allocator;
 	arena.original_data = arena.data;
@@ -48,6 +49,7 @@ reset :: inline (arena : *Memory_Arena, allocator := context.allocator)
 	free_pages (arena);
 	if allocator.proc != null
 		mem.free (arena.data, allocator);
+
 	arena.data = null;
 	arena.original_data = null;;
 	arena.size = 0;
@@ -69,14 +71,17 @@ allocator_proc :: (mode : Allocator_Mode, size : s64, old_size : s64, old_ptr : 
 	case .RESIZE; #through;
 	case .ALLOCATE;
 		aligned_size := (size + ALIGNMENT - 1) & ~(ALIGNMENT - 1);
+		
 		if arena.occupied + aligned_size > arena.size
 		{
 			if !add_page (arena, aligned_size)
 			{
 				log.error ("Could not allocate new page for arena %.", arena);
+
 				return null;
 			}
 		}
+
 		result := arena.data + arena.occupied;
 		arena.occupied += xx aligned_size;
 		arena.high_water_mark = math.max (arena.high_water_mark, arena.occupied);
@@ -120,6 +125,7 @@ set_state :: inline (state : State, arena : *Memory_Arena)
 		arena.data = arena.original_data;
 		arena.size = arena.original_size;
 	}
+	
 	arena.occupied = state.occupied;
 }
 
@@ -132,6 +138,7 @@ add_page :: inline (arena : *Memory_Arena, min_size : s64) -> bool
 	data_size := arena.original_size - ALIGNED_OVERFLOW_PAGE_ALLOCATION;
 	data_size = math.max (data_size, min_size);
 	total_size := data_size + ALIGNED_OVERFLOW_PAGE_ALLOCATION;
+
 	#if LOG_PAGE_ALLOCATIONS
 	{
 		if arena == context.temporary_storage
@@ -139,6 +146,7 @@ add_page :: inline (arena : *Memory_Arena, min_size : s64) -> bool
 		else
 			log.message ("Allocating new page of % bytes for arena %.", data_size, arena);
 	}
+
 	assert (arena.overflow_allocator.proc != null, "Overflow allocator was null.");
 	ptr := mem.alloc (total_size, arena.overflow_allocator);
 	if !ptr
@@ -166,6 +174,7 @@ free_pages :: inline (arena : *Memory_Arena, page : *Memory_Arena.Overflow_Page 
 		mem.free (current, current.allocator);
 		current = next;
 	}
+
 	arena.overflow_pages = current;
 	if arena.overflow_pages
 		arena.data = (cast (*void) arena.overflow_pages) + ALIGNED_OVERFLOW_PAGE_ALLOCATION;

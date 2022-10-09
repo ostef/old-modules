@@ -35,6 +35,7 @@ to_gl :: inline (usage : Buffer_Usage) -> gl.GLenum #must
 	case .STREAM_COPY;
 		gl_usage = gl.STREAM_COPY;
 	}
+	
 	return gl_usage;
 }
 
@@ -105,6 +106,7 @@ get_layout_size :: inline (layout : Vertex_Buffer.Layout) -> u32 #must
 	size : u32;
 	for layout
 		size += get_elem_size (it);
+
 	return size;
 }
 
@@ -129,6 +131,7 @@ to_gl :: inline (elem_kind : Vertex_Buffer.Elem.Kind) -> gl.GLenum #must
 	case .F64;
 		return gl.DOUBLE;
 	}
+	
 	return 0;
 }
 
@@ -137,6 +140,7 @@ init_vertex_buffer :: inline (buffer : *Vertex_Buffer, layout : Vertex_Buffer.La
 	gl.GenVertexArrays (1, *buffer.vao);
 	gl.BindVertexArray (buffer.vao);
 	defer gl.BindVertexArray (0);
+	
 	gl.GenBuffers (1, *buffer.vbo);
 	gl.BindBuffer (gl.ARRAY_BUFFER, buffer.vbo);
 	defer gl.BindBuffer (gl.ARRAY_BUFFER, 0);
@@ -146,12 +150,14 @@ init_vertex_buffer :: inline (buffer : *Vertex_Buffer, layout : Vertex_Buffer.La
 	for elem, i : layout
 	{
 		gl.EnableVertexAttribArray (xx i);
+
 		if elem.kind == .F64
 			gl.VertexAttribLPointer (xx i, xx elem.count, to_gl (elem.kind), vertex_size, cast (*void) elem_offset);
 		else if elem.integer
 			gl.VertexAttribIPointer (xx i, xx elem.count, to_gl (elem.kind), vertex_size, cast (*void) elem_offset);
 		else
 			gl.VertexAttribPointer (xx i, xx elem.count, to_gl (elem.kind), xx elem.normalize, vertex_size, cast (*void) elem_offset);
+
 		elem_offset += get_elem_size (elem);
 	}
 }
@@ -200,6 +206,7 @@ allocate_vertex_buffer_data :: inline (buffer : *Vertex_Buffer, size : s64, usag
 {
 	previous := use_vertex_buffer (buffer);
 	defer use_vertex_buffer (*previous);
+	
 	gl.BufferData (gl.ARRAY_BUFFER, size, data, to_gl (usage));
 }
 
@@ -207,6 +214,7 @@ set_vertex_buffer_data :: inline (buffer : *Vertex_Buffer, data : *void, size : 
 {
 	previous := use_vertex_buffer (buffer);
 	defer use_vertex_buffer (*previous);
+	
 	gl.BufferSubData (gl.ARRAY_BUFFER, 0, size, data);
 }
 
@@ -258,6 +266,7 @@ allocate_index_buffer_data :: inline (buffer : *Index_Buffer, size : s64, usage 
 {
 	previous := use_index_buffer (buffer);
 	defer use_index_buffer (*previous);
+	
 	gl.BufferData (gl.ELEMENT_ARRAY_BUFFER, size, data, to_gl (usage));
 }
 
@@ -265,5 +274,6 @@ set_index_buffer_data :: inline (buffer : *Index_Buffer, data : *void, size : s6
 {
 	previous := use_index_buffer (buffer);
 	defer use_index_buffer (*previous);
+	
 	gl.BufferSubData (gl.ELEMENT_ARRAY_BUFFER, 0, size, data);
 }

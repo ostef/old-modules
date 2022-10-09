@@ -27,6 +27,7 @@ load_from_file :: inline (image : *Image, filename : string, desired_channels : 
 	data := stbi.load (str.clone_to_cstring (filename, mem.TEMP_ALLOC), *width, *height, *channels, desired_channels);
 	if !data
 		return false;
+
 	image.data = data;
 	image.width = width;
 	image.height = height;
@@ -44,6 +45,7 @@ load_from_memory :: inline (image : *Image, buffer : *void, size : s64, desired_
 	data := stbi.load_from_memory (buffer, xx size, *width, *height, *channels, desired_channels);
 	if !data
 		return false;
+
 	image.data = data;
 	image.width = width;
 	image.height = height;

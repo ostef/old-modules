@@ -10,6 +10,7 @@ is_pointer_to :: inline (info : *Type_Info, to : *Type_Info) -> bool #must
 {
 	if !to || !is_pointer (info)
 		return false;
+	
 	return (cast (*Type_Info_Pointer) info).pointer_to == to;
 }
 
@@ -26,13 +27,17 @@ get_relative_pointer_type :: inline (size : s64) -> *Type_Info #must
 	{
 	case 1;
 		return type_info (s8);
+	
 	case 2;
 		return type_info (s16);
+	
 	case 4;
 		return type_info (s32);
+	
 	case 8; #through;
 	case 0;
 		return type_info (s64);
 	}
+	
 	return null;
 }

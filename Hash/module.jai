@@ -72,6 +72,7 @@ djb2 :: inline (data : *void, count : s64, h : u32 = DJB2_DEFAULT_BASIS) -> u32 
 {
 	for i : 0..count - 1
 		h = h * 33 ^ (cast (*u8) data)[i];
+
 	return h;
 }
 
@@ -94,6 +95,7 @@ sdbm :: inline (data : *void, count : s64, h : u32 = SDBM_DEFAULT_BASIS) -> u32 
 {
 	for i : 0..count - 1
 		h = (h << 16) + (h << 6) - h + (cast (*u8) data)[i];
+
 	return h;
 }
 

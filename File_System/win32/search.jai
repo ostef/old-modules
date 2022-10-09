@@ -32,12 +32,15 @@ for_expansion :: (search : *File_Search, body : Code, flags : For_Flags) #expand
 	if !flagged (search.flags, .VISIT_FILES) && !flagged (search.flags, .VISIT_DIRECTORIES)
 	{
 		log.warning ("Trying to do a file search without visiting files nor directories. This does not make sense.");
+
 		return;
 	}
+
 	allocator := arena.to_allocator (*search.filename_arena);
 	directories : [..]string;
 	array.init (*directories, 10, mem.TEMP_ALLOC);
 	array.push (*directories, search.dirname);
+
 	should_break := false;
 	cursor := 0;
 	while !should_break && cursor < directories.count
@@ -45,16 +48,20 @@ for_expansion :: (search : *File_Search, body : Code, flags : For_Flags) #expand
 		dirname := directories[cursor];
 		cursor += 1;
 		find_data : win32.WIN32_FIND_DATAW;
+
 		ts := mem.get_temporary_storage_state ();
 		wildcard := win32.utf8_to_wide (path.join (mem.TEMP_ALLOC, dirname, "/*"), mem.TEMP_ALLOC);
 		find_handle := win32.FindFirstFileW (wildcard, *find_data);
 		mem.set_temporary_storage_state (ts);
+
 		if find_handle == win32.INVALID_HANDLE_VALUE
 		{
 			log.error ("Unable to open directory {:'} for searching: %", dirname, get_last_error_string ());
 			if cursor > 0
 				continue;
+
 			search.error = get_last_error ();
+
 			break;
 		}
 
@@ -69,6 +76,7 @@ for_expansion :: (search : *File_Search, body : Code, flags : For_Flags) #expand
 			filename := win32.wide_to_utf8 (find_data.cFileName.data, allocator);
 			if filename == "." || filename == ".."
 				continue;
+
 			mem.init (*it);
 			it.name = filename;
 			it.full_name = path.join (allocator, dirname, it.name);
@@ -77,6 +85,7 @@ for_expansion :: (search : *File_Search, body : Code, flags : For_Flags) #expand
 			it.creation_time    = time.to_apollo (find_data.ftCreationTime);
 			it.last_access_time = time.to_apollo (find_data.ftLastAccessTime);
 			it.last_write_time  = time.to_apollo (find_data.ftLastWriteTime);
+
 			if flagged (it.attributes, .DIRECTORY)
 			{
 				if flagged (search.flags, .VISIT_DIRECTORIES)
@@ -87,6 +96,7 @@ for_expansion :: (search : *File_Search, body : Code, flags : For_Flags) #expand
 			else if flagged (search.flags, .VISIT_FILES)
 				#insert (break={ should_break = true; break; }) body;
 		}
+
 		win32.FindClose (find_handle);
 	}
 }
@@ -112,43 +122,56 @@ direct_recurse :: (search : *File_Search, body : Code, flags : For_Flags) #expan
 	mem.temporary_block ();
 	`it : File_Info;
 	`it_index := 0;
+
 	if !flagged (search.flags, .VISIT_FILES) && !flagged (search.flags, .VISIT_DIRECTORIES)
 	{
 		log.warning ("Trying to do a file search without visiting files nor directories. This does not make sense.");
+
 		return;
 	}
+
 	allocator := arena.to_allocator (*search.filename_arena);
 	entries : [..]Search_Entry;
 	array.init (*entries, 10, mem.TEMP_ALLOC);
+
 	current := array.push (*entries);
 	current.dirname = search.dirname;
 	while current
 	{
 		dirname := current.dirname;
+
 		if !current.initialized
 		{
 			mem.temporary_block ();
 			wildcard := win32.utf8_to_wide (path.join (mem.TEMP_ALLOC, dirname, "/*"), mem.TEMP_ALLOC);
 			current.find_handle = win32.FindFirstFileW (wildcard, *current.find_data);
 			current.initialized = true;
+
 			if current.find_handle == win32.INVALID_HANDLE_VALUE
 			{
 				current.has_errors = true;
 				log.error ("Unable to open directory {:'} for searching: %", dirname, get_last_error_string ());
+
 				if dirname != search.dirname
 				{
 					current = current.parent;
+
 					continue;
 				}
+
 				search.error = get_last_error ();
+
 				break;	// If we can't open the first directory then just bail out
 			}
 		}
+
 		if current.has_errors || !current.find_handle
 		{
 			current = current.parent;
+
 			continue;
 		}
+
 		while true
 		{
 			defer {
@@ -158,6 +181,7 @@ direct_recurse :: (search : *File_Search, body : Code, flags : For_Flags) #expan
 					win32.FindClose (current.find_handle);
 					current.find_handle = null;
 					current = current.parent;
+
 					break;
 				}
 			}
@@ -165,6 +189,7 @@ direct_recurse :: (search : *File_Search, body : Code, flags : For_Flags) #expan
 			filename := win32.wide_to_utf8 (current.find_data.cFileName.data, allocator);
 			if filename == "." || filename == ".."
 				continue;
+
 			// Fill File_Info data
 			mem.init (*it);
 			it.name = filename;
@@ -174,10 +199,12 @@ direct_recurse :: (search : *File_Search, body : Code, flags : For_Flags) #expan
 			it.creation_time    = time.to_apollo (current.find_data.ftCreationTime);
 			it.last_access_time = time.to_apollo (current.find_data.ftLastAccessTime);
 			it.last_write_time  = time.to_apollo (current.find_data.ftLastWriteTime);
+
 			if flagged (it.attributes, .DIRECTORY)
 			{
 				if flagged (search.flags, .VISIT_DIRECTORIES)
 					#insert (break={ current = null; break; }) body;
+
 				if flagged (search.flags, .RECURSIVE)
 				{
 					// Find next file, so we continue where we left off next time
@@ -186,10 +213,12 @@ direct_recurse :: (search : *File_Search, body : Code, flags : For_Flags) #expan
 						win32.FindClose (current.find_handle);
 						current.find_handle = null;
 					}
+
 					parent_index := current - entries.data;
 					current = array.push (*entries);
 					current.parent = *entries[parent_index];
 					current.dirname = it.full_name;
+
 					break;
 				}
 			}
@@ -199,6 +228,8 @@ direct_recurse :: (search : *File_Search, body : Code, flags : For_Flags) #expan
 	}
 	// Close file search handles that we didn't close yet
 	for * entries
+	{
 		if it.find_handle && it.find_handle != win32.INVALID_HANDLE_VALUE
 			win32.FindClose (it.find_handle);
+	}
 }

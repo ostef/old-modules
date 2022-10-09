@@ -42,24 +42,31 @@ run_command :: (
 {
 	if args.count == 0
 		return 1, "", "", .INVALID_PARAMETERS;
+
 	cmd_args := str.join_sep (mem.TEMP_ALLOC, " ", ..mem.advance (args));
 	cmd_line := str.join (mem.TEMP_ALLOC, "\"", args[0], "\" ", cmd_args);
 	output_pipe : Pipe;
 	error_pipe  : Pipe;
+	
 	if output != .PRINT
 	{
 		output_pipe = create_pipe ();
 		error_pipe  = create_pipe ();
 	}
+
 	defer close_pipe (*output_pipe);
 	defer close_pipe (*error_pipe);
+
 	input_pipe : Pipe;
 	process := create_process (cmd_line, *input_pipe, *output_pipe, *error_pipe, working_directory);
+
 	exit_code, err := wait_for_process (process, timeout_ms);
 	if err != .OK
 		exit_code = terminate_process (process, 1);
+
 	out_str := "";
 	err_str := "";
+
 	if output == .CAPTURE
 	{
 		out_str = fs.read_entire_file (output_pipe.read_end);

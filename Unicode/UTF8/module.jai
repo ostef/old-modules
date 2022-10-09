@@ -22,6 +22,7 @@ make_str :: inline (data : *u8, count : s64) -> Str #must
 	result : Str = ---;
 	result.data  = data;
 	result.count = count;
+
 	return result;
 }
 
@@ -41,7 +42,9 @@ for_expansion :: (s : *Str, body : Code, flags : For_Flags) #expand
 		`it, advance, valid := decode (s.as_array, byte_offset);
 		if !valid
 			break;
+	
 		#insert body;
+	
 		byte_offset += advance;
 		it_index += 1;
 	}
@@ -52,6 +55,7 @@ decode_string :: inline (s : string, allocator := context.allocator) -> []u32 #m
 {
 	valid_input := true;
 	result := mem.alloc (u32, length (s), allocator);
+	
 	i := 0;
 	offset := 0;
 	while offset < s.count
@@ -69,6 +73,7 @@ decode_string :: inline (s : string, allocator := context.allocator) -> []u32 #m
 decode :: inline (buffer : []u8, byte_offset : s64) -> codepoint : u32, size : s64, valid : bool
 {
 	codepoint, size, valid := decode (mem.advance (buffer, byte_offset));
+	
 	return codepoint, size, valid;
 }
 
@@ -82,6 +87,7 @@ decode :: (buffer : []u8) -> codepoint : u32, size : s64, valid : bool
 		if x >= 0xf0
 		{
 			mask := (cast (u32) x << 31) >> 31;
+	
 			return (cast (u32) b0 & (~mask)) | (CODEPOINT_INVALID & mask), 1, true;
 		}
 		else if b0 < 0x80
@@ -91,12 +97,14 @@ decode :: (buffer : []u8) -> codepoint : u32, size : s64, valid : bool
 		range := UTF8_ACCEPT_RANGES[x >> 4];
 		if buffer.count < 2 || buffer[1] < range.lo || buffer[1] > range.hi
 			return CODEPOINT_INVALID, 1, false;
+	
 		b1 := buffer[1];
 		if sz == 2
 			return ((cast (u32) b0 & 0x1f) << 6) | (cast (u32) b1 & 0x3f), 2, true;
 
 		if buffer.count < 3 || buffer[2] < 0x80 || buffer[2] > 0xbf
 			return CODEPOINT_INVALID, 1, false;
+	
 		b2 := buffer[2];
 		if sz == 3
 			return ((cast (u32) b0 & 0x1f) << 12) | ((cast (u32) b1 & 0x3f) << 6) | (cast (u32) b2 & 0x3f), 3, true;
@@ -153,16 +161,19 @@ encoding_length :: inline (codepoint : u32) -> size : s64 #must
 		return 3;
 	else if codepoint <= 0x1fffff
 		return 4;
+	
 	return 3;
 }
 
 encode_string :: inline (s : []u32, allocator := context.allocator) -> string #must, valid : bool
 {
 	valid := true;
+	
 	result : string;
 	for s
 		result.count += encoding_length (it);
 	result.data = mem.alloc (result.count, allocator);
+	
 	i := 0;
 	for s
 	{
@@ -177,12 +188,14 @@ encode_string :: inline (s : []u32, allocator := context.allocator) -> string #m
 encode :: inline (buffer : []u8, offset : s64, codepoint : u32) -> size : s64, valid : bool
 {
 	size, valid := encode (mem.advance (buffer, offset), codepoint);
+	
 	return size, valid;
 }
 
 encode :: (buffer : []u8, codepoint : u32) -> size : s64, valid : bool
 {
 	MASK : u8 : 0x3f;
+	
 	i := codepoint;
 	if i <= (1 << 7) - 1
 	{
@@ -242,6 +255,7 @@ length :: inline (s : string) -> s64 #must, valid : bool
 			i += 4;
 		else
 			return len, false;
+	
 		len += 1;
 	}
 

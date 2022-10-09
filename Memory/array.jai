@@ -4,6 +4,7 @@ make_array :: inline (data : *$T, count : s64) -> []T #must
 	result : []T = ---;
 	result.data = data;
 	result.count = count;
+	
 	return result;
 }
 

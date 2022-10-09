@@ -11,6 +11,7 @@ heap_alloc :: inline (size : s64) -> *void #must
 {
 	heap := win32.GetProcessHeap ();
 	assert (heap != null, "GetProcessHeap returned null: %", win32.get_last_error_string ());
+	
 	return win32.HeapAlloc (heap, 0, xx size);
 }
 
@@ -18,6 +19,7 @@ heap_realloc :: inline (ptr : *void, new_size : s64) -> *void #must
 {
 	heap := win32.GetProcessHeap ();
 	assert (heap != null, "GetProcessHeap returned null: %", win32.get_last_error_string ());
+	
 	return win32.HeapReAlloc (heap, 0, ptr, xx new_size);
 }
 

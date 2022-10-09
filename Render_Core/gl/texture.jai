@@ -93,6 +93,7 @@ set_texture_min_filtering :: inline (texture : *Texture, filtering : Texture.Fil
 {
 	prev := use_texture (texture);
 	defer use_texture (*prev);
+
 	gl.TexParameteri (gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, to_gl (filtering));
 }
 
@@ -100,6 +101,7 @@ set_texture_mag_filtering :: inline (texture : *Texture, filtering : Texture.Fil
 {
 	prev := use_texture (texture);
 	defer use_texture (*prev);
+
 	gl.TexParameteri (gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, to_gl (filtering));
 }
 

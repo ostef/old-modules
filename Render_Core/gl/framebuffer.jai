@@ -13,6 +13,7 @@ init_framebuffer :: inline (framebuffer : *Framebuffer, color_texture : *Texture
 	gl.GenFramebuffers (1, *framebuffer.fbo);
 	gl.BindFramebuffer (gl.FRAMEBUFFER, framebuffer.fbo);
 	defer gl.BindFramebuffer (gl.FRAMEBUFFER, 0);
+
 	gl.FramebufferTexture2D (gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, color_texture.tex, 0);
 
 	status := gl.CheckFramebufferStatus (gl.FRAMEBUFFER);
@@ -20,6 +21,7 @@ init_framebuffer :: inline (framebuffer : *Framebuffer, color_texture : *Texture
 	{
 		gl.DeleteFramebuffers (1, *framebuffer.fbo);
 		framebuffer.fbo = 0;
+	
 		return false;
 	}
 

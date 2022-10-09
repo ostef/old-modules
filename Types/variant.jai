@@ -18,6 +18,7 @@ is_distinct_variant_of :: inline (info : *Type_Info, of : *Type_Info) -> bool #m
 {
 	if !is_variant_of (info, of)
 		return false;
+		
 	return flagged ((cast (*Type_Info_Variant) info).variant_flags, .DISTINCT);
 }
 
@@ -26,5 +27,6 @@ is_isa_variant_of :: inline (info : *Type_Info, of : *Type_Info) -> bool #must
 {
 	if !is_variant_of (info, of)
 		return false;
+		
 	return flagged ((cast (*Type_Info_Variant) info).variant_flags, .ISA);
 }

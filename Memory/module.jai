@@ -26,8 +26,10 @@ init :: inline (arr : []$T)
 {
 	initializer :: initializer_of (T);
 	#if initializer
+	{
 		for i : 0..arr.count - 1
 			initializer (*arr[i]);
+	}
 	else
 		set (arr.data, 0, size_of (T) * arr.count);
 }
@@ -35,6 +37,7 @@ init :: inline (arr : []$T)
 clone :: inline (ptr : *void, size : s64, allocator := context.allocator) -> *void #must
 {
 	result := alloc (size, allocator);
+	
 	return copy (result, ptr, size);
 }
 
@@ -42,6 +45,7 @@ copy :: inline (dst : *void, src : *void, size : s64) -> *void
 #no_context
 {
 	memcpy (dst, src, size);
+	
 	return dst;
 }
 
@@ -49,6 +53,7 @@ set :: inline (dst : *void, value : u8, size : s64) -> *void
 #no_context
 {
 	memset (dst, value, size);
+	
 	return dst;
 }
 

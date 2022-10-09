@@ -23,6 +23,7 @@ message :: inline (
 		return;
 	s := fmt.format (fmt_str, ..args);
 	defer mem.free (s);
+	
 	info : Log_Info;
 	info.location = location;
 	info.common_flags = flags;

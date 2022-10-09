@@ -130,9 +130,11 @@ init :: inline () -> bool
 	ft_err := ft.Init_FreeType (*g_ft_lib);
 	if ft_err != ft.Err_Ok
 		return log.error ("Could not initialize FreeType. Error was %.", ft_err);
+
 	ok, info_log := render.init_shader (*g_glyph_shader, GL_GLYPH_VERTEX_SHADER, GL_GLYPH_FRAGMENT_SHADER);
 	if !ok
 		return log.error ("Could not initialize glyph shader:\n%", info_log);
+
 	render.init_vertex_buffer (*g_rect_vertex_buffer, Vertex.LAYOUT);
 	render.allocate_vertex_buffer_data (*g_rect_vertex_buffer, 6 * size_of (Vertex), .DYNAMIC_DRAW);
 
@@ -151,6 +153,7 @@ find_font :: inline (family : *Font, weight : Weight, effects : Effects, fallbac
 		if it.weight == weight && it.effects == effects
 			return it;
 	}
+
 	return fallback;
 }
 
@@ -190,13 +193,16 @@ load_from_file :: inline (font : *Font, filename : string) -> bool
 {
 	if !g_ft_lib && !init ()
 		return false;
+
 	ft_face : ft.Face;
 	ft_err := ft.New_Face (g_ft_lib, str.clone_to_cstring (filename, mem.TEMP_ALLOC), 0, *ft_face);
 	if ft_err != ft.Err_Ok
 		return log.error ("Could not load FT_Face from file '%'. Error was %.", filename, ft_err);
+
 	font.filename = filename;
 	font.ft_face = ft_face;
 	map.init (*font.pages, 10);
+
 	suffix := path.remove_extension (font.filename);
 	dash_index := str.find_last (suffix, #char "-");
 	if dash_index != -1
@@ -216,16 +222,19 @@ load_family :: inline (search_dir : string, name : string, allocator := context.
 	flags := fs.File_Search.Flags.VISIT_FILES;
 	if recursive
 		flags |= .RECURSIVE;
+
 	result : *Font;
 	tmp_font : Font;
 	for info : fs.file_search (search_dir, flags)
 	{
 		basename := path.remove_extension (info.name);
+
 		if str.starts_with (basename, name)
 		{
 			weight, effects := get_weight_and_effects (str.advance (basename, name.count));
 			if weight == .INVALID
 				continue;
+
 			mem.init (*tmp_font);
 			if load_from_file (*tmp_font, info.full_name)
 			{
@@ -242,6 +251,7 @@ load_family :: inline (search_dir : string, name : string, allocator := context.
 		list.pop (*result, regular);
 		list.push_front (*result, regular);
 	}
+
 	return result;
 }
 
@@ -252,6 +262,7 @@ destroy_family :: inline (family : **Font, allocator := context.allocator)
 		destroy (it);
 		mem.free (it, allocator);
 	}
+
 	family = null;
 }
 
@@ -260,6 +271,7 @@ destroy :: (using font : *Font)
 	filename = "";
 	ft.Done_Face (ft_face);
 	ft_face = null;
+
 	for * page, height : pages
 	{
 		for atlas, i : page.atlases
@@ -267,9 +279,11 @@ destroy :: (using font : *Font)
 			render.destroy_framebuffer (*atlas.framebuffer);
 			render.destroy_texture (*atlas.texture);
 		}
+
 		array.reset (*page.atlases);
 		map.reset (*page.glyphs);
 	}
+
 	map.reset (*pages);
 }
 
@@ -295,6 +309,7 @@ add_atlas_to_page :: inline (using page : *Page, atlas_width := DEFAULT_FONT_ATL
 	result.width  = atlas_width;
 	result.height = atlas_height;
 	render.init_texture (*result.texture, atlas_width, atlas_height, 4, null);
+
 	ok := render.init_framebuffer (*result.framebuffer, *result.texture);
 	assert (ok, "Could not init atlas framebuffer.");
 
@@ -316,6 +331,7 @@ load_glyph :: (using page : *Page, codepoint : u32) -> *Glyph
 	glyph, was_present := map.insert (*glyphs, codepoint);
 	if was_present
 		return glyph;
+
 	ft.Set_Pixel_Sizes (font.ft_face, 0, height);
 	ft_error := ft.Load_Char (font.ft_face, codepoint, ft.LOAD_DEFAULT);
 	assert (ft_error == ft.Err_Ok, "Could not load glyph %.", codepoint);
@@ -341,6 +357,7 @@ render_glyph :: (using page : *Page, codepoint : u32) -> *Glyph
 	glyph, was_present := map.insert (*glyphs, codepoint);
 	if was_present && glyph.rendered
 		return glyph;
+
 	ft.Set_Pixel_Sizes (font.ft_face, 0, height);
 	ft_error := ft.Load_Char (font.ft_face, codepoint, ft.LOAD_RENDER);
 	assert (ft_error == ft.Err_Ok, "Could not load glyph %.", codepoint);
@@ -364,9 +381,11 @@ render_glyph :: (using page : *Page, codepoint : u32) -> *Glyph
 		if it.width - it.pen_y > glyph.bitmap_width && it.height - it.pen_y > glyph.bitmap_height
 		{
 			atlas = it;
+
 			break;
 		}
 	}
+
 	if !atlas then atlas = add_atlas_to_page (page);
 
 	if atlas.width - atlas.pen_x < glyph.bitmap_width || atlas.height - atlas.pen_y < glyph.bitmap_height
@@ -382,19 +401,25 @@ render_glyph :: (using page : *Page, codepoint : u32) -> *Glyph
 		(atlas.pen_x + glyph.bitmap_width) / cast (f32) atlas.width,
 		1 - (atlas.pen_y + glyph.bitmap_height) / cast (f32) atlas.height
 	);
+
 	glyph.atlas_texture = *atlas.texture;
 
 	glyph_texture : render.Texture;
 	render.init_texture (*glyph_texture, glyph.bitmap_width, glyph.bitmap_height, 1, slot.bitmap.buffer);
 	defer render.destroy_texture (*glyph_texture);
+
 	prev_texture := render.use_texture (*glyph_texture);
 	defer render.use_texture (*prev_texture);
+
 	prev_framebuffer := render.use_framebuffer_for_drawing (*atlas.framebuffer);
 	defer render.use_framebuffer_for_drawing (*prev_framebuffer);
+
 	prev_shader := render.use_shader (*g_glyph_shader);
 	defer render.use_shader (*prev_shader);
+
 	prev_vertex_buffer := render.use_vertex_buffer (*g_rect_vertex_buffer);
 	defer render.use_vertex_buffer (*prev_vertex_buffer);
+
 	gl.Viewport (0, 0, xx atlas.width, xx atlas.height);
 	gl.Disable (gl.SCISSOR_TEST);
 	gl.Disable (gl.DEPTH_TEST);
@@ -447,10 +472,12 @@ calculate_text_extents :: inline (font : *Font, height : u32, text : string) -> 
 			width = math.max (width, pen.x);
 			pen.x = 0;
 			pen.y += page.ascent - page.descent;
+
 		case #char "\t";
 			glyph := load_glyph (page, codepoint);
 			pen.x = math.snap_up (pen.x + glyph.advance, page.space_advance * 4.0);
 			width = math.max (width, pen.x);
+
 		case;
 			glyph := load_glyph (page, codepoint);
 			pen.x += glyph.advance;

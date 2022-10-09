@@ -4,6 +4,7 @@ qsort :: inline (arr : []$T, compare : (T, T) -> int)
 	{
 		if n < 2
 			return;
+
 		p := a[n / 2];
 		i := 0;
 		j := n -1;
@@ -11,14 +12,19 @@ qsort :: inline (arr : []$T, compare : (T, T) -> int)
 		{
 			while compare (a[i], p) < 0
 				i += 1;
+
 			while compare (p, a[j]) < 0
 				j -= 1;
+
 			if i >= j
 				break;
+
 			a[i], a[j] = swap (a[i], a[j]);
+
 			i += 1;
 			j -= 1;
 		}
+
 		helper (a, i, compare);
 		helper (a + i, n - i, compare);
 	}
@@ -32,8 +38,10 @@ qsort :: inline (arr : []$T)
 	{
 		if a < b
 			return -1;
+
 		if a > b
 			return 1;
+
 		return 0;
 	}
 

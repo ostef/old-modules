@@ -48,6 +48,7 @@ flush :: inline (using renderer : *Command_Renderer)
 {
 	if current_command.vertex_count == 0
 		return;
+		
 	header := current_command.header;
 	current_command = array.push (*commands);
 	current_command.header = header;
@@ -131,15 +132,18 @@ draw_to_framebuffer :: (using renderer : *Command_Renderer)
 		set_shader (cmd.shader);
 		set_clip_rect (cmd.clip_rect);
 		set_clipping (cmd.clipping_enabled);
+
 		i := 0;
 		while i < cmd.vertex_count
 		{
 			defer i += 3;
+
 			vert := push_vertices (3);
 			vert[0] = vertices[cmd.first_vertex + i + 0];
 			vert[1] = vertices[cmd.first_vertex + i + 1];
 			vert[2] = vertices[cmd.first_vertex + i + 2];
 		}
 	}
+	
 	flush ();
 }

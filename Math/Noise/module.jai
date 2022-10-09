@@ -121,6 +121,7 @@ generate_perlin_permutation_table :: () -> string
 	{
 		if iterations <= 0
 			iterations = array.count;
+			
 		for i : 0..iterations - 1
 		{
 			a := rand.rangei (0, array.count - 1);
@@ -146,6 +147,7 @@ generate_perlin_permutation_table :: () -> string
 	// Generate int array literal
 	code : strbuild.Builder;
 	strbuild.init (*code);
+
 	strbuild.append (*code, "int.[ ");
 	for ints
 	{

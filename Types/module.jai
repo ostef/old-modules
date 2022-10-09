@@ -39,6 +39,7 @@ is_numeric :: inline (info : *Type_Info) -> bool #must
 {
 	if !info || (info.type != .FLOAT && info.type != .INTEGER)
 		return false;
+
 	return true;
 }
 
@@ -48,8 +49,10 @@ is_signed :: inline (info : *Type_Info) -> bool #must
 {
 	if !info || (info.type != .INTEGER && info.type != .FLOAT)
 		return false;
+
 	if info.type == .INTEGER
 		return (cast (*Type_Info_Integer) info).signed;
+
 	return true;
 }
 
@@ -59,6 +62,7 @@ is_unsigned :: inline (info : *Type_Info) -> bool #must
 {
 	if !info || info.type != .INTEGER
 		return false;
+
 	return !(cast (*Type_Info_Integer) info).signed;
 }
 
@@ -98,5 +102,6 @@ get_member_type :: inline (info : *Type_Info, name : string) -> *Type_Info #must
 	result := get_array_member_type (info, name);
 	if result
 		return result;
+
 	return get_struct_member_type (info, name);
 }

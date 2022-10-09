@@ -23,6 +23,7 @@ length :: inline (cstr : *u8) -> s64 #must
 	i := 0;
 	while cstr[i]
 		i += 1;
+
 	return i;
 }
 
@@ -116,11 +117,14 @@ compare :: inline (a : string, b : string) -> int #must
 {
 	if a.count < b.count
 		return -cast (int) b[a.count - 1];
+
 	if a.count > b.count
 		return  cast (int) a[b.count - 1];
+
 	for i : 0..a.count - 1
 		if a[i] != b[i]
 			return cast (int) a[i] - cast (int) b[i];
+
 	return 0;
 }
 
@@ -130,9 +134,13 @@ starts_with :: inline (s : string, with : string) -> bool #must
 {
 	if s.count < with.count
 		return false;
+
 	for i : 0..with.count - 1
+	{
 		if s[i] != with[i]
 			return false;
+	}
+
 	return true;
 }
 
@@ -142,9 +150,13 @@ ends_with :: inline (s : string, with : string) -> bool #must
 {
 	if s.count < with.count
 		return false;
+		
 	for i : 0..with.count - 1
+	{
 		if s[s.count - 1 - i] != with[with.count - 1 - i]
 			return false;
+	}
+
 	return true;
 }
 
@@ -153,8 +165,11 @@ find_first :: inline (s : string, char : u8) -> s64 #must
 #no_abc
 {
 	for i : 0..s.count - 1
+	{
 		if s[i] == char
 			return i;
+	}
+
 	return -1;
 }
 
@@ -163,8 +178,11 @@ find_last :: inline (s : string, char : u8) -> s64 #must
 #no_abc
 {
 	for < i : s.count - 1..0
+	{
 		if s[i] == char
 			return i;
+	}
+
 	return -1;
 }
 
@@ -179,11 +197,14 @@ join :: (allocator : Allocator, args : ..string) -> string #must
 	total_size := 0;
 	for args
 		total_size += it.count;
+	
 	if total_size == 0
 		return "";
+	
 	result : string = ---;
 	result.data = mem.alloc (total_size, allocator);
 	result.count = total_size;
+	
 	i := 0;
 	for args
 	{
@@ -203,17 +224,21 @@ join_sep :: (allocator : Allocator, sep : string, args : ..string) -> string #mu
 #no_abc
 {
 	total_size := 0;
+	
 	for args
 	{
 		if it_index != 0
 			total_size += sep.count;
 		total_size += it.count;
 	}
+	
 	if total_size == 0
 		return "";
+	
 	result : string = ---;
 	result.data = mem.alloc (total_size, allocator);
 	result.count = total_size;
+	
 	i := 0;
 	for args
 	{
@@ -222,6 +247,7 @@ join_sep :: (allocator : Allocator, sep : string, args : ..string) -> string #mu
 			mem.copy (result.data + i, sep.data, sep.count);
 			i += sep.count;
 		}
+	
 		mem.copy (result.data + i, it.data, it.count);
 		i += it.count;
 	}
@@ -229,14 +255,3 @@ join_sep :: (allocator : Allocator, sep : string, args : ..string) -> string #mu
 	return result;
 }
 
-format :: inline (s : string, args : ..Any) -> string #must
-{
-	fmt :: #import "Fmt";
-	return fmt.format (s, ..args);
-}
-
-format :: inline (allocator : Allocator, s : string, args : ..Any) -> string #must
-{
-	fmt :: #import "Fmt";
-	return fmt.format (allocator, s, ..args);
-}

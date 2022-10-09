@@ -54,6 +54,7 @@ get :: inline (rng : *MCG) -> u64
 {
 	MULTIPLIER :: u128.{ 0x0fc9_4e3b_f4e9_ab32, 0x8664_58cd_56f5_e605 };
 	rng.state *= MULTIPLIER;
+
 	return rng.state.high;
 }
 
@@ -82,6 +83,7 @@ rangei :: inline (low : s64, high : s64) -> s64 #must { return rangei (*context.
 rangei :: inline (rng : *MCG, low : s64, high : s64) -> s64 #must
 {
 	rand := cast, trunc (s64) get (rng);
+	
 	return math.wrap (rand, low, high);
 }
 

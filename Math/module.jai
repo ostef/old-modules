@@ -49,6 +49,7 @@ clamp :: (x : $T, min : T, max : T) -> T #expand
 {
 	if x > max then x = max;
 	if x < min then x = min;
+
 	return x;
 }
 
@@ -58,6 +59,7 @@ saturate :: (x : $T) -> T #expand
 {
 	if x > 1 then x = 1;
 	if x < 0 then x = 0;
+
 	return x;
 }
 
@@ -148,6 +150,7 @@ wrap :: inline (a : $T, min : T, max : T) -> T #must
 		a = fmod (a, (max - min));
 	else
 		a %= (max - min);
+
 	if a < 0 then a += (max - min);
 	a -= min;
 
@@ -162,6 +165,7 @@ wrap :: inline (a : $T, max : T) -> T #must
 		a = fmod (a, max);
 	else
 		a %= max;
+		
 	if a < 0 then a += max;
 
 	return a;

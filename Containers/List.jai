@@ -10,8 +10,10 @@ push :: inline (list : **$T, node : *T) -> *T
 	should_replace := !(<<list) || !(<<list).prev;
 	node.prev = null;
 	node.next = null;
+
 	if (<<list)
 		insert_before (<<list, node);
+
 	if should_replace then <<list = node;
 
 	return node;
@@ -23,6 +25,7 @@ pop :: inline (list : **$T, node : *T)
 	prev := node.prev;
 	next := node.next;
 	unlink (node);
+
 	if node == <<list
 	{
 		if next then <<list = next;
@@ -37,6 +40,7 @@ pop_front :: inline (list : **$T) -> *T #must
 {
 	node := <<list;
 	pop (list, node);
+
 	return node;
 }
 
@@ -76,6 +80,7 @@ get_last :: inline (list : *$T) -> *T #must
 {
 	while list && list.next
 		list = list.next;
+
 	return list;
 }
 

@@ -30,6 +30,7 @@ get_error_string :: inline (error_code : DWORD) -> string #must
 		g_error_wide_buffer.count,
 		null
 	);
+
 	utf8_count := WideCharToMultiByte (
 		CP_UTF8,
 		0,
@@ -40,6 +41,7 @@ get_error_string :: inline (error_code : DWORD) -> string #must
 		null,
 		null
 	);
+
 	result : string = ---;
 	result.data  = g_error_utf8_buffer.data;
 	result.count = utf8_count;
@@ -52,7 +54,9 @@ wide_to_utf8 :: (data : *u16, allocator := context.allocator) -> string #must, s
 	result_length := WideCharToMultiByte (CP_UTF8, 0, data, -1, null, 0, null, null);
 	if result_length <= 0
 		return "", false;
+
 	utf8_data := cast (*u8) allocator.proc (.ALLOCATE, result_length, 0, null, allocator.data);
+
 	written := WideCharToMultiByte (CP_UTF8, 0, data, -1, cast (*s8) utf8_data, result_length, null, null);
 	if written > 0
 	{
@@ -75,9 +79,11 @@ utf8_to_wide :: (utf8_str : string, allocator := context.allocator) -> wide_str 
 
 		return wide_str, 0;
 	}
+
 	result_length := MultiByteToWideChar (CP_UTF8, 0, cast (*s8) utf8_str.data, cast (s32) utf8_str.count, null, 0);
 	if result_length <= 0
 		return null, 0;
+
 	wide_str := cast (*u16) allocator.proc (.ALLOCATE, (result_length + 1) * size_of (u16), 0, null, allocator.data);
 	written := MultiByteToWideChar (CP_UTF8, 0, cast (*s8) utf8_str.data, cast (s32) utf8_str.count, wide_str, result_length);
 	if written > 0

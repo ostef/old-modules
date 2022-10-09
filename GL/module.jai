@@ -27,22 +27,28 @@ load :: inline ($log_errors := false) -> bool
 			info := type_info (T);
 			code : strbuild.Builder;
 			strbuild.init (*code);
+		
 			strbuild.append_line (*code, "// load_functions for T = %", T);
 			strbuild.append_line (*code, "member_ptr : **void;");
+		
 			for * info.members
 			{
 				if flagged (it.flags, .CONSTANT)
 					continue;
+		
 				if it.type.type == .PROCEDURE || flagged (it.flags, .PROCEDURE_WITH_VOID_POINTER_TYPE_INFO)
 				{
 					strbuild.append_line (*code, "member_ptr = cast (**void) (cast (*u8) ptr + %);", it.offset_in_bytes);
+		
 					if prefix
 						strbuild.append_line (*code, "<<member_ptr = get_proc_address (\"{}{}\");", prefix, it.name);
 					else
 						strbuild.append_line (*code, "<<member_ptr = get_proc_address (\"{}\");", it.name);
+		
 					#if log_errors
 					{
 						strbuild.append_line (*code, "if !(<<member_ptr)");
+		
 						if prefix
 							strbuild.append_line (*code, "\tlog.warning (\"get_proc_address returned null for procedure {}{}.\");", prefix, it.name);
 						else
@@ -59,6 +65,7 @@ load :: inline ($log_errors := false) -> bool
 	if !dummy_window
 		return log.error ("Could not create dummy window to load GL functions.");
 	defer window.destroy (dummy_window);
+	
 	dummy_ctx := create_context (dummy_window, .NONE);
 	if !dummy_ctx
 		return log.error ("Could not create dummy GL context to load GL functions.");
