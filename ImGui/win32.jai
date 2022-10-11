@@ -9,19 +9,6 @@
 IMGUI_VERSION :: "1.89 WIP";
 IMGUI_VERSION_NUM :: 18802;
 
-KeyModFlags_ :: enum_flags s32 {
-    None  :: 0x0;
-    Ctrl  :: 0x1;
-    Shift :: 0x2;
-    Alt   :: 0x4;
-    Super :: 0x8;
-    ImGuiKeyModFlags_None  :: None;
-    ImGuiKeyModFlags_Ctrl  :: Ctrl;
-    ImGuiKeyModFlags_Shift :: Shift;
-    ImGuiKeyModFlags_Alt   :: Alt;
-    ImGuiKeyModFlags_Super :: Super;
-}
-
 IMGUI_PAYLOAD_TYPE_COLOR_3F :: "_COL3F";
 IMGUI_PAYLOAD_TYPE_COLOR_4F :: "_COL4F";
 
@@ -34,36 +21,6 @@ IM_COL32_G_SHIFT :: 8;
 IM_COL32_B_SHIFT :: 16;
 IM_COL32_A_SHIFT :: 24;
 IM_COL32_A_MASK :: 0xFF000000;
-
-// RENAMED ImGuiKeyModFlags -> ImGuiModFlags in 1.88 (from April 2022)
-KeyModFlags :: s32;
-
-ImDrawCornerFlags_ :: enum_flags s32 {
-    None     :: 0x100;
-    TopLeft  :: 0x10;
-    TopRight :: 0x20;
-    BotLeft  :: 0x40;
-    BotRight :: 0x80;
-    All      :: 0xf0;
-    Top      :: 0x30;
-    Bot      :: 0xc0;
-    Left     :: 0x50;
-    Right    :: 0xa0;
-
-    ImDrawCornerFlags_None     :: None;
-    ImDrawCornerFlags_TopLeft  :: TopLeft;
-    ImDrawCornerFlags_TopRight :: TopRight;
-    ImDrawCornerFlags_BotLeft  :: BotLeft;
-    ImDrawCornerFlags_BotRight :: BotRight;
-    ImDrawCornerFlags_All      :: All;
-    ImDrawCornerFlags_Top      :: Top;
-    ImDrawCornerFlags_Bot      :: Bot;
-    ImDrawCornerFlags_Left     :: Left;
-    ImDrawCornerFlags_Right    :: Right;
-}
-
-// OBSOLETED in 1.82 (from Mars 2021): flags for AddRect(), AddRectFilled(), AddImageRounded(), PathRect()
-ImDrawCornerFlags :: ImDrawFlags;
 
 IM_DRAWLIST_TEX_LINES_WIDTH_MAX :: 63;
 
@@ -98,10 +55,10 @@ ImWchar32 :: u32;
 ImWchar :: ImWchar16;
 
 // Callback and functions types
-InputTextCallback :: #type (a0: *InputTextCallbackData) -> s32 #c_call;
-SizeCallback :: #type (a0: *SizeCallbackData) -> void #c_call;
-MemAllocFunc :: #type (a0: size_t, a1: *void) -> *void #c_call;
-MemFreeFunc :: #type (a0: *void, a1: *void) -> void #c_call;
+InputTextCallback :: #type (data: *InputTextCallbackData) -> s32 #c_call;
+SizeCallback :: #type (data: *SizeCallbackData) -> void #c_call;
+MemAllocFunc :: #type (sz: size_t, user_data: *void) -> *void #c_call;
+MemFreeFunc :: #type (ptr: *void, user_data: *void) -> void #c_call;
 //-----------------------------------------------------------------------------
 // [SECTION] Dear ImGui end-user API functions
 // (Note that ImGui:: being a namespace, you can add extra ImGui:: functions in your own separate file. Please don't modify imgui source files!)
@@ -415,7 +372,7 @@ BeginCombo :: (label: *u8, preview_value: *u8, flags: ComboFlags = .None) -> boo
 EndCombo :: () -> void #foreign imgui "?EndCombo@ImGui@@YAXXZ";
 Combo :: (label: *u8, current_item: *s32, items: **u8, items_count: s32, popup_max_height_in_items: s32 = -1) -> bool #foreign imgui "?Combo@ImGui@@YA_NPEBDPEAHQEBQEBDHH@Z";
 Combo :: (label: *u8, current_item: *s32, items_separated_by_zeros: *u8, popup_max_height_in_items: s32 = -1) -> bool #foreign imgui "?Combo@ImGui@@YA_NPEBDPEAH0H@Z";
-Combo :: (label: *u8, current_item: *s32, items_getter: #type (a0: *void, a1: s32, a2: **u8) -> bool #c_call, data: *void, items_count: s32, popup_max_height_in_items: s32 = -1) -> bool #foreign imgui "?Combo@ImGui@@YA_NPEBDPEAHP6A_NPEAXHPEAPEBD@Z2HH@Z";
+Combo :: (label: *u8, current_item: *s32, items_getter: #type (data: *void, idx: s32, out_text: **u8) -> bool #c_call, data: *void, items_count: s32, popup_max_height_in_items: s32 = -1) -> bool #foreign imgui "?Combo@ImGui@@YA_NPEBDPEAHP6A_NPEAXHPEAPEBD@Z2HH@Z";
 
 // Widgets: Drag Sliders
 // - CTRL+Click on any drag box to turn them into an input box. Manually input values aren't clamped by default and can go off-bounds. Use ImGuiSliderFlags_AlwaysClamp to always clamp.
@@ -548,14 +505,14 @@ BeginListBox :: (label: *u8, size: ImVec2 = ImVec2.{0, 0}) -> bool #no_context {
 }
 EndListBox :: () -> void #foreign imgui "?EndListBox@ImGui@@YAXXZ";
 ListBox :: (label: *u8, current_item: *s32, items: **u8, items_count: s32, height_in_items: s32 = -1) -> bool #foreign imgui "?ListBox@ImGui@@YA_NPEBDPEAHQEBQEBDHH@Z";
-ListBox :: (label: *u8, current_item: *s32, items_getter: #type (a0: *void, a1: s32, a2: **u8) -> bool #c_call, data: *void, items_count: s32, height_in_items: s32 = -1) -> bool #foreign imgui "?ListBox@ImGui@@YA_NPEBDPEAHP6A_NPEAXHPEAPEBD@Z2HH@Z";
+ListBox :: (label: *u8, current_item: *s32, items_getter: #type (data: *void, idx: s32, out_text: **u8) -> bool #c_call, data: *void, items_count: s32, height_in_items: s32 = -1) -> bool #foreign imgui "?ListBox@ImGui@@YA_NPEBDPEAHP6A_NPEAXHPEAPEBD@Z2HH@Z";
 
 // Widgets: Data Plotting
 // - Consider using ImPlot (https://github.com/epezent/implot) which is much better!
 PlotLines :: (label: *u8, values: *float, values_count: s32, values_offset: s32 = 0, overlay_text: *u8 = null, scale_min: float = FLOAT32_MAX, scale_max: float = FLOAT32_MAX, graph_size: ImVec2 = ImVec2.{0, 0}, stride: s32 = 4) -> void #foreign imgui "?PlotLines@ImGui@@YAXPEBDPEBMHH0MMUImVec2@@H@Z";
-PlotLines :: (label: *u8, values_getter: #type (a0: *void, a1: s32) -> float #c_call, data: *void, values_count: s32, values_offset: s32 = 0, overlay_text: *u8 = null, scale_min: float = FLOAT32_MAX, scale_max: float = FLOAT32_MAX, graph_size: ImVec2 = ImVec2.{0, 0}) -> void #foreign imgui "?PlotLines@ImGui@@YAXPEBDP6AMPEAXH@Z1HH0MMUImVec2@@@Z";
+PlotLines :: (label: *u8, values_getter: #type (data: *void, idx: s32) -> float #c_call, data: *void, values_count: s32, values_offset: s32 = 0, overlay_text: *u8 = null, scale_min: float = FLOAT32_MAX, scale_max: float = FLOAT32_MAX, graph_size: ImVec2 = ImVec2.{0, 0}) -> void #foreign imgui "?PlotLines@ImGui@@YAXPEBDP6AMPEAXH@Z1HH0MMUImVec2@@@Z";
 PlotHistogram :: (label: *u8, values: *float, values_count: s32, values_offset: s32 = 0, overlay_text: *u8 = null, scale_min: float = FLOAT32_MAX, scale_max: float = FLOAT32_MAX, graph_size: ImVec2 = ImVec2.{0, 0}, stride: s32 = 4) -> void #foreign imgui "?PlotHistogram@ImGui@@YAXPEBDPEBMHH0MMUImVec2@@H@Z";
-PlotHistogram :: (label: *u8, values_getter: #type (a0: *void, a1: s32) -> float #c_call, data: *void, values_count: s32, values_offset: s32 = 0, overlay_text: *u8 = null, scale_min: float = FLOAT32_MAX, scale_max: float = FLOAT32_MAX, graph_size: ImVec2 = ImVec2.{0, 0}) -> void #foreign imgui "?PlotHistogram@ImGui@@YAXPEBDP6AMPEAXH@Z1HH0MMUImVec2@@@Z";
+PlotHistogram :: (label: *u8, values_getter: #type (data: *void, idx: s32) -> float #c_call, data: *void, values_count: s32, values_offset: s32 = 0, overlay_text: *u8 = null, scale_min: float = FLOAT32_MAX, scale_max: float = FLOAT32_MAX, graph_size: ImVec2 = ImVec2.{0, 0}) -> void #foreign imgui "?PlotHistogram@ImGui@@YAXPEBDP6AMPEAXH@Z1HH0MMUImVec2@@@Z";
 
 // Widgets: Value() Helpers.
 // - Those are merely shortcut to calling Text() with a format string. Output single value in "name: value" format (tip: freely declare more in your code to handle your types. you can add functions to the ImGui namespace)
@@ -2479,13 +2436,13 @@ IO :: struct {
 
     // Optional: Access OS clipboard
     // (default to use native Win32 clipboard on Windows, otherwise uses a private clipboard. Override to access OS clipboard on other architectures)
-    GetClipboardTextFn:                #type (a0: *void) -> *u8 #c_call;
-    SetClipboardTextFn:                #type (a0: *void, a1: *u8) -> void #c_call;
+    GetClipboardTextFn:                #type (user_data: *void) -> *u8 #c_call;
+    SetClipboardTextFn:                #type (user_data: *void, text: *u8) -> void #c_call;
     ClipboardUserData:                 *void;
 
     // Optional: Notify OS Input Method Editor of the screen position of your cursor for text input position (e.g. when using Japanese/Chinese IME on Windows)
     // (default to use native imm32 api on Windows)
-    SetPlatformImeDataFn:              #type (a0: *Viewport, a1: *PlatformImeData) -> void #c_call;
+    SetPlatformImeDataFn:              #type (viewport: *Viewport, data: *PlatformImeData) -> void #c_call;
 
     ImeWindowHandle:                   *void; // = NULL           // [Obsolete] Set ImGuiViewport::PlatformHandleRaw instead. Set this to your HWND to get automatic IME cursor positioning.
 
@@ -3391,30 +3348,30 @@ Viewport :: struct {
 
 // (Optional) Access via ImGui::GetPlatformIO()
 PlatformIO :: struct {
-    Platform_CreateWindow:       #type (a0: *Viewport) -> void #c_call; // . . U . .  // Create a new platform window for the given viewport
-    Platform_DestroyWindow:      #type (a0: *Viewport) -> void #c_call; // N . U . D  //
-    Platform_ShowWindow:         #type (a0: *Viewport) -> void #c_call; // . . U . .  // Newly created windows are initially hidden so SetWindowPos/Size/Title can be called on them before showing the window
-    Platform_SetWindowPos:       #type (a0: *Viewport, a1: ImVec2) -> void #c_call; // . . U . .  // Set platform window position (given the upper-left corner of client area)
-    Platform_GetWindowPos:       #type (a0: *Viewport) -> ImVec2 #c_call; // N . . . .  //
-    Platform_SetWindowSize:      #type (a0: *Viewport, a1: ImVec2) -> void #c_call; // . . U . .  // Set platform window client area size (ignoring OS decorations such as OS title bar etc.)
-    Platform_GetWindowSize:      #type (a0: *Viewport) -> ImVec2 #c_call; // N . . . .  // Get platform window client area size
-    Platform_SetWindowFocus:     #type (a0: *Viewport) -> void #c_call; // N . . . .  // Move window to front and set input focus
-    Platform_GetWindowFocus:     #type (a0: *Viewport) -> bool #c_call; // . . U . .  //
-    Platform_GetWindowMinimized: #type (a0: *Viewport) -> bool #c_call; // N . . . .  // Get platform window minimized state. When minimized, we generally won't attempt to get/set size and contents will be culled more easily
-    Platform_SetWindowTitle:     #type (a0: *Viewport, a1: *u8) -> void #c_call; // . . U . .  // Set platform window title (given an UTF-8 string)
-    Platform_SetWindowAlpha:     #type (a0: *Viewport, a1: float) -> void #c_call; // . . U . .  // (Optional) Setup global transparency (not per-pixel transparency)
-    Platform_UpdateWindow:       #type (a0: *Viewport) -> void #c_call; // . . U . .  // (Optional) Called by UpdatePlatformWindows(). Optional hook to allow the platform backend from doing general book-keeping every frame.
-    Platform_RenderWindow:       #type (a0: *Viewport, a1: *void) -> void #c_call; // . . . R .  // (Optional) Main rendering (platform side! This is often unused, or just setting a "current" context for OpenGL bindings). 'render_arg' is the value passed to RenderPlatformWindowsDefault().
-    Platform_SwapBuffers:        #type (a0: *Viewport, a1: *void) -> void #c_call; // . . . R .  // (Optional) Call Present/SwapBuffers (platform side! This is often unused!). 'render_arg' is the value passed to RenderPlatformWindowsDefault().
-    Platform_GetWindowDpiScale:  #type (a0: *Viewport) -> float #c_call; // N . . . .  // (Optional) [BETA] FIXME-DPI: DPI handling: Return DPI scale for this viewport. 1.0f = 96 DPI.
-    Platform_OnChangedViewport:  #type (a0: *Viewport) -> void #c_call; // . F . . .  // (Optional) [BETA] FIXME-DPI: DPI handling: Called during Begin() every time the viewport we are outputting into changes, so backend has a chance to swap fonts to adjust style.
-    Platform_CreateVkSurface:    #type (a0: *Viewport, a1: ImU64, a2: *void, a3: *ImU64) -> s32 #c_call; // (Optional) For a Vulkan Renderer to call into Platform code (since the surface creation needs to tie them both).
+    Platform_CreateWindow:       #type (vp: *Viewport) -> void #c_call; // . . U . .  // Create a new platform window for the given viewport
+    Platform_DestroyWindow:      #type (vp: *Viewport) -> void #c_call; // N . U . D  //
+    Platform_ShowWindow:         #type (vp: *Viewport) -> void #c_call; // . . U . .  // Newly created windows are initially hidden so SetWindowPos/Size/Title can be called on them before showing the window
+    Platform_SetWindowPos:       #type (vp: *Viewport, pos: ImVec2) -> void #c_call; // . . U . .  // Set platform window position (given the upper-left corner of client area)
+    Platform_GetWindowPos:       #type (vp: *Viewport) -> ImVec2 #c_call #cpp_return_type_is_non_pod; // N . . . .  //
+    Platform_SetWindowSize:      #type (vp: *Viewport, size: ImVec2) -> void #c_call; // . . U . .  // Set platform window client area size (ignoring OS decorations such as OS title bar etc.)
+    Platform_GetWindowSize:      #type (vp: *Viewport) -> ImVec2 #c_call #cpp_return_type_is_non_pod; // N . . . .  // Get platform window client area size
+    Platform_SetWindowFocus:     #type (vp: *Viewport) -> void #c_call; // N . . . .  // Move window to front and set input focus
+    Platform_GetWindowFocus:     #type (vp: *Viewport) -> bool #c_call; // . . U . .  //
+    Platform_GetWindowMinimized: #type (vp: *Viewport) -> bool #c_call; // N . . . .  // Get platform window minimized state. When minimized, we generally won't attempt to get/set size and contents will be culled more easily
+    Platform_SetWindowTitle:     #type (vp: *Viewport, str: *u8) -> void #c_call; // . . U . .  // Set platform window title (given an UTF-8 string)
+    Platform_SetWindowAlpha:     #type (vp: *Viewport, alpha: float) -> void #c_call; // . . U . .  // (Optional) Setup global transparency (not per-pixel transparency)
+    Platform_UpdateWindow:       #type (vp: *Viewport) -> void #c_call; // . . U . .  // (Optional) Called by UpdatePlatformWindows(). Optional hook to allow the platform backend from doing general book-keeping every frame.
+    Platform_RenderWindow:       #type (vp: *Viewport, render_arg: *void) -> void #c_call; // . . . R .  // (Optional) Main rendering (platform side! This is often unused, or just setting a "current" context for OpenGL bindings). 'render_arg' is the value passed to RenderPlatformWindowsDefault().
+    Platform_SwapBuffers:        #type (vp: *Viewport, render_arg: *void) -> void #c_call; // . . . R .  // (Optional) Call Present/SwapBuffers (platform side! This is often unused!). 'render_arg' is the value passed to RenderPlatformWindowsDefault().
+    Platform_GetWindowDpiScale:  #type (vp: *Viewport) -> float #c_call; // N . . . .  // (Optional) [BETA] FIXME-DPI: DPI handling: Return DPI scale for this viewport. 1.0f = 96 DPI.
+    Platform_OnChangedViewport:  #type (vp: *Viewport) -> void #c_call; // . F . . .  // (Optional) [BETA] FIXME-DPI: DPI handling: Called during Begin() every time the viewport we are outputting into changes, so backend has a chance to swap fonts to adjust style.
+    Platform_CreateVkSurface:    #type (vp: *Viewport, vk_inst: ImU64, vk_allocators: *void, out_vk_surface: *ImU64) -> s32 #c_call; // (Optional) For a Vulkan Renderer to call into Platform code (since the surface creation needs to tie them both).
 
-    Renderer_CreateWindow:       #type (a0: *Viewport) -> void #c_call; // . . U . .  // Create swap chain, frame buffers etc. (called after Platform_CreateWindow)
-    Renderer_DestroyWindow:      #type (a0: *Viewport) -> void #c_call; // N . U . D  // Destroy swap chain, frame buffers etc. (called before Platform_DestroyWindow)
-    Renderer_SetWindowSize:      #type (a0: *Viewport, a1: ImVec2) -> void #c_call; // . . U . .  // Resize swap chain, frame buffers etc. (called after Platform_SetWindowSize)
-    Renderer_RenderWindow:       #type (a0: *Viewport, a1: *void) -> void #c_call; // . . . R .  // (Optional) Clear framebuffer, setup render target, then render the viewport->DrawData. 'render_arg' is the value passed to RenderPlatformWindowsDefault().
-    Renderer_SwapBuffers:        #type (a0: *Viewport, a1: *void) -> void #c_call; // . . . R .  // (Optional) Call Present/SwapBuffers. 'render_arg' is the value passed to RenderPlatformWindowsDefault().
+    Renderer_CreateWindow:       #type (vp: *Viewport) -> void #c_call; // . . U . .  // Create swap chain, frame buffers etc. (called after Platform_CreateWindow)
+    Renderer_DestroyWindow:      #type (vp: *Viewport) -> void #c_call; // N . U . D  // Destroy swap chain, frame buffers etc. (called before Platform_DestroyWindow)
+    Renderer_SetWindowSize:      #type (vp: *Viewport, size: ImVec2) -> void #c_call; // . . U . .  // Resize swap chain, frame buffers etc. (called after Platform_SetWindowSize)
+    Renderer_RenderWindow:       #type (vp: *Viewport, render_arg: *void) -> void #c_call; // . . . R .  // (Optional) Clear framebuffer, setup render target, then render the viewport->DrawData. 'render_arg' is the value passed to RenderPlatformWindowsDefault().
+    Renderer_SwapBuffers:        #type (vp: *Viewport, render_arg: *void) -> void #c_call; // . . . R .  // (Optional) Call Present/SwapBuffers. 'render_arg' is the value passed to RenderPlatformWindowsDefault().
 
     // (Optional) Monitor list
     // - Updated by: app/backend. Update every frame to dynamically support changing monitor or DPI configuration.
@@ -3439,6 +3396,47 @@ PlatformImeData :: struct {
     WantVisible:     bool; // A widget wants the IME to be visible
     InputPos:        ImVec2; // Position of the input cursor
     InputLineHeight: float; // Line height
+}
+
+// OBSOLETED in 1.82 (from Mars 2021): flags for AddRect(), AddRectFilled(), AddImageRounded(), PathRect()
+ImDrawCornerFlags :: ImDrawFlags;
+ImDrawCornerFlags_ :: enum_flags s32 {
+    None     :: 0x100;
+    TopLeft  :: 0x10;
+    TopRight :: 0x20;
+    BotLeft  :: 0x40;
+    BotRight :: 0x80;
+    All      :: 0xf0;
+    Top      :: 0x30;
+    Bot      :: 0xc0;
+    Left     :: 0x50;
+    Right    :: 0xa0;
+
+    ImDrawCornerFlags_None     :: None;
+    ImDrawCornerFlags_TopLeft  :: TopLeft;
+    ImDrawCornerFlags_TopRight :: TopRight;
+    ImDrawCornerFlags_BotLeft  :: BotLeft;
+    ImDrawCornerFlags_BotRight :: BotRight;
+    ImDrawCornerFlags_All      :: All;
+    ImDrawCornerFlags_Top      :: Top;
+    ImDrawCornerFlags_Bot      :: Bot;
+    ImDrawCornerFlags_Left     :: Left;
+    ImDrawCornerFlags_Right    :: Right;
+}
+
+// RENAMED ImGuiKeyModFlags -> ImGuiModFlags in 1.88 (from April 2022)
+KeyModFlags :: s32;
+KeyModFlags_ :: enum_flags s32 {
+    None  :: 0x0;
+    Ctrl  :: 0x1;
+    Shift :: 0x2;
+    Alt   :: 0x4;
+    Super :: 0x8;
+    ImGuiKeyModFlags_None  :: None;
+    ImGuiKeyModFlags_Ctrl  :: Ctrl;
+    ImGuiKeyModFlags_Shift :: Shift;
+    ImGuiKeyModFlags_Alt   :: Alt;
+    ImGuiKeyModFlags_Super :: Super;
 }
 
 #scope_file

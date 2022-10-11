@@ -1,5 +1,6 @@
 #import "Basic";
 #import "File";
+#import "File_Utilities";
 #import "String";
 bdgen :: #import "Bindings_Generator";
 
@@ -16,7 +17,7 @@ TYPES_TO_OMIT :: string.[
 	"ImDrawCallback"
 ];
 
-COMPILE_CPP_SOURCE :: false;
+ALWAYS_COMPILE_CPP_SOURCE :: false;
 COMPILE_DEBUG :: true;
 INCLUDE_DEMO  :: true;
 
@@ -28,7 +29,7 @@ g_begin_end_string_args : [..]*bdgen.Declaration;
 
 	set_build_options_dc (.{do_output = false});
 
-	#if COMPILE_CPP_SOURCE
+	if !file_exists ("win/ImGui.dll") || !file_exists ("win/ImGui.lib") || ALWAYS_COMPILE_CPP_SOURCE
 	{
 		if !compile_cpp_source ()
 		{
@@ -178,6 +179,7 @@ visitor :: (decl : *bdgen.Declaration, parent_decl : *bdgen.Declaration) -> bdge
 
 	case .FUNCTION;
 		func := cast (*bdgen.Function) decl;
+		type := func.type.type_of_function;
 
 		// ImGui also has functions with pairs of arguments like "text_begin" and "text_end"
 		// for the pointers to the beginning and end of a string. We'll generate wrappers for
@@ -185,7 +187,7 @@ visitor :: (decl : *bdgen.Declaration, parent_decl : *bdgen.Declaration) -> bdge
 		//
 		// Here we collect pointers to "_begin" arguments, and use them in
 		// get_func_args_for_printing below.
-		for func.arguments
+		for type.arguments
 		{
 			if it_index == 0 || !ends_with (it.name, "_end")
 				continue;
@@ -195,7 +197,7 @@ visitor :: (decl : *bdgen.Declaration, parent_decl : *bdgen.Declaration) -> bdge
 			
 			// The first arg may appear as "text_begin" or just "text"
 			name_with_begin := tprint ("%_begin", basename);
-			prev_arg := func.arguments[it_index - 1];
+			prev_arg := type.arguments[it_index - 1];
 			if prev_arg.name == basename || prev_arg.name == name_with_begin
 			{
 				array_add (*g_begin_end_string_args, prev_arg);
@@ -207,13 +209,13 @@ visitor :: (decl : *bdgen.Declaration, parent_decl : *bdgen.Declaration) -> bdge
 	return .RECURSE;
 }
 
-get_func_args_for_printing :: (func : *bdgen.Function, mode : bdgen.Arg_Print_Mode) -> []*bdgen.Declaration
+get_func_args_for_printing :: (func : *bdgen.Function, type : *bdgen.Function_Type, mode : bdgen.Arg_Print_Mode) -> []*bdgen.Declaration
 {
 	args : [..]*bdgen.Declaration;
 	if func.decl_flags & .NEEDS_PRINTF_WRAPPER
 		print ("Function % wants printf wrapper.\n", func.name);
 
-	for func.arguments
+	for type.arguments
 	{
 		if array_find (g_begin_end_string_args, it)
 		{
