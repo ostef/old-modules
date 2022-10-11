@@ -212,7 +212,15 @@ visitor :: (decl : *bdgen.Declaration, parent_decl : *bdgen.Declaration) -> bdge
 get_func_args_for_printing :: (func : *bdgen.Function, type : *bdgen.Function_Type, mode : bdgen.Arg_Print_Mode) -> []*bdgen.Declaration
 {
 	args : [..]*bdgen.Declaration;
+	
+	
+	// We disabled printf wrapper generation in the generator options, so we can't
+	// rely on func.decl_flags being NEEDS_PRINTF_WRAPPER
+	/*
 	if func.decl_flags & .NEEDS_PRINTF_WRAPPER
+		print ("Function % wants printf wrapper.\n", func.name);
+	*/
+	if (type.flags & .VARIADIC) && bdgen.is_char_pointer_type(<<type.arguments[type.arguments.count - 1].type)
 		print ("Function % wants printf wrapper.\n", func.name);
 
 	for type.arguments
