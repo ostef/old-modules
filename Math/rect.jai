@@ -89,6 +89,7 @@ top_left :: inline (using rect : $R/Rect) -> R.V #must
 	result : R.V;
 	result.x = rect.x;
 	result.y = rect.y;
+	
 	return result;
 }
 
@@ -98,6 +99,7 @@ top_right :: inline (using rect : $R/Rect) -> R.V #must
 	result : R.V;
 	result.x = rect.x + rect.w;
 	result.y = rect.y;
+
 	return result;
 }
 
@@ -107,6 +109,7 @@ bottom_left :: inline (using rect : $R/Rect) -> R.V #must
 	result : R.V;
 	result.x = rect.x;
 	result.y = rect.y + rect.h;
+
 	return result;
 }
 
@@ -116,6 +119,7 @@ bottom_right :: inline (using rect : $R/Rect) -> R.V #must
 	result : R.V;
 	result.x = rect.x + rect.w;
 	result.y = rect.y + rect.h;
+
 	return result;
 }
 

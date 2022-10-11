@@ -77,18 +77,23 @@ create_context :: inline (win : *window.Handle, gl_ctx : *gl.GL_Context) -> *Dra
 {
 	if !win || !gl_ctx
 		return null;
-	imdraw := mem.alloc (Draw_Context, mem.HEAP_ALLOC);
+
+	imdraw := mem.alloc (Draw_Context);
 	if !imdraw
 		return null;
+
 	imdraw.win = win;
 	imdraw.gl_ctx = gl_ctx;
 	shader_ok, info_log := render.init_shader (*imdraw.default_shader, GL_VERTEX_SHADER, GL_FRAGMENT_SHADER);
+
 	if !shader_ok
 	{
 		log.error ("Could not load ImDraw default shader:\n%", info_log);
 		destroy_context (imdraw);
+	
 		return null;
 	}
+
 	render.init_vertex_buffer (*imdraw.vertex_buffer, Vertex.LAYOUT);
 	render.allocate_vertex_buffer_data (*imdraw.vertex_buffer, MAX_VERTICES * size_of (Vertex), .DYNAMIC_DRAW);
 
@@ -100,7 +105,7 @@ destroy_context :: inline (imdraw : *Draw_Context)
 	assert (context.imdraw_context != imdraw, "Cannot destroy ImDraw context because it is in use; end was not called.");
 	render.destroy_vertex_buffer (*imdraw.vertex_buffer);
 	render.destroy_shader (*imdraw.default_shader);
-	mem.free (imdraw, mem.HEAP_ALLOC);
+	mem.free (imdraw);
 }
 
 begin :: inline (imdraw : *Draw_Context)
@@ -120,15 +125,21 @@ end :: inline ()
 flush :: inline ()
 {
 	check_init ();
+
 	if imdraw.vertex_count == 0
 		return;
+
 	shader := ifx imdraw.shader then imdraw.shader else *imdraw.default_shader;
+	
 	prev_vertex_buffer := render.use_vertex_buffer (*imdraw.vertex_buffer);
 	defer render.use_vertex_buffer (*prev_vertex_buffer);
+
 	prev_shader := render.use_shader (shader);
 	defer render.use_shader (*prev_shader);
+	
 	prev_texture := render.use_texture (imdraw.texture);
 	defer render.use_texture (*prev_texture);
+	
 	prev_framebuffer := render.use_framebuffer_for_drawing (imdraw.framebuffer);
 	defer render.use_framebuffer_for_drawing (*prev_framebuffer);
 
@@ -141,6 +152,7 @@ flush :: inline ()
 		viewport.w = viewport_w;
 		viewport.h = viewport_h;
 	}
+
 	view_projection := mat4f_orthographic_projection (
 		cast (f32) viewport.x,
 		cast (f32) (viewport.x + viewport.w),
@@ -149,6 +161,7 @@ flush :: inline ()
 		0,
 		1
 	);
+	
 	gl.Viewport (viewport.x, viewport.y, xx viewport.w, xx viewport.h);
 	render.set_shader_parameter (shader, "u_View_Projection_Matrix", view_projection);
 	render.set_shader_parameter (shader, "u_Use_Texture", imdraw.texture != null);
@@ -161,6 +174,7 @@ flush :: inline ()
 		gl.Scissor (xx clip_rect.x, xx clip_rect.y, xx clip_rect.w, xx clip_rect.h);
 	}
 	defer gl.Disable (gl.SCISSOR_TEST);
+	
 	gl.Disable (gl.DEPTH_TEST);
 	gl.Enable (gl.BLEND);
 	gl.BlendFunc (gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
@@ -182,6 +196,7 @@ push_vertices :: inline (ctx : *Draw_Context, count : s64) -> *Vertex #must
 	assert (count <= MAX_VERTICES, "Reserving too many vertices (requested %, maximum is %).", count, MAX_VERTICES);
 	if ctx.vertex_count + count > MAX_VERTICES
 		flush ();
+	
 	result := *ctx.vertices[ctx.vertex_count];
 	ctx.vertex_count += count;
 
@@ -199,10 +214,13 @@ set_clip_rect :: inline (ctx : *Draw_Context, clip_rect : Recti) -> previous : R
 {;
 	previous := ctx.clip_rect;
 	// We can't use operator == for rects because it is in math
-	if !mem.equals (previous, clip_rect) || !ctx.clipping_enabled then flush ();
+	if !mem.equals (previous, clip_rect) || !ctx.clipping_enabled
+		flush ();
+	
 	ctx.clipping_enabled = true;
 	ctx.clip_rect = clip_rect;
 	using ctx.clip_rect;
+	
 	if w < 0 then w = 0;
 	if h < 0 then h = 0;
 
@@ -215,6 +233,7 @@ push_clip_rect :: inline (renderer : *$T, clip_rect : Recti) -> previous : Recti
 	check_init ();
 	if get_clipping (renderer)
 		return set_clip_rect (renderer, math.clip (clip_rect, get_clip_rect (renderer)));
+	
 	return set_clip_rect (renderer, clip_rect);
 }
 
@@ -222,6 +241,7 @@ scope_clip_rect :: (clip_rect : Recti) #expand
 {
 	previous_clip := get_clipping ();
 	`defer set_clipping (previous_clip);
+	
 	previous_rect := push_clip_rect (clip_rect);
 	`defer set_clip_rect (previous_rect);
 }
@@ -230,6 +250,7 @@ scope_clip_rect :: (renderer : *$T, clip_rect : Recti) #expand
 {
 	previous_clip := get_clipping (renderer);
 	`defer set_clipping (renderer, previous_clip);
+	
 	previous_rect := push_clip_rect (renderer, clip_rect);
 	`defer set_clip_rect (renderer, previous_rect);
 }
@@ -246,6 +267,7 @@ set_clipping :: inline (ctx : *Draw_Context, enable : bool) -> previous : bool
 	previous := ctx.clipping_enabled;
 	if previous != enable then flush ();
 	ctx.clipping_enabled = enable;
+	
 	return previous;
 }
 
@@ -261,6 +283,7 @@ set_texture :: inline (ctx : *Draw_Context, texture : *render.Texture) -> previo
 	previous := ctx.texture;
 	if previous != texture then flush ();
 	ctx.texture = texture;
+	
 	return previous;
 }
 
@@ -276,12 +299,14 @@ set_shader :: inline (ctx : *Draw_Context, shader : *render.Shader) -> *render.S
 	previous := ctx.shader;
 	if previous != shader then flush ();
 	ctx.shader = shader;
+	
 	return previous;
 }
 
 get_viewport :: inline () -> Recti #must
 {
 	check_init ();
+	
 	return imdraw.viewport;
 }
 
@@ -291,12 +316,14 @@ set_viewport :: inline (viewport : Recti) -> Recti
 	previous := imdraw.viewport;
 	if !mem.equals (previous, viewport) then flush ();
 	imdraw.viewport = viewport;
+	
 	return previous;
 }
 
 get_framebuffer :: inline () -> *render.Framebuffer #must
 {
 	check_init ();
+	
 	return imdraw.framebuffer;
 }
 
@@ -306,6 +333,7 @@ set_framebuffer :: inline (framebuffer : *render.Framebuffer) -> *render.Framebu
 	previous := imdraw.framebuffer;
 	if previous != framebuffer then flush ();
 	imdraw.framebuffer = framebuffer;
+	
 	return previous;
 }
 

@@ -72,6 +72,7 @@ to_error :: inline (err : fs.Error) -> Error #must
 	case .OK;
 		return .OK;
 	}
+
 	return .UNKNOWN;
 }
 
@@ -79,6 +80,7 @@ close :: inline (s : Stream) -> Error
 {
 	if s.close
 		return s.close (s);
+
 	return .NOT_IMPLEMENTED;
 }
 
@@ -87,8 +89,10 @@ write :: inline (s : Stream, buff : *void, size : s64) -> bytes_written : s64, E
 	if s.write
 	{
 		bytes_written, err := s.write (s, buff, size);
+
 		return bytes_written, err;
 	}
+
 	return 0, .NOT_IMPLEMENTED;
 }
 
@@ -97,8 +101,10 @@ read :: inline (s : Stream, buff : *void, size : s64) -> bytes_read : s64, Error
 	if s.read
 	{
 		bytes_read, err := s.read (s, buff, size);
+
 		return bytes_read, err;
 	}
+
 	return 0, .NOT_IMPLEMENTED;
 }
 
@@ -106,6 +112,7 @@ flush :: inline (s : Stream) -> Error
 {
 	if s.flush
 		return s.flush (s);
+
 	return .NOT_IMPLEMENTED;
 }
 
@@ -114,8 +121,10 @@ seek :: inline (s : Stream, offset : s64, from : Seek_From) -> new_offset : s64,
 	if s.seek
 	{
 		res, err := s.seek (s, offset, from);
+
 		return res, err;
 	}
+
 	return 0, .NOT_IMPLEMENTED;
 }
 
@@ -124,14 +133,17 @@ size :: inline (s : Stream) -> s64, Error
 	if s.size
 	{
 		res, err := s.size (s);
+
 		return res, err;
 	}
+
 	return 0, .NOT_IMPLEMENTED;
 }
 
 get_cursor :: inline (s : Stream) -> s64, Error
 {
 	cursor, err := seek (s, 0, .CURRENT);
+
 	return cursor, err;
 }
 
@@ -141,6 +153,7 @@ read :: inline (stream : Stream, $T : Type) -> T #must, Error
 	bytes, err := read (stream, *result, size_of (T));
 	if bytes != size_of (T)
 		return result, .EOI;
+
 	return result, err;
 }
 
@@ -149,5 +162,6 @@ read :: inline (stream : Stream, $T : Type) -> T #must, Error
 write :: inline (stream : Stream, val : $T) -> Error
 {
 	bytes, err := write (stream, *val, size_of (T));
+	
 	return err;
 }

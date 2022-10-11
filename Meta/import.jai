@@ -25,7 +25,7 @@ find_module_path :: (base : string) -> string, is_file : bool, exists : bool
 		return module_path, !flagged (attrs, .DIRECTORY), true;
 	else if !str.ends_with (module_path, ".jai")
 	{
-		module_path = path.join (mem.HEAP_ALLOC, module_path, ".jai");
+		module_path = path.join (module_path, ".jai");
 		attrs, err := fs.get_file_attributes (module_path);
 		if err == .OK
 			return module_path, !flagged (attrs, .DIRECTORY), true;
@@ -49,8 +49,8 @@ handle_failed_import :: (import : *jaic.Message_Failed_Import)
 		base_dir, has_mapping := map.get (g_module_search_map, mount_name);
 		if has_mapping
 		{
-			mounted_path := path.join (mem.HEAP_ALLOC, base_dir, module_name);
-			module_path = fs.get_full_filename (module_path, mem.HEAP_ALLOC);
+			mounted_path := path.join (base_dir, module_name);
+			module_path = fs.get_full_filename (module_path);
 			module_path, is_file, exists = find_module_path (mounted_path);
 		}
 		else
@@ -60,8 +60,8 @@ handle_failed_import :: (import : *jaic.Message_Failed_Import)
 	{
 		for g_module_search_dirs
 		{
-			full_path := path.join (mem.HEAP_ALLOC, it, import.target_module_name);
-			full_path = fs.get_full_filename (full_path, mem.HEAP_ALLOC);
+			full_path := path.join (it, import.target_module_name);
+			full_path = fs.get_full_filename (full_path);
 			if exists
 				break;
 			module_path, is_file, exists = find_module_path (full_path);

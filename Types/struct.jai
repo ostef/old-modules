@@ -11,6 +11,7 @@ is_struct :: inline (info : *Type_Info) -> bool #must
 {
 	if !is_struct_or_union (info)
 		return false;
+
 	return !is_union (info);
 }
 
@@ -20,6 +21,7 @@ is_union :: inline (info : *Type_Info) -> bool #must
 {
 	if !is_struct_or_union (info)
 		return false;
+
 	return (cast (*Type_Info_Struct) info).textual_flags & .UNION == .UNION;
 }
 
@@ -28,10 +30,14 @@ struct_has_member :: inline (info : *Type_Info, name : string) -> bool #must
 {
 	if !is_struct (info)
 		return false;
+
 	info_struct := cast (*Type_Info_Struct) info;
 	for member : info_struct.members
+	{
 		if member.name == name
 			return true;
+	}
+
 	return false;
 }
 
@@ -40,9 +46,13 @@ get_struct_member_type :: inline (info : *Type_Info, name : string) -> *Type_Inf
 {
 	if !is_struct (info)
 		return null;
+
 	info_struct := cast (*Type_Info_Struct) info;
 	for member : info_struct.members
+	{
 		if member.name == name
 			return member.type;
+	}
+
 	return null;
 }

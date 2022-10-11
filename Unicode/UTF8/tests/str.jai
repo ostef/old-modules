@@ -6,7 +6,7 @@ main :: ()
 {
 	s := utf8.make_str ("Hello Sailor!");
 	assert (s.as_string == "Hello Sailor!");
-	codepoints := utf8.decode (s, context.allocator);
+	codepoints := utf8.decode_string (s, context.allocator);
 	last_index := -1;
 	for codepoint, i : utf8.make_str ("Hello Sailor!")
 	{

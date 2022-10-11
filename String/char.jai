@@ -56,6 +56,7 @@ to_upper :: inline (ascii : u8) -> u8 #must
 {
 	if is_lower (ascii)
 		return #char "A" + (ascii - #char "a");
+
 	return ascii;
 }
 
@@ -64,6 +65,7 @@ to_lower :: inline (ascii : u8) -> u8 #must
 {
 	if is_upper (ascii)
 		return #char "a" + (ascii - #char "A");
+
 	return ascii;
 }
 
@@ -72,6 +74,7 @@ to_upper :: inline (s : string) -> string
 {
 	for i : 0..s.count - 1
 		s[i] = to_upper (s[i]);
+
 	return s;
 }
 
@@ -80,6 +83,7 @@ to_lower :: inline (s : string) -> string
 {
 	for i : 0..s.count - 1
 		s[i] = to_lower (s[i]);
+
 	return s;
 }
 

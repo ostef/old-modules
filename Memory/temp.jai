@@ -7,6 +7,7 @@ temporary_allocator_proc :: (mode : Allocator_Mode, size : s64, old_size : s64, 
 		storage = cast (*Temporary_Storage) allocator_data;
 	else
 		storage = context.temporary_storage;
+	
 	return inline arena.allocator_proc (mode, size, old_size, old_ptr, storage);
 }
 

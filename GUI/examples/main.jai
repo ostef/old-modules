@@ -68,10 +68,10 @@ main :: ()
 	imdraw_ctx := imdraw.create_context (g_window, gl_ctx);
 	defer imdraw.destroy_context (imdraw_ctx);
 	
-	g_font = font.load_family ("C:/Windows/Fonts/", "Roboto", mem.HEAP_ALLOC);
+	g_font = font.load_family ("C:/Windows/Fonts/", "Roboto");
 	if !g_font
 		error ("Could not load font.");
-	defer font.destroy_family (*g_font, mem.HEAP_ALLOC);
+	defer font.destroy_family (*g_font);
 
 	if !render.load_texture_from_file (*g_icons.exclamation, "data/icons/exclamation_16.png")
 		error ("Could not load icon.");

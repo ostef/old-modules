@@ -43,27 +43,31 @@ win32_init_window_context :: inline () -> bool
 {
 	{
 		using g_wndclass;
+
 		cbSize        = size_of (win32.WNDCLASSEXW);
 		style         = win32.CS_DBLCLKS | win32.CS_OWNDC;
 		lpfnWndProc   = win32_wnd_proc;
 		hInstance     = win32.GetModuleHandleW (null);
-		lpszClassName = win32.utf8_to_wide ("WindowClass", mem.HEAP_ALLOC);
+		lpszClassName = win32.utf8_to_wide ("WindowClass");
 		if !win32.RegisterClassExW (*g_wndclass)
 		{
 			show_error_box ("RegisterClassExW for WindowClass failed: %", win32.get_last_error_string ());
+	
 			return false;
 		}
 	}
 	{
 		using g_custom_caption_wndclass;
+	
 		cbSize        = size_of (win32.WNDCLASSEXW);
 		style         = win32.CS_DBLCLKS | win32.CS_OWNDC;
 		lpfnWndProc   = win32_custom_caption_wnd_proc;
 		hInstance     = win32.GetModuleHandleW (null);
-		lpszClassName = win32.utf8_to_wide ("CustomCaptionWindowClass", mem.HEAP_ALLOC);
+		lpszClassName = win32.utf8_to_wide ("CustomCaptionWindowClass");
 		if !win32.RegisterClassExW (*g_custom_caption_wndclass)
 		{
 			show_error_box ("RegisterClassExW for CustomCaptionWindowClass failed: %", win32.get_last_error_string ());
+	
 			return false;
 		}
 	}
@@ -81,6 +85,7 @@ win32_init_window_context :: inline () -> bool
 		g_cursors.size_vertical = win32.LoadCursorW (null, cast (*u16) win32.IDC_SIZENS);
 		g_cursors.not_allowed = win32.LoadCursorW (null, cast (*u16) win32.IDC_NO);
 	}
+
 	g_initialized = true;
 
 	return true;
@@ -115,6 +120,7 @@ create :: inline (
 {
 	if !g_initialized
 		win32_init_window_context ();
+
 	if x == DEFAULT then x = win32.CW_USEDEFAULT;
 	if y == DEFAULT then y = win32.CW_USEDEFAULT;
 	if width  == DEFAULT then width  = win32.CW_USEDEFAULT;
@@ -123,14 +129,17 @@ create :: inline (
 	wndclass := *g_wndclass;
 	window_flags : Flags;
 	style : win32.DWORD = win32.WS_OVERLAPPEDWINDOW;
+
 	if flagged (flags, .CUSTOM_CAPTION)
 	{
 		style = win32.WS_THICKFRAME | win32.WS_SYSMENU | win32.WS_MAXIMIZEBOX | win32.WS_MINIMIZEBOX;
 		window_flags |= .CUSTOM_CAPTION;
 		wndclass = *g_custom_caption_wndclass;
 	}
+
 	if flagged (flags, .VISIBLE)
 		style |= win32.WS_VISIBLE;
+	
 	if flagged (flags, .USE_CLIENT_COORDINATES)
 	{
 		rect : win32.RECT;
@@ -161,7 +170,8 @@ create :: inline (
 		win32.GetModuleHandleW (null),
 		null
 	);
-	data := mem.alloc (Win32_Window_Data, mem.HEAP_ALLOC);
+
+	data := mem.alloc (Win32_Window_Data);
 	data.message_queue.allocator = mem.HEAP_ALLOC;
 	win32.SetWindowLongPtrW (hwnd, win32.GWLP_USERDATA, cast (*win32.LONG) data);
 	data.flags = window_flags;
@@ -194,6 +204,7 @@ get_flags :: inline (window : Handle) -> Flags #must
 {
 	data := win32_get_window_data (window);
 	contextless_assert (data != null, "Could not retrieve window data.");
+	
 	return data.flags;
 }
 
@@ -202,6 +213,7 @@ get_caption_hit_test :: inline (window : Handle) -> Caption_Hit_Test_Proc #must
 {
 	data := win32_get_window_data (window);
 	contextless_assert (data != null, "Could not retrieve window data.");
+	
 	return data.caption_hit_test;
 }
 
@@ -276,6 +288,7 @@ is_maximized :: inline (window : Handle) -> bool #must
 	placement.length = size_of (win32.WINDOWPLACEMENT);
 	if win32.GetWindowPlacement (window, *placement)
 		return placement.showCmd == win32.SW_SHOWMAXIMIZED;
+	
 	return false;
 }
 
@@ -286,6 +299,7 @@ is_minimized :: inline (window : Handle) -> bool #must
 	placement.length = size_of (win32.WINDOWPLACEMENT);
 	if win32.GetWindowPlacement (window, *placement)
 		return placement.showCmd == win32.SW_SHOWMINIMIZED;
+	
 	return false;
 }
 
@@ -312,6 +326,7 @@ get_mouse_position :: inline () -> x : s32, y : s32
 {
 	result : win32.POINT;
 	win32.GetCursorPos (*result);
+	
 	return result.x, result.y;
 }
 
@@ -321,6 +336,7 @@ get_mouse_position :: inline (window : Handle) -> x : s32, y : s32
 	result : win32.POINT;
 	win32.GetCursorPos (*result);
 	win32.ScreenToClient (window, *result);
+	
 	return result.x, result.y;
 }
 
@@ -348,12 +364,15 @@ poll_messages :: inline (window : Handle)
 get_next_message :: inline (window : Handle, msg : *Message) -> bool
 {
 	data := win32_get_window_data (window);
+	
 	if data.last_retrieved_message >= data.message_queue.count
 	{
 		array.clear (*data.message_queue);
 		data.last_retrieved_message = 0;
+	
 		return false;
 	}
+	
 	<<msg = data.message_queue[data.last_retrieved_message];
 	data.last_retrieved_message += 1;
 
@@ -420,6 +439,7 @@ win32_wnd_proc :: (window : win32.HWND, msg : u32, wparam : win32.WPARAM, lparam
 	using data := win32_get_window_data (window);
 	if !data
 		return win32.DefWindowProcW (window, msg, wparam, lparam);
+
 	window_msg : Message;
 	window_msg.window = window;
 
@@ -431,13 +451,14 @@ win32_wnd_proc :: (window : win32.HWND, msg : u32, wparam : win32.WPARAM, lparam
 		{
 		case win32.WM_DESTROY;
 			array.reset (*message_queue);
-			mem.free (data, mem.HEAP_ALLOC);
+			mem.free (data);
 			data = null;
 
 		case win32.WM_MOVE;
 			window_msg.kind = .WINDOW_MOVED;
 			window_msg.window_x = win32.LOWORD (lparam);
 			window_msg.window_y = win32.HIWORD (lparam);
+			
 			push_message (data, window_msg);
 
 		case win32.WM_SIZE;
@@ -452,12 +473,15 @@ win32_wnd_proc :: (window : win32.HWND, msg : u32, wparam : win32.WPARAM, lparam
 			case;
 				return win32.DefWindowProcW (window, msg, wparam, lparam);
 			}
+	
 			window_msg.viewport_width  = win32.LOWORD (lparam);
 			window_msg.viewport_height = win32.HIWORD (lparam);
+		
 			push_message (data, window_msg);
 
 		case win32.WM_CLOSE;
 			window_msg.kind = .WINDOW_CLOSED;
+		
 			push_message (data, window_msg);
 
 		case win32.WM_SHOWWINDOW;
@@ -465,14 +489,17 @@ win32_wnd_proc :: (window : win32.HWND, msg : u32, wparam : win32.WPARAM, lparam
 				window_msg.kind = .WINDOW_SHOWN;
 			else
 				window_msg.kind = .WINDOW_HIDDEN;
+			
 			push_message (data, window_msg);
 
 		case win32.WM_SETFOCUS;
 			window_msg.kind = .WINDOW_RECEIVED_FOCUS;
+			
 			push_message (data, window_msg);
 
 		case win32.WM_KILLFOCUS;
 			window_msg.kind = .WINDOW_LOST_FOCUS;
+			
 			push_message (data, window_msg);
 
 		case win32.WM_CHAR;
@@ -494,12 +521,14 @@ win32_wnd_proc :: (window : win32.HWND, msg : u32, wparam : win32.WPARAM, lparam
 					codepoint |= (low_surrogate - UTF16_HI_SURROGATE);
 					codepoint += 0x10000;
 				}
+
 				unicode :: #import "Unicode";
 				if unicode.is_printable (codepoint)
 				{
 					window_msg.kind      = .TEXT_INPUT;
 					window_msg.mods      = input.get_mod_state ();
 					window_msg.codepoint = codepoint;
+			
 					push_message (data, window_msg);
 				}
 			}
@@ -525,6 +554,7 @@ win32_wnd_proc :: (window : win32.HWND, msg : u32, wparam : win32.WPARAM, lparam
 				window_msg.kind = .KEY_PRESSED;
 			window_msg.mods     = input.get_mod_state ();
 			window_msg.key_code = input.win32_vk_to_key_code (xx wparam);
+			
 			push_message (data, window_msg);
 
 			if msg == win32.WM_SYSKEYDOWN || msg == win32.WM_SYSKEYUP
@@ -577,20 +607,25 @@ win32_wnd_proc :: (window : win32.HWND, msg : u32, wparam : win32.WPARAM, lparam
 				window_msg.kind = .MOUSE_BUTTON_REPEATED;
 				window_msg.mouse_button = .RIGHT;
 			}
+	
 			window_msg.mods = input.get_mod_state ();
 			window_msg.mouse_x = win32.LOWORD (lparam);
 			window_msg.mouse_y = win32.HIWORD (lparam);
+			
 			push_message (data, window_msg);
 
 		case win32.WM_MOUSEHWHEEL; #through;
 		case win32.WM_MOUSEWHEEL;
 			window_msg.kind = .MOUSE_WHEEL;
 			window_msg.mods = input.get_mod_state ();
+		
 			if msg == win32.WM_MOUSEHWHEEL
 				window_msg.mouse_wheel_x = win32.HIWORD (wparam) / 120.0;
 			else
 				window_msg.mouse_wheel_y = win32.HIWORD (wparam) / 120.0;
+	
 			window_msg.mouse_x, window_msg.mouse_y = get_mouse_position (window);
+		
 			push_message (data, window_msg);
 
 		case win32.WM_MOUSEMOVE;
@@ -605,17 +640,20 @@ win32_wnd_proc :: (window : win32.HWND, msg : u32, wparam : win32.WPARAM, lparam
 			window_msg.mods = input.get_mod_state ();
 			window_msg.mouse_x = win32.LOWORD (lparam);
 			window_msg.mouse_y = win32.HIWORD (lparam);
+			
 			push_message (data, window_msg);
 
 		case win32.WM_MOUSELEAVE;
 			data.is_mouse_inside_client_area = false;
 			window_msg.kind = .MOUSE_LEFT_WINDOW;
+			
 			push_message (data, window_msg);
 
 		case win32.WM_INPUT;
 			size := cast (u32) size_of (win32.RAWINPUT);
 			rawinput : win32.RAWINPUT;
 			win32.GetRawInputData (cast (win32.HRAWINPUT) lparam, win32.RID_INPUT, *rawinput, *size, size_of (win32.RAWINPUTHEADER));
+			
 			if rawinput.header.dwType == win32.RIM_TYPEMOUSE
 			{
 				if flagged (rawinput.data.mouse.usFlags, win32.MOUSE_MOVE_RELATIVE) && (rawinput.data.mouse.lLastX != 0 || rawinput.data.mouse.lLastY != 0)
@@ -624,6 +662,7 @@ win32_wnd_proc :: (window : win32.HWND, msg : u32, wparam : win32.WPARAM, lparam
 					window_msg.mods = input.get_mod_state ();
 					window_msg.mouse_delta_x = rawinput.data.mouse.lLastX;
 					window_msg.mouse_delta_y = rawinput.data.mouse.lLastY;
+			
 					push_message (data, window_msg);
 
 					return 0;
@@ -634,12 +673,14 @@ win32_wnd_proc :: (window : win32.HWND, msg : u32, wparam : win32.WPARAM, lparam
 
 		case win32.WM_SETCURSOR;
 			win32.SetCursor (win32.LoadCursorW (null, cast (*win32.WCHAR) win32.IDC_ARROW));
+		
 			return win32.DefWindowProcW (window, msg, wparam, lparam);
 
 		case;
 			return win32.DefWindowProcW (window, msg, wparam, lparam);
 		}
 	}
+
 	return 0;
 }
 
@@ -660,28 +701,35 @@ win32_custom_caption_wnd_proc :: (window : win32.HWND, msg : u32, wparam : win32
 				size_rect.right - size_rect.left, size_rect.bottom - size_rect.top,
 				win32.SWP_FRAMECHANGED | win32.SWP_NOMOVE | win32.SWP_NOSIZE
 			);
+	
 			return win32.DefWindowProcW (window, msg, wparam, lparam);
 	
 		case win32.WM_NCCALCSIZE;
 			if wparam == 0
 				return win32.DefWindowProcW (window, msg, wparam, lparam);
+	
 			frame_x := win32.GetSystemMetrics (win32.SM_CXFRAME);
 			frame_y := win32.GetSystemMetrics (win32.SM_CYFRAME);
 			padding := win32.GetSystemMetrics (win32.SM_CXPADDEDBORDER);
 			params := cast (*win32.NCCALCSIZE_PARAMS)lparam;
+		
 			client_rect := *params.rgrc[0];
 			client_rect.right  -= frame_x + padding;
 			client_rect.left   += frame_x + padding;
 			client_rect.bottom -= frame_y + padding;
+	
 			if is_maximized (window)
 				client_rect.top += padding * 2;
+	
 			return 0;
 
 		case win32.WM_NCHITTEST;
 			hit := win32.DefWindowProcW (window, msg, wparam, lparam);
+		
 			using data := win32_get_window_data (window);
 			if !data
 				return hit;
+		
 			if hit ==
 			{
 			case win32.HTNOWHERE; #through;
@@ -702,6 +750,7 @@ win32_custom_caption_wnd_proc :: (window : win32.HWND, msg : u32, wparam : win32
 			win32.ScreenToClient (window, *cursor);
 			on_caption := caption_hit_test && caption_hit_test (window, cursor.x, cursor.y);
 			on_resize_border := cursor.y > 0 && cursor.y < win32.GetSystemMetrics (win32.SM_CYFRAME) + win32.GetSystemMetrics (win32.SM_CXPADDEDBORDER);
+		
 			// Don't resize when we are not on the caption, because we could be on
 			// some UI elements. If we don't have a caption_hit_test, then ignore
 			// that. The user should provide a hit test function anyway...
@@ -709,8 +758,10 @@ win32_custom_caption_wnd_proc :: (window : win32.HWND, msg : u32, wparam : win32
 				return win32.HTTOP;
 			else if on_caption
 				return win32.HTCAPTION;
+		
 			return win32.HTCLIENT;
 		}
 	}
+	
 	return win32_wnd_proc (window, msg, wparam, lparam);
 }

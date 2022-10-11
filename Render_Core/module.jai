@@ -4,7 +4,7 @@
 mem     :: #import "Memory";
 log     :: #import "Log";
 str     :: #import "String";
-builder :: #import "String/Builder";
+strbuild :: #import "String/Builder";
 math    :: #import "Math";
 using linalg  :: #import "Linalg";
 gl      :: #import "GL";
@@ -57,6 +57,7 @@ init_mesh_buffers :: inline (using mesh : *Mesh)
 {
 	init_vertex_buffer (*vertex_buffer, Vertex_Type.LAYOUT);
 	init_index_buffer (*index_buffer);
+
 	allocate_vertex_buffer_data (*vertex_buffer, vertices.count * size_of (Vertex_Type), .STATIC_DRAW, vertices.data);
 	allocate_index_buffer_data (*index_buffer, indices.count * size_of (u32), .STATIC_DRAW, indices.data);
 }

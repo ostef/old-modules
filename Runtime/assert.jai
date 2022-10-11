@@ -5,6 +5,7 @@ contextless_panic :: inline (msg := "", location := #caller_location)
 {
 	write_location (location);
 	write_string (": Panic");
+
 	if msg
 	{
 		write_string (": ");
@@ -13,6 +14,7 @@ contextless_panic :: inline (msg := "", location := #caller_location)
 	}
 	else
 		write_string ("!\n");
+
 	write_string ("Breaking into the debugger, if attached.\n");
 	debug_break ();
 }
@@ -24,6 +26,7 @@ contextless_assert :: inline (assertion : bool, msg := "", location := #caller_l
 	{
 		write_location (location);
 		write_string (": Assertion failed");
+
 		if msg
 		{
 			write_string (": ");
@@ -32,6 +35,7 @@ contextless_assert :: inline (assertion : bool, msg := "", location := #caller_l
 		}
 		else
 			write_string ("!\n");
+	
 		write_string ("Breaking into the debugger, if attached.\n");
 		debug_break ();
 	}
@@ -42,8 +46,10 @@ always_panic :: inline (fmt_str := "", args : ..Any, location := #caller_locatio
 	if !context.panicking
 	{
 		context.panicking = true;
-		msg := fmt.format (mem.HEAP_ALLOC, fmt_str, ..args);
-		defer no_inline mem.free (msg, mem.HEAP_ALLOC);
+
+		msg := fmt.format (fmt_str, ..args);
+		defer no_inline mem.free (msg);
+
 		context.assertion_failed (location, msg);
 		context.panicking = false;
 	}
@@ -54,8 +60,10 @@ always_assert :: inline (assertion : bool, fmt_str := "", args : ..Any, location
 	if !assertion && !context.handling_assertion_failure
 	{
 		context.handling_assertion_failure = true;
-		msg := fmt.format (mem.HEAP_ALLOC, fmt_str, ..args);
-		defer no_inline mem.free (msg, mem.HEAP_ALLOC);
+
+		msg := fmt.format (fmt_str, ..args);
+		defer no_inline mem.free (msg);
+
 		context.assertion_failed (location, msg);
 		context.handling_assertion_failure = false;
 	}
@@ -94,17 +102,21 @@ assertion_failed :: (location : Source_Code_Location, msg : string)
 				write_string (":");
 				write_nonnegative_number (node.line_number);
 				write_string (": ");
+
 				if node.info.name
 					write_string (node.info.name);
 				else
 					write_string ("(anonymous procedure)");
+
 				write_string ("\n");
 			}
+
 			node = node.next;
 		}
 	}
 
 	write_location (location);
+
 	if context.panicking
 		write_string (": Panic");
 	else
@@ -126,6 +138,7 @@ assertion_failed :: (location : Source_Code_Location, msg : string)
 	}
 	else
 		write_string ("Breaking into the debugger, if attached.\n");
+
 	debug_break ();
 }
 

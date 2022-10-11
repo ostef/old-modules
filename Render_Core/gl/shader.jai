@@ -73,6 +73,7 @@ shader_parameter_kind_from_gl :: inline (type : gl.GLenum) -> Shader.Parameter.K
 	case gl.FLOAT_MAT4;
 		kind = .MAT4F;
 	}
+
 	return kind;
 }
 
@@ -101,16 +102,20 @@ init_shader :: inline (shader : *Shader, vertex_src : string, fragment_src : str
 
 	vso = gl.CreateShader (gl.VERTEX_SHADER);
 	defer gl.DeleteShader (vso);
+
 	gl.ShaderSource (vso, 1, *str.clone_to_cstring (vertex_src, mem.TEMP_ALLOC), null);
 	gl.CompileShader (vso);
+	
 	ok, info_log = check_compile_errors (vso);
 	if !ok
 		return false, info_log;
 
 	fso = gl.CreateShader (gl.FRAGMENT_SHADER);
 	defer gl.DeleteShader (fso);
+	
 	gl.ShaderSource (fso, 1, *str.clone_to_cstring (fragment_src, mem.TEMP_ALLOC), null);
 	gl.CompileShader (fso);
+
 	ok, info_log = check_compile_errors (fso);
 	if !ok
 		return false, info_log;
@@ -119,20 +124,25 @@ init_shader :: inline (shader : *Shader, vertex_src : string, fragment_src : str
 	{
 		gso = gl.CreateShader (gl.GEOMETRY_SHADER);
 		defer gl.DeleteShader (gso);
+	
 		gl.ShaderSource (gso, 1, *str.clone_to_cstring (geometry_src, mem.TEMP_ALLOC), null);
 		gl.CompileShader (gso);
+
 		ok, info_log = check_compile_errors (gso);
 		if !ok
 			return false, info_log;
 	}
 
 	spo := gl.CreateProgram ();
+
 	gl.AttachShader (spo, vso);
 	gl.AttachShader (spo, fso);
 	if geometry_src
 		gl.AttachShader (spo, gso);
+
 	gl.LinkProgram (spo);
 	success : s32;
+	
 	gl.GetProgramiv (spo, gl.LINK_STATUS, *success);
 	if !success
 	{
@@ -148,7 +158,8 @@ init_shader :: inline (shader : *Shader, vertex_src : string, fragment_src : str
 	shader.spo = spo;
 	param_count : s32;
 	gl.GetProgramiv (shader.spo, gl.ACTIVE_UNIFORMS, *param_count);
-	shader.parameters.data = mem.alloc (size_of (Shader.Parameter) * param_count, mem.HEAP_ALLOC);
+	
+	shader.parameters.data = mem.alloc (size_of (Shader.Parameter) * param_count);
 	shader.parameters.count = 0;
 	name_data := cast (*u8) mem.alloc (256, mem.TEMP_ALLOC);
 	for i : 0..param_count - 1
@@ -156,14 +167,18 @@ init_shader :: inline (shader : *Shader, vertex_src : string, fragment_src : str
 		name_len  : u32;
 		size : s32;
 		type : gl.GLenum;
+
 		gl.GetActiveUniform (shader.spo, xx i, 256, *name_len, *size, *type, name_data);
+
 		param : Shader.Parameter;
 		param.kind = shader_parameter_kind_from_gl (type);
 		if param.kind == .UNKNOWN
 			continue;
-		param.name = str.clone (str.make (name_data, name_len), mem.HEAP_ALLOC);
+
+		param.name = str.clone (str.make (name_data, name_len));
 		param.count = size;
 		param.location = gl.GetUniformLocation (shader.spo, name_data);
+	
 		shader.parameters.data[shader.parameters.count] = param;
 		shader.parameters.count += 1;
 	}
@@ -174,8 +189,9 @@ init_shader :: inline (shader : *Shader, vertex_src : string, fragment_src : str
 destroy_shader :: inline (shader : *Shader)
 {
 	for shader.parameters
-		mem.free (it.name, mem.HEAP_ALLOC);
-	mem.free (shader.parameters, mem.HEAP_ALLOC);
+		mem.free (it.name);
+
+	mem.free (shader.parameters);
 	gl.DeleteProgram (shader.spo);
 	shader.spo = 0;
 	shader.parameters = .[];
@@ -209,6 +225,7 @@ get_shader_parameter :: inline (shader : *Shader, name : string) -> Shader.Param
 		if it.name == name
 			return it, true;
 	}
+
 	return .{}, false;
 }
 
@@ -217,6 +234,7 @@ set_shader_parameter :: inline (shader : *Shader, name : string, val : bool) -> 
 	param, ok := get_shader_parameter (shader, name);
 	if !ok || param.kind != .BOOL
 		return false;
+
 	gl.Uniform1i (param.location, cast (s32) val);
 
 	return true;
@@ -227,6 +245,7 @@ set_shader_parameter :: inline (shader : *Shader, name : string, val : s32) -> b
 	param, ok := get_shader_parameter (shader, name);
 	if !ok || param.kind != .S32
 		return false;
+
 	gl.Uniform1i (param.location, val);
 
 	return true;
@@ -237,6 +256,7 @@ set_shader_parameter :: inline (shader : *Shader, name : string, val : u32) -> b
 	param, ok := get_shader_parameter (shader, name);
 	if !ok || param.kind != .U32
 		return false;
+
 	gl.Uniform1ui (param.location, val);
 
 	return true;
@@ -247,6 +267,7 @@ set_shader_parameter :: inline (shader : *Shader, name : string, val : f32) -> b
 	param, ok := get_shader_parameter (shader, name);
 	if !ok || param.kind != .F32
 		return false;
+
 	gl.Uniform1f (param.location, val);
 
 	return true;
@@ -257,6 +278,7 @@ set_shader_parameter :: inline (shader : *Shader, name : string, val : Vec2f) ->
 	param, ok := get_shader_parameter (shader, name);
 	if !ok || param.kind != .VEC2F
 		return false;
+
 	gl.Uniform2f (param.location, val.x, val.y);
 
 	return true;
@@ -267,6 +289,7 @@ set_shader_parameter :: inline (shader : *Shader, name : string, val : Vec3f) ->
 	param, ok := get_shader_parameter (shader, name);
 	if !ok || param.kind != .VEC3F
 		return false;
+
 	gl.Uniform3f (param.location, val.x, val.y, val.z);
 
 	return true;
@@ -277,6 +300,7 @@ set_shader_parameter :: inline (shader : *Shader, name : string, val : Vec4f) ->
 	param, ok := get_shader_parameter (shader, name);
 	if !ok || param.kind != .VEC4F
 		return false;
+
 	gl.Uniform4f (param.location, val.x, val.y, val.z, val.w);
 
 	return true;
@@ -287,6 +311,7 @@ set_shader_parameter :: inline (shader : *Shader, name : string, val : Mat3f) ->
 	param, ok := get_shader_parameter (shader, name);
 	if !ok || param.kind != .MAT3F
 		return false;
+	
 	gl.UniformMatrix3fv (param.location, 1, gl.TRUE, *val.r0c0);
 
 	return true;
@@ -297,6 +322,7 @@ set_shader_parameter :: inline (shader : *Shader, name : string, val : Mat4f) ->
 	param, ok := get_shader_parameter (shader, name);
 	if !ok || param.kind != .MAT4F
 		return false;
+	
 	gl.UniformMatrix4fv (param.location, 1, gl.TRUE, *val.r0c0);
 
 	return true;

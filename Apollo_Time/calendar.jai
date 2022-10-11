@@ -67,6 +67,20 @@ SPANISH_ASCII_NAMES :: Calendar_Names.{
 	short_months = .[ "Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic" ],
 };
 
+ITALIAN_NAMES :: Calendar_Names.{
+	days = .[ "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato", "Domenica" ],
+	short_days = .[ "Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom" ],
+	months = .[ "Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre" ],
+	short_months = .[ "Gen", "Feb", "Mar", "Apr", "Mag", "Giu", "Lug", "Ago", "Set", "Ot", "Nov", "Dic" ],
+};
+
+ITALIAN_ASCII_NAMES :: Calendar_Names.{
+	days = .[ "Lunedi", "Martedi", "Mercoledi", "Giovedi", "Venerdi", "Sabato", "Domenica" ],
+	short_days = .[ "Lun", "Mar", "Mer", "Gio", "Ven", "Sab", "Dom" ],
+	months = .[ "Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre" ],
+	short_months = .[ "Gen", "Feb", "Mar", "Apr", "Mag", "Giu", "Lug", "Ago", "Set", "Ot", "Nov", "Dic" ],
+};
+
 // Usage:
 // 		format (time, "{D} {d} {M} {Y}, {hr:02}:{mn:02} {AMPM}", allocator) => "Mon 10 Feb 2022, 10:04 AM"
 // y : time.year % 100,
@@ -85,44 +99,49 @@ SPANISH_ASCII_NAMES :: Calendar_Names.{
 // sc : time.second,
 // ms : time.millisecond,
 // tz : time.time_zone
-format :: (time : Calendar_Time, fmt_str : string, allocator : Allocator, names := ENGLISH_NAMES) -> string #must
+format :: (time : Calendar_Time, fmt_str : string, allocator := context.allocator, names := ENGLISH_NAMES) -> string #must
 {
 	fmt :: #import "Fmt";
 	str :: #import "String";
-	builder :: #import "String/Builder";
+	strbuild :: #import "String/Builder";
 
 	FMT_STRINGS :: string.[ "y", "yy", "m", "M", "MM", "d", "D", "DD", "ampm", "AMPM", "hr", "HR", "mn", "sc", "ms", "tz" ];
 
 	new_fmt_str : string;
 	{
-		b : builder.Builder;
-		builder.init (*b, mem.TEMP_ALLOC);
+		b : strbuild.Builder;
+		strbuild.init (*b, mem.TEMP_ALLOC);
+
 		i := 0;
 		while i < fmt_str.count
 		#no_abc
 		{
 			if fmt_str[i] == #char "{"
 			{
-				builder.append_byte (*b, fmt_str[i]);
+				strbuild.append_byte (*b, fmt_str[i]);
+
 				i += 1;
 				s := str.advance (fmt_str, i);
+
 				for FMT_STRINGS
 				{
 					if str.starts_with (s, it) && (s.count == it.count || s[it.count] == #char ":" || s[it.count] == #char "}")
 					{
-						builder.append_s64 (*b, it_index);
+						strbuild.append_s64 (*b, it_index);
 						i += it.count;
+
 						break;
 					}
 				}
 			}
 			else
 			{
-				builder.append_byte (*b, fmt_str[i]);
+				strbuild.append_byte (*b, fmt_str[i]);
 				i += 1;
 			}
 		}
-		new_fmt_str = builder.build (b, mem.TEMP_ALLOC);
+
+		new_fmt_str = strbuild.build (b, mem.TEMP_ALLOC);
 	}
 
 	return fmt.format (

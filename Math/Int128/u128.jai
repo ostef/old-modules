@@ -12,6 +12,7 @@ make_u128 :: inline (low : u64) -> u128 #must
 	result : u128 = ---;
 	result.high = 0;
 	result.low  = low;
+
 	return result;
 }
 
@@ -21,6 +22,7 @@ make_u128 :: inline (high : u64, low : u64) -> u128 #must
 	result : u128 = ---;
 	result.high = high;
 	result.low = low;
+
 	return result;
 }
 
@@ -33,6 +35,7 @@ to_s128 :: inline (x : u128, $no_check := false) -> s128 #must
 	else
 		result.high = cast (s64) x.high;
 	result.low = x.low;
+
 	return result;
 }
 
@@ -42,6 +45,7 @@ to_u64 :: inline (a : u128, $no_check := false) -> u64 #must
 	#if no_check
 		if a.high != 0
 			contextless_panic ("Cast from u128 to u64 bounds check failed.");
+
 	return a.low;
 }
 
@@ -64,6 +68,7 @@ add :: inline (a : u128, b : u128) -> u128 #must
 		add		[p + 8], bl;
 		adc		[p + 0], bh;	// @Incomplete (stefan): Shouldn't we use ADCX instead ?
 	}
+
 	return result;
 }
 
@@ -86,6 +91,7 @@ sub :: inline (a : u128, b : u128) -> u128 #must
 		sub	[p + 8], bl;
 		sbb	[p + 0], bh;
 	}
+
 	return result;
 }
 
@@ -146,6 +152,7 @@ mul :: inline (a : u128, b : u128) -> u128 #must
 		// Store the high part in the result
 		mov	[r + 0], high_sum;
 	}
+
 	return result;
 }
 
@@ -179,6 +186,7 @@ mul :: inline (a : u128, b : u64) -> u128 #must
 		// Store the high part in the result
 		mov	[r + 0], high_sum;
 	}
+
 	return result;
 }
 
@@ -216,6 +224,7 @@ div :: inline (a : u128, b : u128) -> u128 #must
 		// Easy case: no overflow. 64-bits is enough to store the quotient
 		if a.high < b.low
 			return make_u128 (div128_64 (a, b.low));
+		
 		q1 := a.high / b.low;
 		k  := a.high - q1 * b.low;
 		q0 := div128_64 (make_u128 (k, a.low), b.low);
@@ -234,12 +243,14 @@ div :: inline (a : u128, b : u128) -> u128 #must
 	q1 := make_u128 (div128_64 (a >> 1, b1));
 	// Undo normalization and division of dividend by 2
 	q0 := (q1 << n) >> 31;
+	
 	if q0.high || q0.low
 	{
 		if q0.low == 0
 			q0.high -= 1;
 		q0.low -= 1;
 	}
+	
 	if a - q0 * b >= b
 	{
 		q0.low += 1;
@@ -262,6 +273,7 @@ lshift :: inline (a : u128, x : u8) -> u128 #must
 		shld	[p + 0], low, x;
 		shl		[p + 8], x;
 	}
+
 	return result;
 }
 
@@ -277,6 +289,7 @@ rshift :: inline (a : u128, x : u8) -> u128 #must
 		shrd	[p + 8], high, x;
 		shr		[p + 0], x;
 	}
+
 	return result;
 }
 
@@ -342,6 +355,7 @@ operator < :: inline (a : u128, b : u128) -> bool #must
 		sbb		ah, bh;
 		setl	result;
 	}
+	
 	return result;
 }
 

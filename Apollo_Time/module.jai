@@ -75,16 +75,21 @@ to_f64_seconds :: inline (t : Apollo_Time) -> f64 #must
 	// f64 and then add them.
 
 	a := t;
-	if t.high < 0 then a = -a;  // Do this on a positive number and re-negate at the end.
-	seconds := to_seconds (a); // @Robustness: Note that our 'seconds' is signed which means we are missing 1 bit of range.
+	// Do this on a positive number and re-negate at the end.
+	if t.high < 0 then a = -a;
+	
+	// @Robustness: Note that our 'seconds' is signed which means we are missing 1 bit of range.
+	seconds := to_seconds (a);
 	f := cast (f64) seconds;
 	b := from_seconds (seconds);
 	femto := a - b;
 	assert (femto.high == 0);
 	f_femto := femto.low / cast (f64) FEMTOSECONDS;
 	f += f_femto;
+	
 	if t.high < 0
 		return -f;
+	
 	return f;
 }
 
@@ -110,19 +115,24 @@ from_f64_seconds :: inline (sec : f64) -> Apollo_Time #must
 	if !mantissa
 		return .{};
 
-	a := from_seconds (xx mantissa);	// In the current format, seconds start in the low word, so we know we have more than the mantissa size available.
+	// In the current format, seconds start in the low word,
+	// so we know we have more than the mantissa size available.
+	a := from_seconds (xx mantissa);
+
 	shift := exponent;
 	if shift < 0
 	{
 		shift = -shift;
 		if shift > 255
 			return .{};
+	
 		a >>= cast (u8) shift;
 	}
 	else if shift
 	{
 		if shift > 255
 			return .{};
+	
 		a <<= cast (u8) shift;
 	}
 

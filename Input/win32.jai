@@ -95,6 +95,7 @@ init :: inline () -> bool
 	mouse.usUsage     = 0x02;
 	if !win32.RegisterRawInputDevices (*mouse, 1, size_of (win32.RAWINPUTDEVICE))
 		return false;
+	
 	return true;
 }
 
@@ -138,9 +139,10 @@ win32_vk_to_key_code :: inline (vk : s32) -> Key_Code #must
 {
 	WIN32_VK_TO_KEY_CODE :: #insert -> string
 	{
-		code : builder.Builder;
-		builder.init (*code, mem.HEAP_ALLOC);
-		builder.append_line (*code, "Key_Code.[");
+		code : strbuild.Builder;
+		strbuild.init (*code);
+
+		strbuild.append_line (*code, "Key_Code.[");
 		for i : 0..256
 		{
 			key_code := Key_Code.UNKNOWN;
@@ -149,14 +151,17 @@ win32_vk_to_key_code :: inline (vk : s32) -> Key_Code #must
 				if it.vk == xx i
 				{
 					key_code = it.key_code;
+	
 					break;
 				}
 			}
-			builder.append_line (*code, "\t.%,", key_code);
-		}
-		builder.append_line (*code, "];");
 
-		return builder.build (code, mem.HEAP_ALLOC);
+			strbuild.append_line (*code, "\t.%,", key_code);
+		}
+
+		strbuild.append_line (*code, "];");
+
+		return strbuild.build (code);
 	};
 
 	return WIN32_VK_TO_KEY_CODE[vk];
@@ -167,9 +172,10 @@ win32_key_code_to_vk :: inline (key_code : Key_Code) -> s32 #must
 {
 	WIN32_KEY_CODE_TO_VK :: #insert -> string
 	{
-		code : builder.Builder;
-		builder.init (*code, mem.HEAP_ALLOC);
-		builder.append_line (*code, "s32.[");
+		code : strbuild.Builder;
+		strbuild.init (*code);
+
+		strbuild.append_line (*code, "s32.[");
 		for i : 0..256
 		{
 			vk := 0;
@@ -178,14 +184,17 @@ win32_key_code_to_vk :: inline (key_code : Key_Code) -> s32 #must
 				if it.key_code == xx i
 				{
 					vk = it.vk;
+
 					break;
 				}
 			}
-			builder.append_line (*code, "\t%,", vk);
-		}
-		builder.append_line (*code, "];");
 
-		return builder.build (code, mem.HEAP_ALLOC);
+			strbuild.append_line (*code, "\t%,", vk);
+		}
+
+		strbuild.append_line (*code, "];");
+
+		return strbuild.build (code);
 	};
 
 	return WIN32_KEY_CODE_TO_VK[cast (s64) key_code];
@@ -203,6 +212,7 @@ win32_vk_to_mouse_button :: inline (vk : win32.DWORD) -> Mouse_Button #must
 	case win32.VK_MBUTTON;
 		return .MIDDLE;
 	}
+
 	return .UNKNOWN;
 }
 
@@ -218,6 +228,7 @@ win32_mouse_button_to_vk :: inline (button : Mouse_Button) -> s32 #must
 	case .MIDDLE;
 		return win32.VK_MBUTTON;
 	}
+	
 	return 0;
 }
 

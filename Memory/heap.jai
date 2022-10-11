@@ -11,5 +11,6 @@ heap_allocator_proc :: (mode : Allocator_Mode, size : s64, old_size : s64, old_p
 	case .FREE;
 		heap_free (old_ptr);
 	}
+	
 	return null;
 }

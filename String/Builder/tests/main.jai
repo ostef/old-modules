@@ -7,13 +7,13 @@ fmt     :: #import "Fmt";
 main :: ()
 {
 	b : builder.Builder;
-	builder.init (*b, mem.HEAP_ALLOC);
+	builder.init (*b);
 	builder.append_bool (*b, true);
 	builder.append_newline (*b);
 	builder.append_bool (*b, false);
 	builder.append_newline (*b);
 	builder.append (*b, "Hello Sailor! ");
 	builder.append_fmt (*b, "There are % leaves in the pile!", 69105);
-	s := builder.build_and_reset (*b, mem.HEAP_ALLOC);
+	s := builder.build_and_reset (*b);
 	fmt.println (s);
 }

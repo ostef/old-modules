@@ -26,10 +26,10 @@ build :: ()
 	context.temporary_storage.overflow_allocator = mem.HEAP_ALLOC;
 	
 	test_only : [..]string;
-	array.init (*test_only, 20, mem.HEAP_ALLOC);
+	array.init (*test_only, 20);
 	
 	tests : [..]Test_Entry;
-	array.init (*tests, 20, mem.HEAP_ALLOC);
+	array.init (*tests, 20);
 	
 	opt := jaic.get_build_options ();
 	args := opt.compile_time_command_line;
@@ -80,7 +80,7 @@ build :: ()
 	// Compile all tests
 	for * test : tests
 	{
-		workspace_name := path.join (mem.HEAP_ALLOC, test.module_name, test.name);
+		workspace_name := path.join (test.module_name, test.name);
 		fmt.println ("Creating workspace %", workspace_name);
 		test.workspace = jaic.compiler_create_workspace (workspace_name);
 		
@@ -89,8 +89,8 @@ build :: ()
 		options.dead_code_elimination = .NONE;
 		options.output_type = .EXECUTABLE;
 		options.output_executable_name = test.name;
-		options.output_path = path.join (mem.HEAP_ALLOC, path.get_parent_dir (test.filename), "/");
-		options.intermediate_path = path.join (mem.HEAP_ALLOC, path.get_parent_dir (test.filename), ".build/");
+		options.output_path = path.join (path.get_parent_dir (test.filename), "/");
+		options.intermediate_path = path.join (path.get_parent_dir (test.filename), ".build/");
 
 		jaic.set_build_options (options, test.workspace);
 		jaic.compiler_begin_intercept (test.workspace);

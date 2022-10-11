@@ -146,15 +146,15 @@ check_init :: () #expand
 init :: ()
 {
 	assert (context.ui_context == null, "UI context is already initialized.");
-	context.ui_context = mem.alloc (UI_Context, mem.HEAP_ALLOC);
+	context.ui_context = mem.alloc (UI_Context);
 	ui := context.ui_context;
-	storage.init (*ui.controls, mem.HEAP_ALLOC);
-	map.init (*ui.controls_by_id, 300, mem.HEAP_ALLOC);
-	array.init (*ui.text_input, 300, mem.HEAP_ALLOC);
-	array.init (*ui.clipping_stack, 50, mem.HEAP_ALLOC);
-	array.init (*ui.id_offset_stack, 50, mem.HEAP_ALLOC);
-	array.init (*ui.occlusion_layers, 50, mem.HEAP_ALLOC);
-	imdraw.init (*ui.renderer, 5000, 1000, mem.HEAP_ALLOC);
+	storage.init (*ui.controls);
+	map.init (*ui.controls_by_id, 300);
+	array.init (*ui.text_input, 300);
+	array.init (*ui.clipping_stack, 50);
+	array.init (*ui.id_offset_stack, 50);
+	array.init (*ui.occlusion_layers, 50);
+	imdraw.init (*ui.renderer, 5000, 1000);
 
 	push_occlusion_layer ("Popups");
 	push_occlusion_layer ("Windows");
@@ -173,7 +173,7 @@ terminate :: ()
 	array.reset (*ui.id_offset_stack);
 	imdraw.reset (*ui.renderer);
 
-	mem.free (ui, mem.HEAP_ALLOC);
+	mem.free (ui);
 	context.ui_context = null;
 }
 
@@ -547,9 +547,9 @@ get_occluder_size :: inline () -> linalg.Vec2f
 init :: (layer : *Occlusion_Layer, name : string)
 {
 	layer.name = name;
-	storage.init (*layer.occluders, mem.HEAP_ALLOC);
-	map.init (*layer.occluders_by_id, 100, mem.HEAP_ALLOC);
-	array.init (*layer.occluders_bottommost_to_topmost, 100, mem.HEAP_ALLOC);
+	storage.init (*layer.occluders);
+	map.init (*layer.occluders_by_id, 100);
+	array.init (*layer.occluders_bottommost_to_topmost, 100);
 }
 
 reset :: (using layer : *Occlusion_Layer)
@@ -619,7 +619,7 @@ set_occlusion_layer :: inline (index : s64) -> previous : s64
 
 init :: (occluder : *Occluder)
 {
-	imdraw.init (*occluder.renderer, 1000, 100, mem.HEAP_ALLOC);
+	imdraw.init (*occluder.renderer, 1000, 100);
 }
 
 cleanup :: (occluder : *Occluder)

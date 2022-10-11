@@ -74,7 +74,7 @@ NEVER_OCCUPIED_HASH :: 0;
 REMOVED_HASH        :: 1;
 FIRST_OCCUPIED_HASH :: 2;
 
-init :: inline (map : *Hash_Map, capacity : s64, allocator : Allocator)
+init :: inline (map : *Hash_Map, capacity : s64, allocator := context.allocator)
 {
 	capacity = math.max (capacity, MIN_CAPACITY);
 	capacity = math.next_power_of_two (capacity);
@@ -84,6 +84,7 @@ init :: inline (map : *Hash_Map, capacity : s64, allocator : Allocator)
 	map.allocated = capacity;
 	map.allocator = allocator;
 	map.entries = mem.alloc (map.Entry, capacity, allocator);
+
 	for * map.entries
 		it.hash = NEVER_OCCUPIED_HASH;
 }
@@ -102,6 +103,7 @@ clear :: inline (using map : *Hash_Map)
 {
 	count = 0;
 	occupied = 0;
+
 	for * entries
 		it.hash = NEVER_OCCUPIED_HASH;
 }
@@ -110,14 +112,18 @@ grow :: inline (map : *Hash_Map)
 {
 	old_entries := map.entries;
 	defer mem.free (old_entries, map.allocator);
+
 	new_capacity := math.max (map.allocated * 2, MIN_CAPACITY);
 	map.entries = mem.alloc (map.Entry, new_capacity, map.allocator);
 	map.count = 0;
 	map.occupied = 0;
 	map.allocated = new_capacity;
+
 	for entry : old_entries
+	{
 		if entry.hash >= FIRST_OCCUPIED_HASH
 			insert (map, entry.key, entry.value);
+	}
 }
 
 probe :: inline (map : Hash_Map, key : map.Key) -> h : u32, index : s64, is_present : bool
@@ -125,14 +131,17 @@ probe :: inline (map : Hash_Map, key : map.Key) -> h : u32, index : s64, is_pres
 	mask := cast, trunc (u32) (map.allocated - 1);
 	h := map.hash_key (key);
 	if h < FIRST_OCCUPIED_HASH then h += FIRST_OCCUPIED_HASH;
+	
 	index := h & mask;
 	// @Note (stefan): See initial_probe_increment in jai/modules/Hash_Table.jai
 	increment := 1 + (h >> 27);
 	while map.entries[index].hash
 	{
 		entry := *map.entries[index];
+
 		if entry.hash == h && map.compare_keys (entry.key, key)
 			return h, index, true;
+
 		index += increment;
 		index &= mask;
 		increment += 1;
@@ -146,12 +155,17 @@ insert :: (map : *Hash_Map, key : map.Key, $initialize_if_new := true) -> *map.V
 {
 	if (map.occupied + 1) * 100 >= map.allocated * map.LOAD_FACTOR
 		grow (map);
+
 	assert (map.occupied <= map.allocated);
 	h, index, is_present := probe (map, key);
+
 	entry := *map.entries[index];
 	if is_present
 		return *entry.value, true;
-	#if initialize_if_new then mem.init (*entry.value);
+
+	#if initialize_if_new
+		mem.init (*entry.value);
+
 	entry.hash = h;
 	entry.key  = key;
 	map.occupied += 1;
@@ -164,6 +178,7 @@ insert :: inline (map : *Hash_Map, key : map.Key, value : map.Val) -> *map.Val, 
 {
 	ptr, is_present := insert (map, key);
 	<<ptr = value;
+
 	return ptr, is_present;
 }
 
@@ -172,6 +187,7 @@ remove_at :: (map : *Hash_Map, key : map.Key) -> found : bool, removed : map.Val
 	h, index, is_present := probe (map, key);
 	if !is_present
 		return false, default (map.Val);
+
 	entry := *map.entries[index];
 	entry.hash = REMOVED_HASH;
 	map.count -= 1;
@@ -187,24 +203,31 @@ set :: inline (map : *Hash_Map, key : map.Key, value : map.Val)
 
 get_ptr :: (map : Hash_Map, key : map.Key) -> *map.Val #must
 {
-	if map.count == 0 then return null;
+	if map.count == 0
+		return null;
+
 	h, index, is_present := probe (map, key);
 	if is_present
 		return *map.entries[index].value;
+
 	return null;
 }
 
 get :: inline (map : Hash_Map, key : map.Key, fallback : map.Val) -> map.Val #must, found : bool
 {
 	ptr := get_ptr (map, key);
-	if ptr then return <<ptr, true;
+	if ptr
+		return <<ptr, true;
+
 	return fallback, false;
 }
 
 get :: inline (map : Hash_Map, key : map.Key) -> map.Val #must, found : bool
 {
 	ptr := get_ptr (map, key);
-	if ptr then return <<ptr, true;
+	if ptr
+		return <<ptr, true;
+
 	return default (map.Val), false;
 }
 
@@ -215,13 +238,15 @@ for_expansion :: (map : *Hash_Map, body : Code, flags : For_Flags) #expand
 
 	for * <=REVERSE entry, i : map.entries
 	{
-		if entry.hash < FIRST_OCCUPIED_HASH then continue;
+		if entry.hash < FIRST_OCCUPIED_HASH
+			continue;
 
 		`it_index := entry.key;
 		#if BY_POINTER
 			`it := *entry.value;
 		else
 			`it := entry.value;
+		
 		#insert (remove = { entry.hash = REMOVED_HASH; map.count -= 1; }) body;
 	}
 }

@@ -157,14 +157,18 @@ draw_rect :: inline (
 {
 	if rect.w <= 0 || rect.h <= 0
 		return;
+
 	if corner_radius <= 0 || round_corners == .NONE
 	{
 		draw_rect (renderer, rect, color, uv_rect);
+		
 		return;
 	}
+
 	inner_rect    := math.truncate_all_sides (rect, corner_radius);
 	uv_radius     := (corner_radius / rect.w) * uv_rect.w;
 	inner_uv_rect := math.truncate_all_sides (uv_rect, uv_radius);
+	
 	// Inner rect
 	draw_triangle (
 		renderer,
@@ -186,6 +190,7 @@ draw_rect :: inline (
 		uv1 = vec2f (inner_uv_rect.x + inner_uv_rect.w, inner_uv_rect.y),
 		uv2 = vec2f (inner_uv_rect.x + inner_uv_rect.w, inner_uv_rect.y + inner_uv_rect.h)
 	);
+	
 	// Draw corners
 	if flagged (round_corners, .TOP_LEFT)
 		draw_semi_circle (
@@ -205,6 +210,7 @@ draw_rect :: inline (
 			color,
 			uv_rect = math.ltrbf (uv_rect.x, uv_rect.y, inner_uv_rect.x, inner_uv_rect.y)
 		);
+	
 	if flagged (round_corners, .TOP_RIGHT)
 		draw_semi_circle (
 			renderer,
@@ -223,6 +229,7 @@ draw_rect :: inline (
 			color,
 			uv_rect = math.ltrbf (inner_uv_rect.x + inner_uv_rect.w, uv_rect.y, uv_rect.x + uv_rect.w, inner_uv_rect.y)
 		);
+	
 	if flagged (round_corners, .BOTTOM_LEFT)
 		draw_semi_circle (
 			renderer,
@@ -241,6 +248,7 @@ draw_rect :: inline (
 			color,
 			uv_rect = math.ltrbf (uv_rect.x, inner_uv_rect.y + inner_uv_rect.h, inner_uv_rect.x, uv_rect.y + uv_rect.h)
 		);
+	
 	if flagged (round_corners, .BOTTOM_RIGHT)
 		draw_semi_circle (
 			renderer,
@@ -259,6 +267,7 @@ draw_rect :: inline (
 			color,
 			uv_rect = math.ltrbf (inner_uv_rect.x + inner_uv_rect.w, inner_uv_rect.y + inner_uv_rect.h, uv_rect.x + uv_rect.w, uv_rect.y + uv_rect.h)
 		);
+	
 	// Top
 	draw_triangle (
 		renderer,
@@ -270,6 +279,7 @@ draw_rect :: inline (
 		uv1 = vec2f (inner_uv_rect.x + inner_uv_rect.w, uv_rect.y),
 		uv2 = vec2f (inner_uv_rect.x, inner_uv_rect.y),
 	);
+	
 	draw_triangle (
 		renderer,
 		vec2f (inner_rect.x, inner_rect.y),
@@ -280,6 +290,7 @@ draw_rect :: inline (
 		uv1 = vec2f (inner_uv_rect.x + inner_uv_rect.w, uv_rect.y),
 		uv2 = vec2f (inner_uv_rect.x + inner_uv_rect.w, inner_uv_rect.y),
 	);
+	
 	// Right
 	draw_triangle (
 		renderer,
@@ -291,6 +302,7 @@ draw_rect :: inline (
 		uv1 = vec2f (uv_rect.x + uv_rect.w, inner_uv_rect.y),
 		uv2 = vec2f (uv_rect.x + uv_rect.w, inner_uv_rect.y + inner_uv_rect.h),
 	);
+
 	draw_triangle (
 		renderer,
 		vec2f (inner_rect.x + inner_rect.w, inner_rect.y),
@@ -301,6 +313,7 @@ draw_rect :: inline (
 		uv1 = vec2f (uv_rect.x + uv_rect.w, inner_uv_rect.y + inner_uv_rect.h),
 		uv2 = vec2f (inner_uv_rect.x + inner_uv_rect.w, inner_uv_rect.y + inner_uv_rect.h),
 	);
+
 	// Bottom
 	draw_triangle (
 		renderer,
@@ -312,6 +325,7 @@ draw_rect :: inline (
 		uv1 = vec2f (inner_uv_rect.x + inner_uv_rect.w, inner_uv_rect.y + inner_uv_rect.h),
 		uv2 = vec2f (inner_uv_rect.x + inner_uv_rect.w, uv_rect.y + uv_rect.h),
 	);
+
 	draw_triangle (
 		renderer,
 		vec2f (inner_rect.x, inner_rect.y + inner_rect.h),
@@ -322,6 +336,7 @@ draw_rect :: inline (
 		uv1 = vec2f (inner_uv_rect.x + inner_uv_rect.w, uv_rect.y + uv_rect.h),
 		uv2 = vec2f (inner_uv_rect.x, uv_rect.y + uv_rect.h),
 	);
+
 	// Left
 	draw_triangle (
 		renderer,
@@ -333,6 +348,7 @@ draw_rect :: inline (
 		uv1 = vec2f (inner_uv_rect.x, inner_uv_rect.y),
 		uv2 = vec2f (inner_uv_rect.x, inner_uv_rect.y + inner_uv_rect.h),
 	);
+
 	draw_triangle (
 		renderer,
 		vec2f (rect.x, inner_rect.y),
@@ -370,6 +386,7 @@ draw_rect_outline :: inline (
 {
 	if rect.x >= rect.x + rect.w || rect.y >= rect.y + rect.h
 		return;
+
 	inner_rect := math.truncate_all_sides (rect, thickness * 0.5);
 	outer_rect := math.expand_all_sides (rect, thickness * 0.5);
 	uv_thickness  := thickness / rect.w * uv_rect.w;
@@ -405,6 +422,7 @@ draw_rect_outline :: inline (
 			uv_center = math.top_right (inner_uv_rect),
 			uv_radius = uv_radius
 		);
+
 	if flagged (round_corners, .BOTTOM_LEFT)
 		draw_semi_circle_outline (
 			renderer,
@@ -417,6 +435,7 @@ draw_rect_outline :: inline (
 			uv_center = math.bottom_left (inner_uv_rect),
 			uv_radius = uv_radius
 		);
+
 	if flagged (round_corners, .BOTTOM_RIGHT)
 		draw_semi_circle_outline (
 			renderer,
@@ -443,6 +462,7 @@ draw_rect_outline :: inline (
 		vec2f (inner_uv_rect.x + inner_uv_rect.w - uv_inset, outer_uv_rect.y),
 		vec2f (inner_uv_rect.x + inner_uv_rect.w - uv_inset, inner_uv_rect.y),
 	);
+
 	// Right
 	draw_quad (
 		renderer,
@@ -456,6 +476,7 @@ draw_rect_outline :: inline (
 		vec2f (outer_uv_rect.x + outer_uv_rect.w, inner_uv_rect.y + inner_uv_rect.h - uv_inset),
 		vec2f (inner_uv_rect.x + inner_uv_rect.w, inner_uv_rect.y + inner_uv_rect.h - uv_inset),
 	);
+
 	// Bottom
 	draw_quad (
 		renderer,
@@ -469,6 +490,7 @@ draw_rect_outline :: inline (
 		vec2f (inner_uv_rect.x + inner_uv_rect.w - uv_inset, inner_uv_rect.y + inner_uv_rect.h),
 		vec2f (inner_uv_rect.x + inner_uv_rect.w - uv_inset, outer_uv_rect.y + outer_uv_rect.h),
 	);
+
 	// Left
 	draw_quad (
 		renderer,
@@ -513,8 +535,10 @@ draw_semi_circle :: inline (
 {
 	if radius <= 0
 		return;
+
 	if resolution <= 0
 		resolution = math.max (cast (int) radius, 20);
+
 	theta := -angle / cast (f32) resolution;
 	tan_factor := math.tan (theta);
 	rad_factor := math.cos (theta);
@@ -607,8 +631,10 @@ draw_semi_circle_outline :: inline (
 {
 	if radius <= 0
 		return;
+
 	if resolution <= 0
 		resolution = math.max (cast (int) radius, 20);
+
 	uv_thickness := thickness / radius * uv_radius;
 	inner_radius := radius - thickness;
 	inner_uv_radius := uv_radius - uv_thickness;
@@ -624,6 +650,7 @@ draw_semi_circle_outline :: inline (
 		p += t * tan_factor;
 		p *= rad_factor;
 		p2 := p;
+
 		draw_triangle (
 			renderer,
 			center + p1 * inner_radius,
@@ -634,6 +661,7 @@ draw_semi_circle_outline :: inline (
 			uv1 = uv_center + p1 * uv_radius,
 			uv2 = uv_center + p2 * uv_radius
 		);
+
 		draw_triangle (
 			renderer,
 			center + p1 * inner_radius,
@@ -710,7 +738,9 @@ draw_line :: inline (
 	cost     := math.cos (theta);
 	sint     := math.sin (theta);
 	offset   := vec2f (cost, sint) * thickness * 0.5;
+	
 	draw_triangle (renderer, start - offset, start + offset, end + offset, color);
+
 	draw_triangle (renderer, start - offset, end + offset, end - offset, color);
 }
 
@@ -755,6 +785,7 @@ draw_text :: inline (
 ) -> text_rect : math.Rectf
 {
 	check_init ();
+
 	return draw_text (imdraw, fnt, height, position, text, color, weight, effects, anchor);
 }
 
@@ -774,6 +805,7 @@ draw_text :: inline (
 		fnt = font.find_font (fnt, weight, .ITALIC, fallback = fnt);
 	else
 		fnt = font.find_font (fnt, weight, fnt.effects, fallback = fnt);
+
 	return draw_text (renderer, fnt, height, position, text, color, effects, anchor);
 }
 
@@ -788,6 +820,7 @@ draw_text :: inline (
 ) -> text_rect : math.Rectf
 {
 	check_init ();
+	
 	return draw_text (imdraw, fnt, height, position, text, color, effects, anchor);
 }
 
@@ -808,23 +841,28 @@ draw_text :: (
 
 	prev_texture := get_texture (renderer, );
 	defer set_texture (renderer, prev_texture);
+	
 	prev_shader := set_shader (renderer, *font.g_glyph_shader);
 	defer set_shader (renderer, prev_shader);
 
 	if flagged (effects, .ITALIC)
 		fnt = font.find_font (fnt, fnt.weight, .ITALIC, fallback = fnt);
+	
 	page := font.load_page (fnt, height);
 	pen := vec2f (0, cast (f32) page.ascent);
 	offset : Vec2f;
 	size := font.calculate_text_extents (fnt, height, text);
+	
 	if flagged (anchor, .VCENTER)
 		offset.y = -size.y * 0.5;
 	else if flagged (anchor, .BOTTOM)
 		offset.y = -size.y;
+	
 	if flagged (anchor, .HCENTER)
 		offset.x = -size.x * 0.5;
 	else if flagged (anchor, .RIGHT)
 		offset.x = -size.x;
+	
 	for codepoint, i : utf8.make_str (text)
 	{
 		if codepoint ==
@@ -841,6 +879,7 @@ draw_text :: (
 					1
 				);
 			}
+			
 			if flagged (effects, .STRIKETHROUGH)
 			{
 				set_texture (renderer, null);
@@ -852,11 +891,14 @@ draw_text :: (
 					1
 				);
 			}
+			
 			pen.x = 0;
 			pen.y += page.ascent - page.descent;
+		
 		case #char "\t";
 			glyph := font.load_glyph (page, codepoint);
 			pen.x = math.snap_up (pen.x + glyph.advance, page.space_advance * 4.0);
+		
 		case;
 			glyph := font.render_glyph (page, codepoint);
 			glyph_rect := math.xywhf (
@@ -866,10 +908,12 @@ draw_text :: (
 				cast (f32) glyph.bitmap_height
 			);
 			pen.x += glyph.advance;
+		
 			set_texture (renderer, glyph.atlas_texture);
 			draw_rect (renderer, glyph_rect, color, glyph.uv_rect);
 		}
 	}
+	
 	if pen.x != 0 && flagged (effects, .UNDERLINE)
 	{
 		set_texture (renderer, null);
@@ -881,6 +925,7 @@ draw_text :: (
 			1
 		);
 	}
+	
 	if pen.x != 0 && flagged (effects, .STRIKETHROUGH)
 	{
 		set_texture (renderer, null);

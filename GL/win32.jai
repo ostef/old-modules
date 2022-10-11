@@ -20,6 +20,7 @@ create_context :: inline (win : window.Handle, flags := GL_Context_Creation_Flag
 
 	if flagged (flags, .MULTISAMPLED) && !wglChoosePixelFormatARB
 		log.error ("Cannot create multisampled GL context because wglChoosePixelFormatARB is not loaded.");
+
 	pixel_format : s32;
 	if flagged (flags, .MULTISAMPLED) && wglChoosePixelFormatARB != null
 	{
@@ -37,7 +38,9 @@ create_context :: inline (win : window.Handle, flags := GL_Context_Creation_Flag
 		];
 		num_formats : u32;
 		float_attributes := f32.[ 0, 0 ];
+
 		valid := wglChoosePixelFormatARB (hdc, attributes.data, float_attributes.data, 1, *pixel_format, *num_formats);
+
 		// We don't have multisampling, so let Windows choose the closest pixel format from the descriptor.
 		if !valid || num_formats < 1
 		{
@@ -49,6 +52,7 @@ create_context :: inline (win : window.Handle, flags := GL_Context_Creation_Flag
 	{
 		pixel_format = win32.ChoosePixelFormat (hdc, *pfd);
 	}
+
 	win32.SetPixelFormat (hdc, pixel_format, *pfd);
 
 	ctx := wglCreateContext (hdc);
@@ -61,6 +65,7 @@ destroy_context :: inline (win : window.Handle, ctx : GL_Context)
 {
 	if get_current_context () == ctx
 		make_context_current (win, null);
+
 	wglDeleteContext (ctx);
 }
 

@@ -4,6 +4,7 @@ make_array :: inline (data : *$T, count : s64) -> []T #must
 	result : []T = ---;
 	result.data = data;
 	result.count = count;
+	
 	return result;
 }
 
@@ -44,7 +45,7 @@ advance :: inline (arr : *[]$T, count := 1)
 	arr.count -= count;
 }
 
-clone :: inline (arr : []$T, allocator : Allocator) -> []T #must
+clone :: inline (arr : []$T, allocator := context.allocator) -> []T #must
 {
 	result : []T = ---;
 	result.data = alloc (size_of (T) * arr.count, allocator);
