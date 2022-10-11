@@ -13,7 +13,7 @@ temporary_allocator_proc :: (mode : Allocator_Mode, size : s64, old_size : s64, 
 
 reset_temporary_storage :: inline (storage := context.temporary_storage)
 {
-	arena.reset (storage);
+	arena.reset (storage, allocator = .{ null, null });
 }
 
 Temporary_Storage_State :: arena.State;
