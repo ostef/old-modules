@@ -69,11 +69,15 @@ main :: ()
 		frame_start := time.to_float_seconds (time.current_monotonic ());
 		mem.reset_temporary_storage ();
 
+		input.update ();
+		
 		window.poll_messages (g_window);
 		msg : window.Message;
 		while window.get_next_message (g_window, *msg)
 		{
+			input.handle_window_message (msg);
 			imgui_platform.handle_window_message (msg);
+
 			if msg.kind ==
 			{
 			case .WINDOW_CLOSED;
