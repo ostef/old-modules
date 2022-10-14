@@ -7,6 +7,13 @@ trap_allocator_proc :: (mode : Allocator_Mode, size : s64, old_size : s64, old_p
 	return null;
 }
 
+allocator_block :: (allocator : Allocator) #expand
+{
+	prev_allocator := context.allocator;
+	context.allocator = allocator;
+	`defer context.allocator = prev_allocator;
+}
+
 alloc :: inline (size : s64, allocator := context.allocator) -> *void #must
 {
 	assert (allocator.proc != null, "Allocator is null.");
