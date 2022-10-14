@@ -28,7 +28,14 @@ set_temporary_storage_state :: inline (state : Temporary_Storage_State, storage 
 	arena.set_state (state, storage);
 }
 
+temporary_storage_block :: (storage := context.temporary_storage) #expand
+{
+	state := get_temporary_storage_state (storage);
+	`defer set_temporary_storage_state (state, storage);
+}
+
 temporary_block :: (storage := context.temporary_storage) #expand
+#deprecated "Use temporary_storage_block instead, because the name temporary_block is ambiguous with allocator_block, that does not quite do the same thing."
 {
 	state := get_temporary_storage_state (storage);
 	`defer set_temporary_storage_state (state, storage);
