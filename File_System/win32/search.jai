@@ -119,7 +119,7 @@ direct_recurse :: (search : *File_Search, body : Code, flags : For_Flags) #expan
 	defer if search.in_loop
 		reset_search (search);
 
-	mem.temporary_block ();
+	mem.temporary_storage_block ();
 	`it : File_Info;
 	`it_index := 0;
 
@@ -142,7 +142,7 @@ direct_recurse :: (search : *File_Search, body : Code, flags : For_Flags) #expan
 
 		if !current.initialized
 		{
-			mem.temporary_block ();
+			mem.temporary_storage_block ();
 			wildcard := win32.utf8_to_wide (path.join (mem.TEMP_ALLOC, dirname, "/*"), mem.TEMP_ALLOC);
 			current.find_handle = win32.FindFirstFileW (wildcard, *current.find_data);
 			current.initialized = true;
