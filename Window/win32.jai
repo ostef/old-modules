@@ -93,7 +93,7 @@ win32_init_window_context :: inline () -> bool
 
 show_error_box :: inline (parent : Handle, fmt_str : string, args : ..Any)
 {
-	mem.temporary_block ();
+	mem.temporary_storage_block ();
 	str := fmt.format (mem.TEMP_ALLOC, fmt_str, ..args);
 	win32.MessageBoxW (
 		parent,
