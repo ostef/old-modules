@@ -95,25 +95,4 @@ new_frame :: (fov : f32, camera_transform : linalg.Mat4f, projection : linalg.Ma
 	}
 
 	im3d.AppData.setCullFrustum (app, data.view_projection_matrix, true);
-
-	app.keyDown[im3d.Key.Mouse_Left] = input.is_mouse_button_down (.LEFT);
-
-	ctrl_down := input.is_key_down (.CTRL);
-	app.keyDown[im3d.Key.L] = ctrl_down && input.is_key_down (.L);
-	app.keyDown[im3d.Key.T] = ctrl_down && input.is_key_down (.T);
-	app.keyDown[im3d.Key.R] = ctrl_down && input.is_key_down (.R);
-	app.keyDown[im3d.Key.S] = ctrl_down && input.is_key_down (.S);
-
-	if ctrl_down
-	{
-		app.snapTranslation = 0.5;
-		app.snapRotation    = linalg.to_rads (30.0);
-		app.snapScale       = 0.5;
-	}
-	else
-	{
-		app.snapTranslation = 0;
-		app.snapRotation    = 0;
-		app.snapScale       = 0;
-	}
 }
