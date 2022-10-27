@@ -16,6 +16,7 @@ Test_Entry :: struct
 	module_name : string;
 	filename : string;
 	name : string;
+	is_example : bool;	// Examples are only compiled, and not executed
 	workspace : Workspace;
 	compilation_success : bool;
 }
@@ -54,12 +55,12 @@ build :: ()
 	{
 		if flagged (info.attributes, .DIRECTORY) && info.name == "tests"
 		{
+			module_name := str.clone (path.get_basename (path.get_parent_dir (info.full_name)));
 			search := fs.file_search (info.full_name, mem.HEAP_ALLOC, flags = .VISIT_FILES);
 			for info : search
 			{
 				if str.ends_with (info.name, ".jai")
 				{
-					module_name := path.get_basename (path.get_parent_dir (path.get_parent_dir (info.full_name)));
 
 					if test_only.count != 0 && array.find_first (test_only, module_name) == -1
 						continue;
@@ -70,8 +71,25 @@ build :: ()
 					test.name = path.remove_extension (path.get_basename (test.filename));
 				}
 			}
-			
-			continue;
+		}
+		else if flagged (info.attributes, .DIRECTORY) && info.name == "examples"
+		{
+			module_name := str.clone (path.get_basename (path.get_parent_dir (info.full_name)));
+			search := fs.file_search (info.full_name, mem.HEAP_ALLOC);
+			for info : search
+			{
+				if info.name == "main.jai"
+				{
+					if test_only.count != 0 && array.find_first (test_only, module_name) == -1
+						continue;
+
+					test := array.push (*tests);
+					test.module_name = module_name;
+					test.filename = info.full_name;
+					test.name = path.get_basename (path.get_parent_dir (info.full_name));
+					test.is_example = true;
+				}
+			}
 		}
 	}
 	
@@ -81,7 +99,7 @@ build :: ()
 	for * test : tests
 	{
 		workspace_name := path.join (test.module_name, test.name);
-		fmt.println ("Creating workspace %", workspace_name);
+		log.message ("Creating workspace %", workspace_name);
 		test.workspace = jaic.compiler_create_workspace (workspace_name);
 		
 		options := jaic.get_build_options (test.workspace);
@@ -112,12 +130,15 @@ build :: ()
 			log.error ("Failed to compile workspace '%'.", workspace_name);
 	}
 
+	fmt.print ("\n");
+
 	// Execute all tests
 	for test : tests
 	{
-		if !test.compilation_success
+		if !test.compilation_success || test.is_example
 			continue;
 
+		log.message ("Executing test %/%.", test.module_name, test.name);
 		test_filename := path.join (mem.TEMP_ALLOC, path.get_parent_dir (test.filename), test.name);
 		exit_code, out_str, err_str := ps.run_command (
 			test_filename,
@@ -127,7 +148,7 @@ build :: ()
 
 		if exit_code != 0
 		{
-			fmt.println ("Test %/% failed.", test.module_name, test.name);
+			log.error ("Test %/% failed.", test.module_name, test.name);
 	
 			if out_str
 			{
