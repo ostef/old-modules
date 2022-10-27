@@ -110,7 +110,7 @@ main :: ()
 		
 		ps.sleep_milliseconds (10);
 		frame_end := time.current_monotonic ();
-		delta_time = xx time.to_float_seconds (frame_end - frame_start);
+		delta_time = xx time.to_f64_seconds (frame_end - frame_start);
 	}
 }
 

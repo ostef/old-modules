@@ -2,6 +2,7 @@
 mem  :: #import "Memory";
 fmt  :: #import "Fmt";
 time :: #import "Apollo_Time";
+#import "Math/Int128";
 
 ps     :: #import "Process";
 window :: #import "Window";
@@ -66,7 +67,7 @@ main :: ()
 	delta_time := 0.1666;
 	while g_is_running
 	{
-		frame_start := time.to_float_seconds (time.current_monotonic ());
+		frame_start := time.current_monotonic ();
 		mem.reset_temporary_storage ();
 
 		input.update ();
@@ -103,7 +104,7 @@ main :: ()
 		window.swap_buffers (g_window);
 		
 		ps.sleep_milliseconds (10);
-		frame_end := time.to_float_seconds (time.current_monotonic ());
-		delta_time = cast (f32) (frame_end - frame_start);
+		frame_end := time.current_monotonic ();
+		delta_time = cast (f32) time.to_f64_seconds (frame_end - frame_start);
 	}
 }

@@ -74,8 +74,11 @@ main :: ()
 	g_is_running = true;
 	while g_is_running
 	{
+		t := time.to_f64_seconds (time.current_monotonic ());
+
 		mem.reset_temporary_storage ();
-		t := time.to_float_seconds (time.current_monotonic ());
+
+
 		window.poll_messages (g_window);
 		msg : window.Message;
 		while window.get_next_message (g_window, *msg)
@@ -84,6 +87,7 @@ main :: ()
 		width, height := window.get_viewport_size (g_window);
 		gl.ClearColor (0.1, 0.1, 0.1, 1);
 		gl.Clear (gl.COLOR_BUFFER_BIT);
+
 		imdraw.begin (imdraw_ctx);
 		{
 			prev_texture := imdraw.set_texture (*uv_grid);
@@ -102,12 +106,16 @@ main :: ()
 
 			cos := vec2f (xx t, math.cos (cast (f32) t));
 			sin := vec2f (xx t, math.sin (cast (f32) t));
+
 			pos := vec2f (math.wrap (cos.x * 69.105, 0, cast (f32) width), 30 + cos.y * 10);
 			imdraw.draw_text (jetbrains_mono, 30, pos, "Hello Sailor!", math.rgba (255, 95, 51), weight = .REGULAR, effects = imdraw.Text_Effects.ITALIC | .STRIKETHROUGH | .UNDERLINE);
+
 			pos = vec2f (math.wrap (sin.x * -123.456, 0, cast (f32) width), 146 + sin.y * 6);
 			imdraw.draw_text (beau_rivage, 30, pos, "Hello Sailor!", math.rgba (66, 135, 245), effects = .UNDERLINE);
+
 			pos = vec2f (math.wrap (cos.x * 26, 0, cast (f32) width), 300 + cos.y * 13);
 			imdraw.draw_text (noto_sans_jp, 30, pos, "こんにちはセーラー！", math.rgba (57, 250, 224), weight = .MEDIUM);
+
 			pos = vec2f (math.wrap (sin.x * 4, 0, cast (f32) width), 420 + sin.y * 32);
 			imdraw.draw_text (noto_sans_kr, 30, pos, "안녕하세요 선원님!", math.rgba (255, 56, 225), weight = .LIGHT, effects = imdraw.Text_Effects.STRIKEOUT);
 
@@ -123,6 +131,7 @@ main :: ()
 			);
 		}
 		imdraw.end ();
+
 		window.swap_buffers (g_window);
 	}
 }
