@@ -61,7 +61,7 @@ array_has_member :: inline (info : *Type_Info, name : string) -> bool #must
 	
 	case .FIXED; #through;
 	case .VIEW;
-		if name == "count"
+		if name == "count" || name == "data"
 			return true;
 	}
 	
@@ -90,6 +90,9 @@ get_array_member_type :: inline (info : *Type_Info, name : string) -> *Type_Info
 	case .VIEW;
 		if name == "count"
 			return get_relative_pointer_type (info_array.relative_pointer_size);
+
+		// We can't handle the 'data' member correctly, because we would need
+		// to return a type info that we can't access!
 	}
 	
 	return null;

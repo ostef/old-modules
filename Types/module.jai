@@ -90,6 +90,38 @@ is_enum_flags :: inline (info : *Type_Info) -> bool #must
 	return info != null && info.type == .ENUM && flagged ((cast (*Type_Info_Enum) info).enum_type_flags, .FLAGS);
 }
 
+enum_has_name :: inline (type : Type, name : string) -> bool #must { return enum_has_name (cast (*Type_Info) type, name); }
+enum_has_name :: inline (info : *Type_Info, name : string) -> bool #must
+{
+	if !is_enum (info)
+		return false;
+	
+	info_enum := cast (*Type_Info_Enum) info;
+	for info_enum.names
+	{
+		if it == name
+			return true;
+	}
+
+	return false;
+}
+
+enum_has_value :: inline (type : Type, value : s64) -> bool #must { return enum_has_value (cast (*Type_Info) type, value); }
+enum_has_value :: inline (info : *Type_Info, value : s64) -> bool #must
+{
+	if !is_enum (info)
+		return false;
+	
+	info_enum := cast (*Type_Info_Enum) info;
+	for info_enum.values
+	{
+		if it == value
+			return true;
+	}
+
+	return false;
+}
+
 has_member :: inline (type : Type, name : string) -> bool #must { return has_member (cast (*Type_Info) type, name); }
 has_member :: inline (info : *Type_Info, name : string) -> bool #must
 {
