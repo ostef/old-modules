@@ -81,6 +81,30 @@ update_flying_camera :: (using camera : *Camera, delta_time : f32)
 	view_projection_matrix = projection_matrix * view_matrix;
 }
 
+update_im3d_keys :: ()
+{
+	app := im3d.GetAppData ();
+	app.keyDown[im3d.Key.Mouse_Left] = input.is_mouse_button_down (.LEFT);
+
+	app.keyDown[im3d.Key.L] = input.is_key_down (.L);
+	app.keyDown[im3d.Key.T] = input.is_key_down (.T);
+	app.keyDown[im3d.Key.R] = input.is_key_down (.R);
+	app.keyDown[im3d.Key.S] = input.is_key_down (.S);
+
+	if input.is_key_down (.CTRL)
+	{
+		app.snapTranslation = 0.5;
+		app.snapRotation    = linalg.to_rads (30.0);
+		app.snapScale       = 0.5;
+	}
+	else
+	{
+		app.snapTranslation = 0;
+		app.snapRotation    = 0;
+		app.snapScale       = 0;
+	}
+}
+
 main :: ()
 {
 	error :: (fmt_str : string, args : ..Any) #expand
@@ -138,6 +162,8 @@ main :: ()
 		}
 
 		update_flying_camera (*camera, delta_time);
+
+		update_im3d_keys ();
 
 		im3d_impl.new_frame (camera.fov, camera.transform, camera.projection_matrix, delta_time, camera.use_orthographic_projection);
 		im3d.NewFrame ();
