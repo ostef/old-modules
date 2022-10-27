@@ -12,6 +12,13 @@ for_expansion :: list.for_expansion;
 
 #scope_export
 
+Slot_Info :: struct
+{
+	version    : u32;
+	page_index : s32;
+	slot_index : s32;
+}
+
 // @Todo (stefan): Automatically calculate items_per_page based
 // on cache line size and size of .
 Storage :: struct (T : Type, items_per_page : s32)
@@ -22,13 +29,6 @@ Storage :: struct (T : Type, items_per_page : s32)
 		next     : *~s32 Slot;
 		occupied : bool;
 		version  : u32;
-	}
-
-	Slot_Info :: struct
-	{
-		version    : u32;
-		page_index : s32;
-		slot_index : s32;
 	}
 
 	Page :: struct
@@ -52,14 +52,14 @@ Storage :: struct (T : Type, items_per_page : s32)
 	allocator : Allocator;
 }
 
-equals :: inline (storage : Storage, a : storage.Slot_Info, b : storage.Slot_Info) -> bool #must
+equals :: inline (a : Slot_Info, b : Slot_Info) -> bool #must
 {
 	return a.version == b.version && a.page_index == b.page_index && a.slot_index == b.slot_index;
 }
 
-operator == :: inline (storage : Storage, a : storage.Slot_Info, b : storage.Slot_Info) -> bool #must
+operator == :: inline (a : Slot_Info, b : Slot_Info) -> bool #must
 {
-	equals (storage, a, b);
+	return equals (a, b);
 }
 
 init :: inline (storage : *Storage, allocator := context.allocator)
@@ -104,7 +104,7 @@ clear_page :: inline (using storage : *Storage, page : *storage.Page)
 	page.occupied_slots = null;
 }
 
-find_free_slot :: (using storage : *Storage, $initialize := true) -> *storage.T #must, info : storage.Slot_Info, is_new_page : bool
+find_free_slot :: (using storage : *Storage, $initialize := true) -> *storage.T #must, info : Slot_Info, is_new_page : bool
 {
 	is_new_page := false;
 
@@ -152,7 +152,7 @@ find_free_slot :: (using storage : *Storage, $initialize := true) -> *storage.T 
 	return item, info, is_new_page;
 }
 
-insert :: (using storage : *Storage, item : storage.T) -> info : storage.Slot_Info, *storage.T
+insert :: (using storage : *Storage, item : storage.T) -> info : Slot_Info, *storage.T
 {
 	ptr, info := find_free_slot (storage, initialize = false);
 	<<ptr = item;
@@ -160,7 +160,7 @@ insert :: (using storage : *Storage, item : storage.T) -> info : storage.Slot_In
 	return info, ptr;
 }
 
-release_slot :: (using storage : *Storage, info : storage.Slot_Info)
+release_slot :: (using storage : *Storage, info : Slot_Info)
 {
 	page := all_pages[info.page_index];
 	page_was_full := page.free_slots == null;
@@ -195,7 +195,7 @@ release_slot :: (using storage : *Storage, info : storage.Slot_Info)
 
 release_slot :: inline (using storage : *Storage, item : *storage.T) -> bool
 {
-	valid, info, occupied := get_slot_info (storage, item);
+	valid, info, occupied := get_Slot_Info;
 	if !valid || !occupied
 		return false;
 	
@@ -228,7 +228,7 @@ release_all :: (using storage : *Storage)
 	full_pages = null;
 }
 
-get_slot_info :: (using storage : Storage, item : *storage.T) -> valid : bool, info : storage.Slot_Info, occupied : bool
+get_slot_info :: (using storage : Storage, item : *storage.T) -> valid : bool, info : Slot_Info, occupied : bool
 {
 	info : Slot_Info;
 	for page : all_pages
@@ -247,7 +247,7 @@ get_slot_info :: (using storage : Storage, item : *storage.T) -> valid : bool, i
 	return false, info, false;
 }
 
-is_valid :: inline (using storage : Storage, info : storage.Slot_Info) -> bool
+is_valid :: inline (using storage : Storage, info : Slot_Info) -> bool
 {
 	if info.slot_index < 0 && info.slot_index >= items_per_page
 		return false;
@@ -262,7 +262,7 @@ is_valid :: inline (using storage : Storage, info : storage.Slot_Info) -> bool
 	return true;
 }
 
-get_item :: inline (using storage : Storage, info : storage.Slot_Info) -> *storage.T #must
+get_item :: inline (using storage : Storage, info : Slot_Info) -> *storage.T #must
 {
 	assert (info.slot_index >= 0 && info.slot_index < items_per_page, "Invalid slot index.");
 	assert (info.page_index >= 0 && info.page_index < all_pages.count, "Invalid page index.");
@@ -273,7 +273,7 @@ get_item :: inline (using storage : Storage, info : storage.Slot_Info) -> *stora
 	return *all_pages[info.page_index].items[info.slot_index];
 }
 
-operator [] :: inline (using storage : Storage, slot : storage.Slot_Info) -> *storage.T #must
+operator [] :: inline (using storage : Storage, slot : Slot_Info) -> *storage.T #must
 {
 	return get_item (storage, slot);
 }
@@ -284,7 +284,7 @@ for_expansion :: (storage : *Storage, body : Code, flags : For_Flags) #expand
 	REVERSE    :: (flags & .REVERSE) == .REVERSE;
 
 	#assert !REVERSE "Storage is an unordered data structure. Iterating in reverse does not make much sense.";
-	`it_index : storage.Slot_Info;
+	`it_index : Slot_Info;
 	
 	for page, pi : storage.all_pages
 	{
