@@ -105,6 +105,7 @@ build :: ()
 		options := jaic.get_build_options (test.workspace);
 		options.text_output_flags = 0;
 		options.dead_code_elimination = .NONE;
+		options.backend = .X64;
 		options.output_type = .EXECUTABLE;
 		options.output_executable_name = test.name;
 		options.output_path = path.join (path.get_parent_dir (test.filename), "/");
