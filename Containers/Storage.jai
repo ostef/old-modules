@@ -195,7 +195,7 @@ release_slot :: (using storage : *Storage, info : Slot_Info)
 
 release_slot :: inline (using storage : *Storage, item : *storage.T) -> bool
 {
-	valid, info, occupied := get_Slot_Info;
+	valid, info, occupied := get_slot_info (storage, item);
 	if !valid || !occupied
 		return false;
 	
