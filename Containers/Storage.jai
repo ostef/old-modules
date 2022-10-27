@@ -273,7 +273,9 @@ get_item :: inline (using storage : Storage, info : Slot_Info) -> *storage.T #mu
 	return *all_pages[info.page_index].items[info.slot_index];
 }
 
-operator [] :: inline (using storage : Storage, slot : Slot_Info) -> *storage.T #must
+// This cannot be used, because only integers are allowed as subscript types.
+// I leave this here anyways, in case that changes in the future.
+operator *[] :: inline (using storage : Storage, slot : Slot_Info) -> *storage.T #must
 {
 	return get_item (storage, slot);
 }
