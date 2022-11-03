@@ -108,6 +108,9 @@ test_insert_erase :: ()
 	avl.erase (*tree, 30);
 
 	ensure_equals (tree, "8 9 22 40");
+
+	avl.reset (*tree);
+	assert (tree.count == 0, "Expected 0, got %", tree.count);
 }
 
 test_find :: ()
@@ -141,6 +144,9 @@ test_find :: ()
 	ptr := avl.find (tree, "Stefan", compare_key);
 	assert (ptr != null);
 	assert (ptr.value == 20);
+
+	avl.reset (*tree);
+	assert (tree.count == 0);
 }
 
 main :: ()

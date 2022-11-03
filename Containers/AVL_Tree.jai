@@ -38,8 +38,13 @@ init :: (tree : *AVL_Tree, allocator := context.allocator)
 
 reset :: (using tree : *AVL_Tree)
 {
-	while (root)
-		erase (root);
+	node := leftmost (root);
+	while node
+	{
+		next := successor (node);
+		erase (tree, *node.value);
+		node = next;
+	}
 }
 
 clear :: reset;
@@ -353,7 +358,7 @@ insert :: (using tree : *AVL_Tree, value : tree.T) -> *tree.T, already_present :
 	return *node.value, false;
 }
 
-erase :: (tree : *AVL_Tree, ptr : *tree.T)
+erase :: (using tree : *AVL_Tree, ptr : *tree.T)
 {
 	bst_erase :: inline (using tree : *AVL_Tree, node : *tree.Node) -> *tree.Node
 	{
@@ -466,6 +471,9 @@ erase :: (tree : *AVL_Tree, ptr : *tree.T)
 	replacement := bst_erase (tree, node);
 	if replacement
 		retrace (tree, replacement);
+	
+	mem.free (node);
+	count -= 1;
 }
 
 erase :: inline (tree : *AVL_Tree, value : tree.T) -> bool
@@ -505,17 +513,33 @@ find :: (tree : AVL_Tree, key : $T, compare_func : (T, tree.T) -> int) -> *tree.
 
 for_expansion :: (tree : *AVL_Tree, body : Code, flags : For_Flags) #expand
 {
-	`it : tree.T;
+	BY_POINTER :: (flags & .POINTER) == .POINTER;
+	REVERSE    :: (flags & .REVERSE) == .REVERSE;
+
 	`it_index := 0;
 
-	node := leftmost (tree.root);
+	#if REVERSE
+		node := rightmost (tree.root);
+	else
+		node := leftmost (tree.root);
+	
 	while node
 	{
-		defer it_index += 1;
+		defer
+		{
+			it_index += 1;
 
-		it = node.value;
-		#insert body;
+			#if REVERSE
+				node = predecessor (node);
+			else
+				node = successor (node);
+		}
 
-		node = successor (node);
+		#if BY_POINTER
+			`it := *node.value;
+		else
+			`it := node.value;
+
+		#insert body;	// @Todo: remove
 	}
 }
