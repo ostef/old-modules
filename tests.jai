@@ -61,7 +61,6 @@ build :: ()
 			{
 				if str.ends_with (info.name, ".jai")
 				{
-
 					if test_only.count != 0 && array.find_first (test_only, module_name) == -1
 						continue;
 
@@ -175,6 +174,7 @@ time    :: #import "Apollo_Time";
 map     :: #import "Containers/Hash_Map";
 list    :: #import "Containers/List";
 storage :: #import "Containers/Storage";
+avl     :: #import "Containers/AVL_Tree";
 hash    :: #import "Hash";
 io      :: #import "IO";
 linalg  :: #import "Linalg";
