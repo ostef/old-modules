@@ -4,6 +4,7 @@ fmt :: #import "Fmt";
 avl :: #import "Containers/AVL_Tree";
 array :: #import "Containers/Array";
 strbuild :: #import "String/Builder";
+rand :: #import "Math/Random";
 
 for_expansion :: avl.for_expansion;
 
@@ -42,6 +43,8 @@ ensure_sorted :: (tree : avl.AVL_Tree)
 
 ensure_no_loop_in_tree :: (tree : avl.AVL_Tree)
 {
+	mem.temporary_storage_block ();
+
 	nodes : [..]*tree.Node;
 	array.init (*nodes, tree.count, mem.TEMP_ALLOC);
 
@@ -65,19 +68,53 @@ ensure_no_loop_in_tree :: (tree : avl.AVL_Tree)
 	}
 }
 
+ensure_balance_factor_correctness :: (tree : avl.AVL_Tree)
+{
+	get_height :: (node : *tree.Node) -> s64 #must
+	{
+		if !node
+			return 0;
+
+		left := get_height (node.left);
+		right := get_height (node.right);
+		if left > right
+			return left + 1;
+		
+		return right + 1;
+	}
+
+	node := avl.leftmost (tree.root);
+	i := 0;
+	while node
+	{
+		defer i += 1;
+
+		left_height := inline get_height (node.left);
+		right_height := inline get_height (node.right);
+		expected := right_height - left_height;
+		assert (expected == node.balance_factor, "[%] Balance factor is not correct: expected (% - %) = %, got %.", i, right_height, left_height, expected, node.balance_factor);
+
+		node = avl.successor (node);
+	}
+}
+
 test_insert_erase :: ()
 {
 	tree : avl.AVL_Tree (int);
 	avl.init (*tree);
-	
+	defer avl.reset (*tree);
+
 	avl.insert (*tree, 10);
 	ensure_sorted (tree);
+	ensure_balance_factor_correctness (tree);
 	avl.insert (*tree, 20);
 	ensure_sorted (tree);
+	ensure_balance_factor_correctness (tree);
 	avl.insert (*tree, 30);
 
 	ensure_no_loop_in_tree (tree);
 	ensure_sorted (tree);
+	ensure_balance_factor_correctness (tree);
 	ensure_equals (tree, "10 20 30");
 
 	avl.insert (*tree, 40);
@@ -92,15 +129,19 @@ test_insert_erase :: ()
 
 	ensure_no_loop_in_tree (tree);
 	ensure_sorted (tree);
+	ensure_balance_factor_correctness (tree);
 	ensure_equals (tree, "6 7 8 9 10 20 22 30 40");
 
 	avl.erase (*tree, 10);
 
 	ensure_equals (tree, "6 7 8 9 20 22 30 40");
+	assert (tree.count == 8);
+	ensure_balance_factor_correctness (tree);
 
 	avl.erase (*tree, 1);
 
 	ensure_equals (tree, "6 7 8 9 20 22 30 40");
+	ensure_balance_factor_correctness (tree);
 
 	avl.erase (*tree, 6);
 	avl.erase (*tree, 7);
@@ -108,9 +149,20 @@ test_insert_erase :: ()
 	avl.erase (*tree, 30);
 
 	ensure_equals (tree, "8 9 22 40");
+	ensure_balance_factor_correctness (tree);
 
-	avl.reset (*tree);
-	assert (tree.count == 0, "Expected 0, got %", tree.count);
+	for 0..1000
+	{
+		avl.insert (*tree, cast, no_check (int) rand.get ());
+	}
+
+	ensure_balance_factor_correctness (tree);
+
+	avl.erase (*tree, tree.root.value);
+
+	ensure_no_loop_in_tree (tree);
+	ensure_sorted (tree);
+	ensure_balance_factor_correctness (tree);
 }
 
 test_find :: ()
@@ -135,6 +187,7 @@ test_find :: ()
 
 	tree : avl.AVL_Tree (Key_Value (string, int), compare);
 	avl.init (*tree);
+	defer avl.reset (*tree);
 
 	avl.insert (*tree, .{"Stefan",20});
 	avl.insert (*tree, .{"Maxime",26});
@@ -144,9 +197,6 @@ test_find :: ()
 	ptr := avl.find (tree, "Stefan", compare_key);
 	assert (ptr != null);
 	assert (ptr.value == 20);
-
-	avl.reset (*tree);
-	assert (tree.count == 0);
 }
 
 main :: ()

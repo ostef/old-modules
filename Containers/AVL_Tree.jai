@@ -26,7 +26,7 @@ AVL_Tree :: struct (T : Type, comp_func : (T, T) -> int = null, Relative_Pointer
 #if comp_func
 	compare_values :: comp_func;
 else
-	compare_values :: (left, right) => left - right;
+	compare_values :: (left, right) => ifx left < right then -1 else ifx left > right then 1 else 0;
 }
 
 init :: (tree : *AVL_Tree, allocator := context.allocator)
@@ -117,7 +117,7 @@ get_node :: inline (tree : *AVL_Tree, val : *tree.T) -> *tree.Node
 	return cast (*tree.Node) ptr;
 }
 
-rotate_left :: inline (using tree : *AVL_Tree, parent : *tree.Node, $update_balance_factor := true) -> new_parent : *tree.Node
+rotate_left :: inline (using tree : *AVL_Tree, parent : *tree.Node) -> new_parent : *tree.Node
 {
 	node := parent.right;
 
@@ -126,34 +126,20 @@ rotate_left :: inline (using tree : *AVL_Tree, parent : *tree.Node, $update_bala
 		parent.right.parent = parent;
 
 	node.parent = parent.parent;
-	if !node.parent
+	if parent == root
 		root = node;
 	else if is_left_child (parent)
-		node.parent.left = node;
+		parent.parent.left = node;
 	else
-		node.parent.right = node;
+		parent.parent.right = node;
 
 	node.left = parent;
 	node.left.parent = node;
 
-	#if update_balance_factor
-	{	
-		if node.balance_factor == 0
-		{
-			parent.balance_factor = 1;
-			node.balance_factor = -1;
-		}
-		else
-		{
-			parent.balance_factor = 0;
-			node.balance_factor = 0;
-		}
-	}
-
 	return node;
 }
 
-rotate_right :: inline (using tree : *AVL_Tree, parent : *tree.Node, $update_balance_factor := true) -> new_parent : *tree.Node
+rotate_right :: inline (using tree : *AVL_Tree, parent : *tree.Node) -> new_parent : *tree.Node
 {
 	node := parent.left;
 
@@ -162,317 +148,316 @@ rotate_right :: inline (using tree : *AVL_Tree, parent : *tree.Node, $update_bal
 		parent.left.parent = parent;
 
 	node.parent = parent.parent;
-	if !node.parent
+	if parent == root
 		root = node;
 	else if is_left_child (parent)
-		node.parent.left = node;
+		parent.parent.left = node;
 	else
-		node.parent.right = node;
+		parent.parent.right = node;
 
 	node.right = parent;
 	node.right.parent = node;
 
-	#if update_balance_factor
-	{
-		if node.balance_factor == 0
-		{
-			parent.balance_factor = -1;
-			node.balance_factor = 1;
-		}
-		else
-		{
-			parent.balance_factor = 0;
-			node.balance_factor = 0;
-		}
-	}
-
 	return node;
-}
-
-rotate_right_left :: inline (using tree : *AVL_Tree, parent : *tree.Node) -> *tree.Node
-{
-	node := parent.right;
-	node2 := node.left;
-	rotate_right (tree, node, update_balance_factor = false);
-	rotate_left (tree, parent, update_balance_factor = false);
-
-	if node2.balance_factor == 0
-	{
-		parent.balance_factor = 0;
-		node.balance_factor = 0;
-	}
-	else if node2.balance_factor > 0
-	{
-		parent.balance_factor = -1;
-		node.balance_factor = 0;
-	}
-	else
-	{
-		parent.balance_factor = 0;
-		node.balance_factor = 1;
-	}
-
-	node2.balance_factor = 0;
-
-	return node2;
-}
-
-rotate_left_right :: inline (using tree : *AVL_Tree, parent : *tree.Node) -> *tree.Node
-{
-	node := parent.left;
-	node2 := node.right;
-	rotate_left (tree, node, update_balance_factor = false);
-	rotate_right (tree, parent, update_balance_factor = false);
-
-	if node2.balance_factor == 0
-	{
-		parent.balance_factor = 0;
-		node.balance_factor = 0;
-	}
-	else if node2.balance_factor > 0
-	{
-		parent.balance_factor = 1;
-		node.balance_factor = 0;
-	}
-	else
-	{
-		parent.balance_factor = 0;
-		node.balance_factor = -1;
-	}
-
-	node2.balance_factor = 0;
-
-	return node2;
 }
 
 #scope_export
 
 insert :: (using tree : *AVL_Tree, value : tree.T) -> *tree.T, already_present : bool
 {
-	bst_insert :: inline (using tree : *AVL_Tree, value : tree.T) -> *tree.Node, already_present : bool
+	fix_left_imbalance :: (using tree : *AVL_Tree, parent : *tree.Node) -> *tree.Node
 	{
-		parent : *Node;
-		curr := root;
-		comp_result : int = ---;
-		while curr
+		assert (parent.left != null, "Parent has no left child.");
+		if parent.left.balance_factor == parent.balance_factor
 		{
-			parent = curr;
-			comp_result = compare_values (value, curr.value);
-			if comp_result < 0
-				curr = curr.left;
-			else if comp_result > 0
-				curr = curr.right;
-			else
-				return curr, true;
-		}
-
-		node := mem.alloc (Node, allocator, initialize = false);
-		node.balance_factor = 0;
-		node.value = value;
-
-		if parent
-		{
-			if comp_result < 0
-				parent.left = node;
-			else
-				parent.right = node;
+			parent = rotate_right (tree, parent);
+			parent.balance_factor = 0;
+			parent.right.balance_factor = 0;
 		}
 		else
-			root = node;
-		
-		node.parent = parent;
-		node.left = null;
-		node.right = null;
-
-		return node, false;
-	}
-
-	rebalance :: inline (using tree : *AVL_Tree, node : *tree.Node)
-	{
-		parent := node.parent;
-		while parent
 		{
-			if is_right_child (node)
+			old_bf := parent.left.right.balance_factor;
+			rotate_left (tree, parent.left);
+			parent = rotate_right (tree, parent);
+			
+			parent.balance_factor = 0;
+			if old_bf ==
 			{
-				if parent.balance_factor > 0
-				{
-					if node.balance_factor < 0
-						rotate_right_left (tree, parent);
-					else
-						rotate_left (tree, parent);
-					
-					break;
-				}
-				else if parent.balance_factor < 0
-				{
-					parent.balance_factor = 0;
-
-					break;
-				}
-				else
-				{
-					parent.balance_factor = 1;
-					node = parent;
-					parent = node.parent;
-
-					continue;
-				}
-			}
-			else
-			{
-				if parent.balance_factor < 0
-				{
-					if node.balance_factor > 0
-						rotate_left_right (tree, parent);
-					else
-						rotate_right (tree, parent);
-
-					break;
-				}
-				else if parent.balance_factor > 0
-				{
-					parent.balance_factor = 0;
-
-					break;
-				}
-				else
-				{
-					parent.balance_factor = -1;
-					node = parent;
-					parent = node.parent;
-
-					continue;
-				}
+			case -1;
+				parent.left.balance_factor = 0;
+				parent.right.balance_factor = 1;
+			case 1;
+				parent.left.balance_factor = -1;
+				parent.right.balance_factor = 0;
+			case 0;
+				parent.left.balance_factor = 0;
+				parent.right.balance_factor = 0;
 			}
 		}
+
+		return parent;
 	}
 
-	node, already_present := bst_insert (tree, value);
-	if already_present
-		return *node.value, true;
+	fix_right_imbalance :: (using tree : *AVL_Tree, parent : *tree.Node) -> *tree.Node
+	{
+		assert (parent.right != null, "Parent has no right child.");
+		if parent.right.balance_factor == parent.balance_factor
+		{
+			parent = rotate_left (tree, parent);
+			parent.balance_factor = 0;
+			parent.left.balance_factor = 0;
+		}
+		else
+		{
+			old_bf := parent.right.left.balance_factor;
+			rotate_right (tree, parent.right);
+			parent = rotate_left (tree, parent);
+			
+			parent.balance_factor = 0;
+			if old_bf ==
+			{
+			case -1;
+				parent.left.balance_factor = 0;
+				parent.right.balance_factor = 1;
+			case 1;
+				parent.left.balance_factor = -1;
+				parent.right.balance_factor = 0;
+			case 0;
+				parent.left.balance_factor = 0;
+				parent.right.balance_factor = 0;
+			}
+		}
 
-	rebalance (tree, node);
+		return parent;
+	}
+
+	curr := root;
+	parent : *Node;
+	comp_result : int;
+
+	while curr
+	{
+		parent = curr;
+
+		comp_result = compare_values (value, curr.value);
+		if comp_result < 0
+			curr = curr.left;
+		else if comp_result > 0
+			curr = curr.right;
+		else
+			return *curr.value, true;
+	}
+
+	node := mem.alloc (Node, allocator, initialize = false);
+	node.value = value;
+	node.balance_factor = 0;
+	node.parent = parent;
+	node.left = null;
+	node.right = null;
+
+	if !parent
+		root = node;
+	else if comp_result < 0
+		parent.left = node;
+	else
+		parent.right = node;
 
 	count += 1;
+
+	while parent
+	{
+		if is_left_child (node)
+		{
+			if parent.balance_factor ==
+			{
+			case 1;
+				parent.balance_factor = 0;
+
+				break;
+			case 0;
+				parent.balance_factor = -1;
+
+			case -1;
+				fix_left_imbalance (tree, parent);
+
+				break;
+			}
+		}
+		else
+		{
+			if parent.balance_factor ==
+			{
+			case -1;
+				parent.balance_factor = 0;
+
+				break;
+			case 0;
+				parent.balance_factor = 1;
+
+			case 1;
+				fix_right_imbalance (tree, parent);
+
+				break;
+			}
+		}
+
+		node = parent;
+		parent = node.parent;
+	}
 
 	return *node.value, false;
 }
 
 erase :: (using tree : *AVL_Tree, ptr : *tree.T)
 {
-	bst_erase :: inline (using tree : *AVL_Tree, node : *tree.Node) -> *tree.Node
+	fix_left_imbalance :: (using tree : *AVL_Tree, parent : *tree.Node) -> *tree.Node
 	{
-		replacement : *Node;
-
-		if !node.left && !node.right
-			replacement = null;
-		else if !node.right || !node.left
-			replacement = ifx node.right then node.right else node.left;
-		else
+		assert (parent.left != null, "Parent has no left child.");
+		if parent.left.balance_factor ==
 		{
-			replacement = successor (node);
-
-			if replacement != node.right
-				bst_erase (tree, replacement);
-
-			replacement.left = node.left;
-			if replacement.left
-				replacement.left.parent = replacement;
+		case -1;
+			parent = rotate_right (tree, parent);
+			parent.balance_factor = 0;
+			parent.right.balance_factor = 0;
+		
+		case 0;
+			parent = rotate_right (tree, parent);
+			parent.balance_factor = 1;
+			parent.right.balance_factor = -1;
+	
+		case 1;
+			old_bf := parent.left.right.balance_factor;
+			rotate_left (tree, parent.left);
+			parent = rotate_right (tree, parent);
 			
-			replacement.right = node.right;
-			if replacement.right
-				replacement.right.parent = replacement;
+			parent.balance_factor = 0;
+			if old_bf ==
+			{
+			case -1;
+				parent.left.balance_factor = 0;
+				parent.right.balance_factor = 1;
+			case 1;
+				parent.left.balance_factor = -1;
+				parent.right.balance_factor = 0;
+			case 0;
+				parent.left.balance_factor = 0;
+				parent.right.balance_factor = 0;
+			}
 		}
 
-		if !node.parent
-			root = replacement;
-		else if node.parent.left == node
-			node.parent.left = replacement;
-		else if node.parent.right == node
-			node.parent.right = replacement;
-		
-		if replacement
-			replacement.parent = node.parent;
-		
-		return replacement;
+		return parent;
 	}
 
-	retrace :: inline (using tree : *AVL_Tree, node : *tree.Node)
+	fix_right_imbalance :: (using tree : *AVL_Tree, parent : *tree.Node) -> *tree.Node
 	{
-		parent := node.parent;
-		while parent
+		assert (parent.right != null, "Parent has no right child.");
+		if parent.right.balance_factor ==
 		{
-			if is_left_child (node)
-			{
-				if parent.balance_factor > 0
-				{
-					balance_factor := parent.right.balance_factor;
-					if balance_factor < 0
-						rotate_right_left (tree, parent);
-					else
-						rotate_left (tree, parent);
+		case 1;
+			parent = rotate_left (tree, parent);
+			parent.balance_factor = 0;
+			parent.left.balance_factor = 0;
+		
+		case 0;
+			parent = rotate_left (tree, parent);
+			parent.balance_factor = -1;
+			parent.left.balance_factor = 1;
 	
-					if balance_factor == 0
-						break;
-					
-					node = parent;
-					parent = node.parent;
-				}
-				else if parent.balance_factor < 0
-				{
-					node.balance_factor = 0;
-					node = parent;
-					parent = node.parent;
-
-					continue;
-				}
-				else
-				{
-					parent.balance_factor = 1;
-
-					break;
-				}
-			}
-			else
+		case -1;
+			old_bf := parent.right.left.balance_factor;
+			rotate_right (tree, parent.right);
+			parent = rotate_left (tree, parent);
+			
+			parent.balance_factor = 0;
+			if old_bf ==
 			{
-				if parent.balance_factor < 0
-				{
-					balance_factor := parent.left.balance_factor;
-					if balance_factor < 0
-						rotate_left_right (tree, parent);
-					else
-						rotate_right (tree, parent);
-	
-					if balance_factor == 0
-						break;
-					
-					node = parent;
-					parent = node.parent;
-				}
-				else if parent.balance_factor < 0
-				{
-					node.balance_factor = 0;
-					node = parent;
-					parent = node.parent;
-
-					continue;
-				}
-				else
-				{
-					parent.balance_factor = -1;
-
-					break;
-				}
+			case -1;
+				parent.left.balance_factor = 0;
+				parent.right.balance_factor = 1;
+			case 1;
+				parent.left.balance_factor = -1;
+				parent.right.balance_factor = 0;
+			case 0;
+				parent.left.balance_factor = 0;
+				parent.right.balance_factor = 0;
 			}
 		}
+
+		return parent;
 	}
 
 	node := get_node (tree, ptr);
-	replacement := bst_erase (tree, node);
-	if replacement
-		retrace (tree, replacement);
+
+	target : *Node;
+	if !node.left || !node.right
+	{
+		target = node;
+	}
+	else
+	{
+		target = successor (node);
+		node.value = target.value;
+	}
+
+	node = target;
+	parent := node.parent;
+	while parent
+	{
+		if is_left_child (node)
+		{
+			if parent.balance_factor ==
+			{
+			case -1;
+				parent.balance_factor = 0;
+			
+			case 0;
+				parent.balance_factor = 1;
+
+				break;
+			
+			case 1;
+				parent = fix_right_imbalance (tree, parent);
+				if parent.balance_factor == -1
+					break;
+			}
+		}
+		else
+		{
+			if parent.balance_factor ==
+			{
+			case 1;
+				parent.balance_factor = 0;
+			
+			case 0;
+				parent.balance_factor = -1;
+
+				break;
+			
+			case -1;
+				parent = fix_left_imbalance (tree, parent);
+				if parent.balance_factor == 1
+					break;
+			}
+		}
+
+		node = parent;
+		parent = node.parent;
+	}
+
+	// Replace target node with its child
+	child := ifx target.right then target.right else target.left;
+
+	if child
+		child.parent = target.parent;
 	
-	mem.free (node);
+	if !target.parent
+		root = child;
+	else if is_left_child (target)
+		target.parent.left = child;
+	else
+		target.parent.right = child;
+	
+	mem.free (target, allocator);
 	count -= 1;
 }
 
