@@ -8,9 +8,9 @@ fmt :: #import "Fmt";
 
 AVL_Node :: struct (T : Type, Relative_Pointer_Type := void)
 {
-	parent : *~Relative_Pointer_Type AVL_Node (T, Relative_Pointer_Type);
-	left   : *~Relative_Pointer_Type AVL_Node (T, Relative_Pointer_Type);
-	right  : *~Relative_Pointer_Type AVL_Node (T, Relative_Pointer_Type);
+	parent : *~Relative_Pointer_Type #this;
+	left   : *~Relative_Pointer_Type #this;
+	right  : *~Relative_Pointer_Type #this;
 	balance_factor : s8;
 	value : T;
 }
