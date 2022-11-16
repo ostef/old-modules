@@ -81,6 +81,52 @@ ITALIAN_ASCII_NAMES :: Calendar_Names.{
 	short_months = .[ "Gen", "Feb", "Mar", "Apr", "Mag", "Giu", "Lug", "Ago", "Set", "Ot", "Nov", "Dic" ],
 };
 
+#scope_file
+
+process_format_string :: (fmt_str : string) -> string #must
+{
+	str :: #import "String";
+	strbuild :: #import "String/Builder";
+
+	FMT_STRINGS :: string.[ "y", "yy", "m", "M", "MM", "d", "D", "DD", "ampm", "AMPM", "hr", "HR", "mn", "sc", "ms", "tz" ];
+
+	b : strbuild.Builder;
+	strbuild.init (*b, mem.TEMP_ALLOC);
+
+	i := 0;
+	while i < fmt_str.count
+	#no_abc
+	{
+		if fmt_str[i] == #char "{"
+		{
+			strbuild.append_byte (*b, fmt_str[i]);
+
+			i += 1;
+			s := str.advance (fmt_str, i);
+
+			for FMT_STRINGS
+			{
+				if str.starts_with (s, it) && (s.count == it.count || s[it.count] == #char ":" || s[it.count] == #char "}")
+				{
+					strbuild.append_s64 (*b, it_index);
+					i += it.count;
+
+					break;
+				}
+			}
+		}
+		else
+		{
+			strbuild.append_byte (*b, fmt_str[i]);
+			i += 1;
+		}
+	}
+
+	return strbuild.build (b, mem.TEMP_ALLOC);
+}
+
+#scope_export
+
 // Usage:
 // 		format (time, "{D} {d} {M} {Y}, {hr:02}:{mn:02} {AMPM}", allocator) => "Mon 10 Feb 2022, 10:04 AM"
 // y : time.year % 100,
@@ -99,54 +145,39 @@ ITALIAN_ASCII_NAMES :: Calendar_Names.{
 // sc : time.second,
 // ms : time.millisecond,
 // tz : time.time_zone
-format :: (time : Calendar_Time, fmt_str : string, allocator := context.allocator, names := ENGLISH_NAMES) -> string #must
+format :: inline (time : Calendar_Time, fmt_str : string, allocator := context.allocator, names := ENGLISH_NAMES) -> string #must
 {
 	fmt :: #import "Fmt";
-	str :: #import "String";
-	strbuild :: #import "String/Builder";
-
-	FMT_STRINGS :: string.[ "y", "yy", "m", "M", "MM", "d", "D", "DD", "ampm", "AMPM", "hr", "HR", "mn", "sc", "ms", "tz" ];
-
-	new_fmt_str : string;
-	{
-		b : strbuild.Builder;
-		strbuild.init (*b, mem.TEMP_ALLOC);
-
-		i := 0;
-		while i < fmt_str.count
-		#no_abc
-		{
-			if fmt_str[i] == #char "{"
-			{
-				strbuild.append_byte (*b, fmt_str[i]);
-
-				i += 1;
-				s := str.advance (fmt_str, i);
-
-				for FMT_STRINGS
-				{
-					if str.starts_with (s, it) && (s.count == it.count || s[it.count] == #char ":" || s[it.count] == #char "}")
-					{
-						strbuild.append_s64 (*b, it_index);
-						i += it.count;
-
-						break;
-					}
-				}
-			}
-			else
-			{
-				strbuild.append_byte (*b, fmt_str[i]);
-				i += 1;
-			}
-		}
-
-		new_fmt_str = strbuild.build (b, mem.TEMP_ALLOC);
-	}
 
 	return fmt.format (
 		allocator,
-		new_fmt_str,
+		process_format_string (fmt_str),
+		time.year % 100,
+		time.year,
+		time.month + 1,
+		names.short_months[math.clamp (time.month, 0, 11)],
+		names.months[math.clamp (time.month, 0, 11)],
+		time.day_of_month + 1,
+		names.short_days[math.clamp (time.day_of_week, 0, 6)],
+		names.days[math.clamp (time.day_of_week, 0, 6)],
+		ifx time.hour > 12 then "pm" else "am",
+		ifx time.hour > 12 then "PM" else "AM",
+		ifx time.hour > 12 then time.hour - 12 else time.hour,
+		time.hour,
+		time.minute,
+		time.second,
+		time.millisecond,
+		time.time_zone
+	);
+}
+
+format ::inline  (buffer : *$Buffer, time : Calendar_Time, fmt_str : string, names := ENGLISH_NAMES) -> length : s64
+{
+	fmt :: #import "Fmt";
+
+	return fmt.format (
+		buffer,
+		process_format_string (fmt_str),
 		time.year % 100,
 		time.year,
 		time.month + 1,

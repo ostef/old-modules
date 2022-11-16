@@ -89,7 +89,7 @@ to_apollo :: (ct : Calendar_Time) -> Apollo_Time #must
 	st.wYear      = xx, trunc ct.year;
 	st.wMonth     = xx, trunc (ct.month + 1);
 	st.wDay       = xx, trunc (ct.day_of_month + 1);
-	st.wDayOfWeek = xx, trunc ct .day_of_week;
+	st.wDayOfWeek = xx, trunc ct.day_of_week;
 	st.wHour      = xx, trunc ct.hour;
 	st.wMinute    = xx, trunc ct.minute;
 	st.wSecond    = xx, trunc ct.second;
