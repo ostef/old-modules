@@ -5,6 +5,18 @@
 #load "struct.jai";
 #load "variant.jai";
 
+get_name :: inline (T : Type, allocator := context.allocator) -> string #must
+{
+	fmt :: #import "Fmt";
+
+	return fmt.format (allocator, "%", T);
+}
+
+get_name :: inline (info : *Type_Info, allocator := context.allocator) -> string #must
+{
+	return get_name (<<(cast (*Type) *info), allocator);
+}
+
 is_string :: inline (type : Type) -> bool #must { return is_string (cast (*Type_Info) type); }
 is_string :: inline (val : Any)   -> bool #must { return is_string (val.type); }
 is_string :: inline (info : *Type_Info) -> bool #must
