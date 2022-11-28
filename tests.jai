@@ -109,6 +109,7 @@ build :: ()
 		options.output_executable_name = test.name;
 		options.output_path = path.join (path.get_parent_dir (test.filename), "/");
 		options.intermediate_path = path.join (path.get_parent_dir (test.filename), ".build/");
+		options.import_path = opt.import_path;
 
 		jaic.set_build_options (options, test.workspace);
 		jaic.compiler_begin_intercept (test.workspace);
