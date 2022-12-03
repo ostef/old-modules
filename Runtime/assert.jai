@@ -1,5 +1,33 @@
 #add_context panicking : bool;
 
+write_stack_trace :: (node : *Stack_Trace_Node)
+{
+	while node
+	{
+		// There are two different line numbers available.
+		// node.info.location has a line number, but this is the location of
+		// the start of the procedure. That may be useful in some cases, but often
+		// what we really want is the line number of the procedure call, which is
+		// stored in node.line_number. That's what we print in this case.
+		if node.info
+		{
+			write_string (node.info.location.fully_pathed_filename);
+			write_string (":");
+			write_nonnegative_number (node.line_number);
+			write_string (": ");
+
+			if node.info.name
+				write_string (node.info.name);
+			else
+				write_string ("(anonymous procedure)");
+
+			write_string ("\n");
+		}
+
+		node = node.next;
+	}
+}
+
 contextless_panic :: inline (msg := "", location := #caller_location)
 #no_context
 {
@@ -87,34 +115,6 @@ assert :: (assertion_expr : Code, fmt_str := "", args : ..Any, location := #call
 
 assertion_failed :: (location : Source_Code_Location, msg : string)
 {
-	write_stack_trace :: (node : *Stack_Trace_Node)
-	{
-		while node
-		{
-			// There are two different line numbers available.
-			// node.info.location has a line number, but this is the location of
-			// the start of the procedure. That may be useful in some cases, but often
-			// what we really want is the line number of the procedure call, which is
-			// stored in node.line_number. That's what we print in this case.
-			if node.info
-			{
-				write_string (node.info.location.fully_pathed_filename);
-				write_string (":");
-				write_nonnegative_number (node.line_number);
-				write_string (": ");
-
-				if node.info.name
-					write_string (node.info.name);
-				else
-					write_string ("(anonymous procedure)");
-
-				write_string ("\n");
-			}
-
-			node = node.next;
-		}
-	}
-
 	write_location (location);
 
 	if context.panicking
